@@ -1,37 +1,43 @@
 # NOTICE
 
-`tvhome-zh` is a Chinese-localised derivative work of:
+`tvhome-zh` is a derivative work of:
 
 **tv-vibehack** — https://github.com/Gathin23/tv-vibehack
 Copyright (c) 2026 Gathin — MIT License
 
-## Modifications made in this repository (Copyright © 2026 mclhm8182)
+**This is an unofficial, community-run derivative.** It is not affiliated with, endorsed by, or
+connected to the original author or the upstream project. Please support the upstream project if its
+full feature set is what you need.
 
-This repository is **not** an official release of the upstream project. It is
-distributed under the same MIT License terms as the original, with the
-original copyright notice fully retained.
+## What this fork changed
 
-Modifications:
+The positioning of this fork: **upstream hands configuration to files and the command line; this fork
+hands it to the remote control.** Everything upstream makes you do by editing `config.xml`,
+recompiling, or pushing files over ADB has a button on the TV instead.
 
-1. **Simplified Chinese localisation** — added
-   `launcher/app/src/main/res/values-zh/strings.xml` (translations for the
-   greeting, inputs menu, settings, Wi-Fi status, error messages, and the
-   date format), plus a Chinese primary `README.md` with a language switch
-   to the upstream English `README.en.md`.
+Added here, not present upstream:
 
-2. **Editable dock** — the dock (the pinned apps along the bottom) is
-   editable from the sofa: the remote's Menu key (or a "Favourites" pill on
-   the top bar) opens a checklist of every installed app, and a long-press on
-   a tile pins or unpins it. Choices are stored on the TV, so no file editing
-   or rebuilding is needed. Implemented in `DockStore.java` and
-   `MainActivity.dispatchKeyEvent()`. This does not exist upstream, where the
-   dock can only be changed by editing `config.xml` and recompiling.
+- **Editable dock** — the remote's Menu key (or a "Favourites" pill on the top bar) opens a checklist
+  of every installed app, and a long-press on a tile pins or unpins it. Choices are stored on the TV,
+  so no file editing or rebuilding is needed.
+- **Wallpapers** — a panel with a Bing-daily toggle and a "choose a picture on this TV" option. A new
+  picture always replaces the previous one, so the space used never grows.
+- **Icons per row, 3 to 6** — cycled from the same panel, with a first-run recommendation based on the
+  width the launcher actually gets.
+- **Adaptive dock band** — the band behind the dock turns translucent over a wallpaper instead of
+  showing up as a black slab, and stays as upstream drew it on a plain black background.
+- **Ready-made APK** — upstream ships no release; you build it yourself. This repository publishes
+  one.
 
-3. **Theme overlay ported from upstream** — `Config.java` reads an optional
-   `config.json` (plus `wallpaper.jpg`) from the launcher's external files
-   directory, overlaying the built-in `config.xml`, so a theme can be pushed
-   to the TV without a rebuild. `tools/set-wallpaper.sh` is a small helper for
-   setting a wallpaper.
+Still missing here (available upstream): the theme-folder workflow, module cards, the ~250 KB shrunk
+build, AOT precompilation, the home-switch shortcut tile, the VPN badge and the Jalali calendar.
+
+Also in this fork:
+
+2. **Eight languages** — the launcher follows the TV's system language. Chinese was completed from
+   scratch; German was completed; the Spanish, French, Russian, Catalan and Thai translations are
+   upstream's, extended with this fork's new strings. `locales_config.xml` lets Android 13+ give the
+   launcher a language of its own.
 
 Everything else — including all default configuration in `config.xml` — is
 left as the upstream default, so the launcher ships generic and suits any
