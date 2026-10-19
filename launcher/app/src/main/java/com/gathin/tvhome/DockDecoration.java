@@ -9,7 +9,15 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-/** Draws the tvOS style lighter band behind the first (dock) row and adds a gap below it. */
+/**
+ * Draws the tvOS style lighter band behind the first (dock) row and adds a gap below it.
+ *
+ * The band is a near-black rounded rectangle, which is what makes it read as a soft lift on the
+ * launcher's usual black background. That only works while the background is black: over a picture an
+ * opaque slab looks like a hole cut out of the wallpaper. So the band becomes translucent when there
+ * is a wallpaper behind it — visually identical on black, and a gentle scrim over a picture, which
+ * keeps the dock icons readable without the frame announcing itself.
+ */
 public class DockDecoration extends RecyclerView.ItemDecoration {
 
     private final int dockSize;
@@ -18,13 +26,28 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
     private final Paint edge = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF rect = new RectF();
 
-    DockDecoration(int dockSize, float density) {
+    /** @param overWallpaper true when a wallpaper is behind the desk, so the band must not be opaque. */
+    DockDecoration(int dockSize, float density, boolean overWallpaper) {
         this.dockSize = dockSize;
         this.density = density;
         band.setColor(0xFF141416);
         edge.setStyle(Paint.Style.STROKE);
         edge.setStrokeWidth(density);
         edge.setColor(0x1FFFFFFF);
+        setOverWallpaper(overWallpaper);
+    }
+
+    /**
+     * The wallpaper can be added or removed while the launcher is running, so the band has to be
+     * switchable without rebuilding the grid. {@link #invalidate()} is a no-op on the decoration;
+     * the caller invalidates the RecyclerView.
+     */
+    void setOverWallpaper(boolean overWallpaper) {
+        // Opaque on black (unchanged from upstream); ~72% black over a picture, enough to keep the
+        // icons legible on a bright wallpaper without turning the dock into a black brick.
+        band.setColor(overWallpaper ? 0xB8141416 : 0xFF141416);
+        // A white hairline disappears against a bright picture, so lift it a little there.
+        edge.setColor(overWallpaper ? 0x33FFFFFF : 0x1FFFFFFF);
     }
 
     @Override
