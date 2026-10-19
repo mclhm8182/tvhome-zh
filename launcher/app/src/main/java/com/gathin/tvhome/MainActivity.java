@@ -14,6 +14,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.media.tv.TvContract;
 import android.media.tv.TvInputInfo;
 import android.media.tv.TvInputManager;
+import android.net.Uri;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -30,10 +31,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
+import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -59,6 +62,20 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     static int COLUMNS = 4;
     /** config.xml defaults with an optional config.json theme overlay on top. */
     private Config cfg;
+    /** The wallpaper file on the TV; null until something asks for it. */
+    private Wallpaper wall;
+    /** The "Desktop settings" panel, so Back can close it. */
+    private PopupWindow wallpaperPanel;
+    /** The picture behind the desk, when there is one; removed and re-added as the wallpaper changes. */
+    private ImageView wallpaperView;
+    /** Draws the band behind the dock row; kept so its colour can follow the wallpaper. */
+    private DockDecoration dockDecoration;
+    private static final int REQ_PICK_WALLPAPER = 41;
+    /** User's icon-per-row choice; 0 means "whatever this screen is happy with". */
+    private static final String PREFS_LAYOUT = "layout";
+    private static final String KEY_COLUMNS = "columns";
+    /** The range the panel offers, in the order the row cycles through them. */
+    private static final int[] COLUMN_CHOICES = {3, 4, 5, 6};
     private static final long MINUTE_MS = 60_000L;
     private String liveTvPkg;
 
@@ -114,7 +131,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         density = getResources().getDisplayMetrics().density;
         // config.xml defaults, then a config.json overlay pushed by tools/theme.sh if one is there.
         cfg = Config.load(this);
-        COLUMNS = Math.max(1, cfg.columns);
+        // The user's own choice wins; otherwise fall back to what this screen can carry comfortably.
+        int wanted = getSharedPreferences(PREFS_LAYOUT, MODE_PRIVATE).getInt(KEY_COLUMNS, 0);
+        COLUMNS = wanted >= 3 && wanted <= 6 ? wanted : recommendColumns();
         liveTvPkg = cfg.liveTvPackage.trim();
 
         root = findViewById(R.id.root);
@@ -137,7 +156,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         grid.setLayoutManager(new GridLayoutManager(this, COLUMNS));
         grid.setHasFixedSize(true);
         grid.setItemAnimator(null);
-        grid.addItemDecoration(new DockDecoration(COLUMNS, density));
+        dockDecoration = new DockDecoration(COLUMNS, density, wallpaperPresent());
+        grid.addItemDecoration(dockDecoration);
         grid.setLayoutAnimation(new LayoutAnimationController(
                 AnimationUtils.loadAnimation(this, R.anim.tile_enter), 0.06f));
         adapter = new AppAdapter(this, this, COLUMNS, cfg.dockApps);
@@ -174,6 +194,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         View btnInputs = findViewById(R.id.btnInputs);
         View btnSettings = findViewById(R.id.btnSettings);
         findViewById(R.id.btnDock).setOnClickListener(v -> showDockPicker());
+        findViewById(R.id.btnWallpaper).setOnClickListener(v -> showWallpaperPicker());
         btnInputs.setOnClickListener(v -> showInputs());
         btnWifi.setOnClickListener(v -> open(new Intent(Settings.ACTION_WIFI_SETTINGS)));
         btnSettings.setOnClickListener(v -> open(new Intent(Settings.ACTION_SETTINGS)));
@@ -183,10 +204,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         View.OnKeyListener pillKeys = (v, keyCode, event) -> {
             if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
             if (keyCode == KeyEvent.KEYCODE_DPAD_UP) return true;
-            if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && v.getId() == R.id.btnDock) return true;
+            if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && v.getId() == R.id.btnWallpaper) return true;
             return keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && v.getId() == R.id.btnSettings;
         };
         findViewById(R.id.btnDock).setOnKeyListener(pillKeys);
+        findViewById(R.id.btnWallpaper).setOnKeyListener(pillKeys);
         btnInputs.setOnKeyListener(pillKeys);
         btnWifi.setOnKeyListener(pillKeys);
         btnSettings.setOnKeyListener(pillKeys);
@@ -199,6 +221,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
         ConnectivityManager cm = getSystemService(ConnectivityManager.class);
         if (cm != null) cm.registerDefaultNetworkCallback(networkCallback);
+
+        // If the user left the Bing wallpaper on, make sure today's picture is there before they see
+        // the desk. Runs in the background and re-applies only when something actually changed.
+        wall = new Wallpaper(this);
+        if (wall.autoDaily() && !wall.hasWallpaper()) {
+            new Thread(() -> {
+                final boolean done = wall.refreshBingIfDue();
+                if (done) handler.post(this::applyWallpaper);
+            }).start();
+        }
     }
 
     @Override
@@ -386,11 +418,146 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
     }
 
+    // ---- wallpaper ------------------------------------------------------------------------------
+
     /**
-     * A theme's full-screen picture behind everything. Decoded once, downsampled to the screen so a4K
+     * "Wallpaper" panel: turn the Bing daily picture on or off, pick a picture already on the TV, or
+     * drop the wallpaper entirely. The panel is a popup because it is a one-off setting, not a place
+     * the user browses.
+     */
+    private void showWallpaperPicker() {
+        if (wallpaperPanel != null && wallpaperPanel.isShowing()) {
+            wallpaperPanel.dismiss();
+            return;
+        }
+        wall = new Wallpaper(this);
+
+        View panel = getLayoutInflater().inflate(R.layout.popup_wallpaper, root, false);
+        Switch bing = panel.findViewById(R.id.switchBing);
+        TextView status = panel.findViewById(R.id.bingStatus);
+        TextView columnsStatus = panel.findViewById(R.id.columnsStatus);
+        View rowBing = panel.findViewById(R.id.rowBing);
+        View rowColumns = panel.findViewById(R.id.rowColumns);
+        View rowPick = panel.findViewById(R.id.rowPick);
+        View rowOff = panel.findViewById(R.id.rowOff);
+
+        bing.setChecked(wall.autoDaily());
+        status.setText(wallpaperStatus());
+        columnsStatus.setText(columnsStatus());
+
+        rowBing.setOnClickListener(v -> {
+            boolean on = !wall.autoDaily();
+            wall.setAutoDaily(on);
+            bing.setChecked(on);
+            if (on) {
+                status.setText(getString(R.string.bing_fetching));
+                toast(getString(R.string.bing_fetching));
+                // Off the main thread: this hits the network and must never stall the home screen.
+                new Thread(() -> {
+                    boolean done = wall.refreshBingIfDue();
+                    handler.post(() -> {
+                        status.setText(wallpaperStatus());
+                        if (done) {
+                            toast(getString(R.string.bing_updated));
+                            applyWallpaper();
+                        } else {
+                            toast(getString(R.string.bing_failed));
+                        }
+                    });
+                }).start();
+            } else {
+                // Only stop the daily change; whatever is on screen now stays.
+                status.setText(wallpaperStatus());
+                toast(getString(R.string.bing_stopped));
+            }
+        });
+
+        rowColumns.setOnClickListener(v -> cycleColumns(columnsStatus));
+
+        rowPick.setOnClickListener(v -> {
+            Intent pick = new Intent(Intent.ACTION_OPEN_DOCUMENT)
+                    .addCategory(Intent.CATEGORY_OPENABLE)
+                    .setType("image/*");
+            try {
+                wallpaperPanel.dismiss();
+                startActivityForResult(pick, REQ_PICK_WALLPAPER);
+            } catch (ActivityNotFoundException e) {
+                toast(getString(R.string.not_available));
+            }
+        });
+
+        rowOff.setOnClickListener(v -> {
+            boolean removed = wall.clear();
+            bing.setChecked(false);
+            wall.setAutoDaily(false);
+            status.setText(wallpaperStatus());
+            // Drop the picture from the desk straight away; a wallpaper that stays on screen after
+            // the user asked to remove it looks like the button did nothing.
+            removeWallpaper();
+            if (dockDecoration != null) {
+                dockDecoration.setOverWallpaper(wallpaperPresent());
+                grid.invalidateItemDecorations();
+            }
+            toast(getString(removed ? R.string.wallpaper_removed : R.string.wallpaper_none_toast));
+        });
+
+        View close = panel.findViewById(R.id.close);
+        close.setOnClickListener(v -> wallpaperPanel.dismiss());
+
+        // The same lift-and-spring the app tiles use, so a focused row feels like part of the same
+        // desktop rather than a different kind of control.
+        final float rowScale = 1.03f;
+        for (View row : new View[]{rowBing, rowColumns, rowPick, rowOff}) {
+            row.setOnFocusChangeListener((v, focused) -> {
+                float s = focused ? rowScale : 1.0f;
+                v.animate().scaleX(s).scaleY(s)
+                        .setDuration(focused ? 220 : 160)
+                        .setInterpolator(new OvershootInterpolator(focused ? 1.4f : 0f))
+                        .start();
+            });
+        }
+
+        wallpaperPanel = new PopupWindow(panel, (int) (440 * density), (int) (410 * density), true);
+        // A focused row scales a little wider than its cell; without this the popup window clips the
+        // left and right glow even though there is room on screen for it.
+        wallpaperPanel.setClippingEnabled(false);
+        wallpaperPanel.setElevation(12 * density);
+        wallpaperPanel.showAtLocation(root, Gravity.END, (int) (56 * density), (int) (86 * density));
+    }
+
+    /** One line telling the user what the wallpaper is right now. */
+    private String wallpaperStatus() {
+        if (wall == null) wall = new Wallpaper(this);
+        if (wall.hasWallpaper()) {
+            long kb = Math.max(1, wall.sizeBytes() / 1024);
+            return getString(R.string.wallpaper_on, kb);
+        }
+        return getString(R.string.wallpaper_none);
+    }
+
+    /** The user picked a file in the system picker. Copy it in as the one and only wallpaper. */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != REQ_PICK_WALLPAPER || resultCode != RESULT_OK || data == null) return;
+        Uri uri = data.getData();
+        if (uri == null) return;
+        if (wall == null) wall = new Wallpaper(this);
+        if (wall.importFrom(uri)) {
+            toast(getString(R.string.wallpaper_set));
+            applyWallpaper();
+        } else {
+            toast(getString(R.string.wallpaper_bad));
+        }
+    }
+
+    /**
+     * A theme's full-screen picture behind everything. Decoded once, downsampled to the screen so a 4K
      * JPEG costs a 1080p bitmap at most (about 8 MB), which is the price of a wallpaper on a 1 GB TV.
+     * Kept as a field so a wallpaper can be added or dropped in place, without rebuilding the activity.
      */
     private void showWallpaper(java.io.File file) {
+        removeWallpaper();
         try {
             android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
             android.graphics.BitmapFactory.Options opts = new android.graphics.BitmapFactory.Options();
@@ -404,14 +571,94 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             opts.inPreferredConfig = android.graphics.Bitmap.Config.RGB_565;   // no alpha needed, half the memory
             android.graphics.Bitmap bmp = android.graphics.BitmapFactory.decodeFile(file.getPath(), opts);
             if (bmp == null) return;
-            ImageView wall = new ImageView(this);
-            wall.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            wall.setImageBitmap(bmp);
-            root.addView(wall, 0, new FrameLayout.LayoutParams(
+            ImageView view = new ImageView(this);
+            view.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            view.setImageBitmap(bmp);
+            root.addView(view, 0, new FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            wallpaperView = view;
         } catch (Exception | OutOfMemoryError e) {
             // A bad or huge picture must never take the home screen down; the plain colour stays.
         }
+    }
+
+    private void removeWallpaper() {
+        if (wallpaperView != null) {
+            root.removeView(wallpaperView);
+            wallpaperView = null;
+        }
+    }
+
+    /**
+ * How many icons fit on this screen without them becoming postage stamps. Based on the width the
+ * launcher actually gets (screen width minus its own margins) rather than the raw resolution, so a
+ * 1080p panel set to hdpi and a 720p panel set to mdpi are judged on what they really show.
+ */
+private int recommendColumns() {
+        int usableDp = getResources().getConfiguration().screenWidthDp - 112;   // 56dp padding each side
+        if (usableDp >= 1500) return 6;
+        if (usableDp >= 1150) return 5;
+        if (usableDp >= 850) return 4;
+        return 3;
+    }
+
+    /** Whether the current column count came from the user's choice or from {@link #recommendColumns()}. */
+    private boolean columnsAreAutomatic() {
+        int wanted = getSharedPreferences(PREFS_LAYOUT, MODE_PRIVATE).getInt(KEY_COLUMNS, 0);
+        return !(wanted >= 3 && wanted <= 6);
+    }
+
+    /** One line saying how many icons per row the desk is using, and where that number came from. */
+    private String columnsStatus() {
+        return columnsAreAutomatic()
+                ? getString(R.string.columns_auto, COLUMNS)
+                : getString(R.string.columns_manual, COLUMNS);
+    }
+
+    /**
+     * Tapping the row steps through auto → 3 → 4 → 5 → 6 → auto. A row of four options is not worth
+     * a submenu on a remote, and the current value is printed under the title either way.
+     */
+    private void cycleColumns(TextView status) {
+        int current = getSharedPreferences(PREFS_LAYOUT, MODE_PRIVATE).getInt(KEY_COLUMNS, 0);
+        int next;
+        if (current < 3) {
+            next = COLUMN_CHOICES[0];                    // auto → 3
+        } else {
+            int at = -1;
+            for (int i = 0; i < COLUMN_CHOICES.length; i++) {
+                if (COLUMN_CHOICES[i] == current) { at = i; break; }
+            }
+            next = (at >= 0 && at + 1 < COLUMN_CHOICES.length) ? COLUMN_CHOICES[at + 1] : 0;
+        }
+        getSharedPreferences(PREFS_LAYOUT, MODE_PRIVATE).edit().putInt(KEY_COLUMNS, next).apply();
+        COLUMNS = next >= 3 ? next : recommendColumns();
+        if (status != null) status.setText(columnsStatus());
+        toast(next >= 3 ? getString(R.string.columns_set, COLUMNS)
+                : getString(R.string.columns_auto_toast, COLUMNS));
+        // The row count changes the grid layout and the dock split, so the desk has to be rebuilt.
+        // The panel is closed first: rebuilding underneath an open popup is what left a stuck
+        // invisible window on this TV a moment ago.
+        if (wallpaperPanel != null) wallpaperPanel.dismiss();
+        handler.postDelayed(this::recreate, 150);
+    }
+
+    /** Re-apply whatever wallpaper is on disk now, adding or dropping it as needed. */
+    private void applyWallpaper() {
+        if (wall == null) wall = new Wallpaper(this);
+        java.io.File f = wall.file();
+        if (f != null && f.isFile() && f.length() > 0) showWallpaper(f);
+        else removeWallpaper();
+        // The dock band has to follow: opaque over black, translucent over a picture.
+        if (dockDecoration != null) {
+            dockDecoration.setOverWallpaper(wallpaperPresent());
+            grid.invalidateItemDecorations();
+        }
+    }
+
+    /** Whether a picture is currently behind the desk, either from the theme or the wallpaper file. */
+    private boolean wallpaperPresent() {
+        return wallpaperView != null || (cfg != null && cfg.wallpaper != null);
     }
 
     static final class DockHolder extends RecyclerView.ViewHolder {
