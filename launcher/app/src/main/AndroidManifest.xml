@@ -8,11 +8,14 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- Needed on Android 10 to read the Wi-Fi network name; granted over adb at install time. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- Only for the optional Bing daily wallpaper, which stays off until the user turns it on. -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
         android:banner="@drawable/banner"
+        android:localeConfig="@xml/locales_config"
         android:theme="@style/Theme.TvHome"
         android:allowBackup="false">
 
