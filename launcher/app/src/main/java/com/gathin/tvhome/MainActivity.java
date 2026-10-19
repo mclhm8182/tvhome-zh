@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
 import android.graphics.Rect;
@@ -23,6 +25,7 @@ import android.os.Looper;
 import android.provider.Settings;
 import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
@@ -39,6 +42,7 @@ import androidx.dynamicanimation.animation.DynamicAnimation;
 import androidx.dynamicanimation.animation.SpringAnimation;
 import androidx.dynamicanimation.animation.SpringForce;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
@@ -53,6 +57,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     /** Tiles per row and dock slots (res/values/config.xml, columns). Set in onCreate. */
     static int COLUMNS = 4;
+    /** config.xml defaults with an optional config.json theme overlay on top. */
+    private Config cfg;
     private static final long MINUTE_MS = 60_000L;
     private String liveTvPkg;
 
@@ -67,6 +73,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private boolean heroShown;
     private TextView greeting;
     private TextView btnWifi;
+    /** The "Favourites" panel, so Back can close it. */
+    private PopupWindow dockPicker;
     private SpringAnimation springX, springY;
     private float glassTargetX, glassTargetY;
     private boolean glassShown;
@@ -104,11 +112,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         density = getResources().getDisplayMetrics().density;
-        COLUMNS = Math.max(1, getResources().getInteger(R.integer.columns));
-        liveTvPkg = getString(R.string.live_tv_package).trim();
+        // config.xml defaults, then a config.json overlay pushed by tools/theme.sh if one is there.
+        cfg = Config.load(this);
+        COLUMNS = Math.max(1, cfg.columns);
+        liveTvPkg = cfg.liveTvPackage.trim();
 
         root = findViewById(R.id.root);
         glass = findViewById(R.id.glass);
+        // A theme may paint the whole background: a colour, a wallpaper, or nothing beyond both.
+        root.setBackgroundColor(cfg.backgroundColor);
+        if (cfg.wallpaper != null) showWallpaper(cfg.wallpaper);
         ambient = findViewById(R.id.ambient);
         heroName = findViewById(R.id.heroName);
         ambientGlow = new GradientDrawable();
@@ -127,7 +140,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         grid.addItemDecoration(new DockDecoration(COLUMNS, density));
         grid.setLayoutAnimation(new LayoutAnimationController(
                 AnimationUtils.loadAnimation(this, R.anim.tile_enter), 0.06f));
-        adapter = new AppAdapter(this, this, COLUMNS);
+        adapter = new AppAdapter(this, this, COLUMNS, cfg.dockApps);
         grid.setAdapter(adapter);
 
         // tvOS layout: push the dock row to the bottom of the screen; the grid hides below until you press Down.
@@ -160,6 +173,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
         View btnInputs = findViewById(R.id.btnInputs);
         View btnSettings = findViewById(R.id.btnSettings);
+        findViewById(R.id.btnDock).setOnClickListener(v -> showDockPicker());
         btnInputs.setOnClickListener(v -> showInputs());
         btnWifi.setOnClickListener(v -> open(new Intent(Settings.ACTION_WIFI_SETTINGS)));
         btnSettings.setOnClickListener(v -> open(new Intent(Settings.ACTION_SETTINGS)));
@@ -169,9 +183,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         View.OnKeyListener pillKeys = (v, keyCode, event) -> {
             if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
             if (keyCode == KeyEvent.KEYCODE_DPAD_UP) return true;
-            if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && v.getId() == R.id.btnInputs) return true;
+            if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && v.getId() == R.id.btnDock) return true;
             return keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && v.getId() == R.id.btnSettings;
         };
+        findViewById(R.id.btnDock).setOnKeyListener(pillKeys);
         btnInputs.setOnKeyListener(pillKeys);
         btnWifi.setOnKeyListener(pillKeys);
         btnSettings.setOnKeyListener(pillKeys);
@@ -226,7 +241,192 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     @Override
     public void onBackPressed() {
+        if (dockPicker != null && dockPicker.isShowing()) {
+            dockPicker.dismiss();
+            return;
+        }
         // Home screen: Back goes nowhere.
+    }
+
+    /**
+     * The remote's Menu (or app-switch) button opens the dock editor, the way TV boxes with a
+     * built-in launcher do it. Dispatched here rather than through a key listener so it works from
+     * anywhere on the home screen, including when nothing is focused.
+     */
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (event.getAction() == KeyEvent.ACTION_DOWN
+                && (event.getKeyCode() == KeyEvent.KEYCODE_MENU
+                || event.getKeyCode() == KeyEvent.KEYCODE_APP_SWITCH
+                || event.getKeyCode() == KeyEvent.KEYCODE_GUIDE)) {
+            if (dockPicker != null && dockPicker.isShowing()) {
+                dockPicker.dismiss();
+            } else {
+                showDockPicker();
+            }
+            return true;
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    // ---- editing the dock -----------------------------------------------------------------------
+
+    /**
+     * Long-press a tile: pin it to the dock, or take it out again. Pinning replaces the slot the app
+     * would otherwise occupy, so with a full dock the user still ends up with exactly one copy of it.
+     */
+    @Override
+    public void onTileLongPressed(AppAdapter.Entry entry, boolean alreadyPinned) {
+        DockStore dock = adapter.dock();
+        if (alreadyPinned) {
+            dock.unpin(entry.pkg);
+            toast(getString(R.string.dock_removed, entry.label));
+        } else {
+            List<String> apps = dock.apps();
+            int slot = apps.size();
+            if (slot >= adapter.dockSize()) {
+                // Dock is full: put the app in the slot the user is most likely to want to swap, the
+                // first one, so long-pressing never silently does nothing.
+                slot = 0;
+            }
+            dock.pinOver(entry.pkg, slot);
+            toast(getString(R.string.dock_added, entry.label));
+        }
+        refreshDock();
+    }
+
+    /** Reload the grid so the new dock order takes effect, then put focus back where the user was. */
+    private void refreshDock() {
+        final String key = lastFocusedKey;
+        adapter.reload();
+        grid.scheduleLayoutAnimation();
+        int pos = adapter.positionOf(key);
+        if (pos >= 0) {
+            View v = grid.getLayoutManager().findViewByPosition(pos);
+            if (v != null) v.requestFocus();
+        }
+    }
+
+    /**
+     * "Favourites" button: shows every installed app, with the pinned ones ticked, so the dock can be
+     * rebuilt from the sofa instead of by editing config.xml and recompiling.
+     */
+    private void showDockPicker() {
+        if (dockPicker != null && dockPicker.isShowing()) {
+            dockPicker.dismiss();
+            return;
+        }
+        View panel = getLayoutInflater().inflate(R.layout.popup_dock, root, false);
+        RecyclerView list = panel.findViewById(R.id.rows);
+        TextView title = panel.findViewById(R.id.title);
+        title.setText(getString(R.string.dock_picker_title, adapter.dockSize()));
+        list.setLayoutManager(new LinearLayoutManager(this));
+
+        final List<ResolveInfo> found = new ArrayList<>();
+        PackageManager pm = getPackageManager();
+        Intent probe = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER);
+        for (ResolveInfo ri : pm.queryIntentActivities(probe, 0)) {
+            if (ri.activityInfo == null) continue;
+            if (ri.activityInfo.packageName.equals(getPackageName())) continue;
+            found.add(ri);
+        }
+        Collections.sort(found, (a, b) -> String.valueOf(a.loadLabel(pm))
+                .compareToIgnoreCase(String.valueOf(b.loadLabel(pm))));
+
+        final DockStore dock = adapter.dock();
+        list.setAdapter(new RecyclerView.Adapter<DockHolder>() {
+            @Override
+            public DockHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                View v = LayoutInflater.from(MainActivity.this).inflate(R.layout.item_dock, parent, false);
+                return new DockHolder(v);
+            }
+
+            @Override
+            public void onBindViewHolder(@NonNull DockHolder h, int position) {
+                ResolveInfo ri = found.get(position);
+                String label = String.valueOf(ri.loadLabel(pm));
+                String pkg = ri.activityInfo.packageName;
+                h.name.setText(label);
+                h.icon.setImageDrawable(ri.loadIcon(pm));
+                boolean pinned = dock.isPinned(pkg);
+                h.tick.setVisibility(pinned ? View.VISIBLE : View.INVISIBLE);
+                h.item.setOnClickListener(v -> {
+                    if (pinned) {
+                        dock.unpin(pkg);
+                        h.tick.setVisibility(View.INVISIBLE);
+                        toast(getString(R.string.dock_removed, label));
+                    } else if (dock.apps().size() >= adapter.dockSize()) {
+                        // The dock has a fixed number of slots; make that clear instead of silently
+                        // appending a tile the launcher would never draw.
+                        toast(getString(R.string.dock_full, adapter.dockSize()));
+                        return;
+                    } else {
+                        dock.pin(pkg, dock.apps().size());
+                        h.tick.setVisibility(View.VISIBLE);
+                        toast(getString(R.string.dock_added, label));
+                    }
+                    refreshDock();
+                });
+            }
+
+            @Override
+            public int getItemCount() {
+                return found.size();
+            }
+        });
+
+        View close = panel.findViewById(R.id.close);
+        close.setOnClickListener(v -> dockPicker.dismiss());
+        dockPicker = new PopupWindow(panel, (int) (420 * density), (int) (440 * density), true);
+        dockPicker.setElevation(12 * density);
+        dockPicker.showAtLocation(root, Gravity.END, (int) (56 * density), (int) (86 * density));
+    }
+
+    private void toast(String text) {
+        Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * A theme's full-screen picture behind everything. Decoded once, downsampled to the screen so a4K
+     * JPEG costs a 1080p bitmap at most (about 8 MB), which is the price of a wallpaper on a 1 GB TV.
+     */
+    private void showWallpaper(java.io.File file) {
+        try {
+            android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
+            android.graphics.BitmapFactory.Options opts = new android.graphics.BitmapFactory.Options();
+            opts.inJustDecodeBounds = true;
+            android.graphics.BitmapFactory.decodeFile(file.getPath(), opts);
+            int sample = 1;
+            while (opts.outWidth / (sample * 2) >= dm.widthPixels
+                    && opts.outHeight / (sample * 2) >= dm.heightPixels) sample *= 2;
+            opts.inJustDecodeBounds = false;
+            opts.inSampleSize = sample;
+            opts.inPreferredConfig = android.graphics.Bitmap.Config.RGB_565;   // no alpha needed, half the memory
+            android.graphics.Bitmap bmp = android.graphics.BitmapFactory.decodeFile(file.getPath(), opts);
+            if (bmp == null) return;
+            ImageView wall = new ImageView(this);
+            wall.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            wall.setImageBitmap(bmp);
+            root.addView(wall, 0, new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        } catch (Exception | OutOfMemoryError e) {
+            // A bad or huge picture must never take the home screen down; the plain colour stays.
+        }
+    }
+
+    static final class DockHolder extends RecyclerView.ViewHolder {
+        final View item;
+        final ImageView icon;
+        final TextView name;
+        final ImageView tick;
+
+        DockHolder(View v) {
+            super(v);
+            item = v.findViewById(R.id.item);
+            icon = v.findViewById(R.id.icon);
+            name = v.findViewById(R.id.name);
+            tick = v.findViewById(R.id.tick);
+        }
     }
 
     // ---- glass highlight -------------------------------------------------------------------------

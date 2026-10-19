@@ -1,6 +1,5 @@
 package com.gathin.tvhome;
 
-import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -12,8 +11,6 @@ import android.graphics.Color;
 import android.graphics.Outline;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.provider.Settings;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -45,6 +42,9 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
 
         /** Called for D-pad Up/Down on a tile. Return true when handled. */
         boolean onTileVerticalKey(int position, int keyCode);
+
+        /** Long-press on a tile: pin to the dock, or unpin when already pinned. */
+        void onTileLongPressed(Entry entry, boolean alreadyPinned);
     }
 
     static final class Entry {
@@ -69,21 +69,30 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
     private final Context ctx;
     private final TileListener listener;
     private final int dockSize;
-    /** Dock order (res/values/config.xml, dock_apps). */
-    private final List<String> favourites;
+    /** The user's dock, from config.xml defaults or their own edits (DockStore). */
+    private final DockStore dock;
     /** Never shown as tiles (res/values/config.xml, hidden_apps). */
     private final Set<String> hidden;
     private final List<Entry> items = new ArrayList<>();
 
-    AppAdapter(Context ctx, TileListener listener, int dockSize) {
+    AppAdapter(Context ctx, TileListener listener, int dockSize, List<String> dockDefaults) {
         this.ctx = ctx;
         this.listener = listener;
         this.dockSize = dockSize;
-        this.favourites = Arrays.asList(ctx.getResources().getStringArray(R.array.dock_apps));
+        this.dock = new DockStore(ctx, dockDefaults);
         this.hidden = new HashSet<>(Arrays.asList(ctx.getResources().getStringArray(R.array.hidden_apps)));
         // Tiles keep their identity across reload(), so a focused tile stays on its app instead of
         // its view being rebound to whatever app now sits in that slot.
         setHasStableIds(true);
+    }
+
+    DockStore dock() {
+        return dock;
+    }
+
+    /** How many dock slots this launcher lays out. */
+    int dockSize() {
+        return dockSize;
     }
 
     void reload() {
@@ -102,7 +111,8 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
             fresh.add(new Entry(label, new ComponentName(pkg, ri.activityInfo.name), banner, icon));
         }
         Collections.sort(fresh, (a, b) -> {
-            int fa = favourites.indexOf(a.pkg), fb = favourites.indexOf(b.pkg);
+            List<String> dockApps = dock.apps();
+            int fa = dockApps.indexOf(a.pkg), fb = dockApps.indexOf(b.pkg);
             if (fa >= 0 || fb >= 0) {
                 if (fa < 0) return 1;
                 if (fb < 0) return -1;
@@ -145,13 +155,10 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
             h.label.setVisibility(View.VISIBLE);
         }
         h.card.setOnClickListener(v -> launch(e));
+        // Long-press edits the dock: pin into the first free slot, or unpin if it is already there.
+        // Upstream long-press opened app info; dock editing is the thing users actually asked for.
         h.card.setOnLongClickListener(v -> {
-            Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + e.pkg));
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            try {
-                ctx.startActivity(i);
-            } catch (ActivityNotFoundException ignored) {
-            }
+            if (listener != null) listener.onTileLongPressed(e, dock.isPinned(e.pkg));
             return true;
         });
     }

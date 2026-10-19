@@ -19,6 +19,20 @@ Modifications:
    date format), plus a Chinese primary `README.md` with a language switch
    to the upstream English `README.en.md`.
 
+2. **Editable dock** — the dock (the pinned apps along the bottom) is
+   editable from the sofa: the remote's Menu key (or a "Favourites" pill on
+   the top bar) opens a checklist of every installed app, and a long-press on
+   a tile pins or unpins it. Choices are stored on the TV, so no file editing
+   or rebuilding is needed. Implemented in `DockStore.java` and
+   `MainActivity.dispatchKeyEvent()`. This does not exist upstream, where the
+   dock can only be changed by editing `config.xml` and recompiling.
+
+3. **Theme overlay ported from upstream** — `Config.java` reads an optional
+   `config.json` (plus `wallpaper.jpg`) from the launcher's external files
+   directory, overlaying the built-in `config.xml`, so a theme can be pushed
+   to the TV without a rebuild. `tools/set-wallpaper.sh` is a small helper for
+   setting a wallpaper.
+
 Everything else — including all default configuration in `config.xml` — is
 left as the upstream default, so the launcher ships generic and suits any
 brand of TV box. No box-specific or vendor-specific defaults are baked in.

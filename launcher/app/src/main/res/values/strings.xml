@@ -20,4 +20,10 @@
     <string name="cant_open">Can\'t open %1$s</string>
     <string name="date_format">EEEE  d MMMM</string>
     <string name="dream_name">Clock</string>
+    <string name="favourites">Favourites</string>
+    <string name="close">Close</string>
+    <string name="dock_picker_title">Favourites · pick up to %1$d for the dock</string>
+    <string name="dock_added">%1$s pinned to the dock</string>
+    <string name="dock_removed">%1$s taken off the dock</string>
+    <string name="dock_full">The dock holds %1$d apps. Take one out first.</string>
 </resources>

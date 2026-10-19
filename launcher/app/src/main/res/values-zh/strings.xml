@@ -20,4 +20,10 @@
     <string name="cant_open">无法打开 %1$s</string>
     <string name="date_format">M月d日 EEEE</string>
     <string name="dream_name">时钟屏保</string>
+    <string name="favourites">常用</string>
+    <string name="close">关闭</string>
+    <string name="dock_picker_title">常用应用 · 最多选 %1$d 个放到底部</string>
+    <string name="dock_added">已把 %1$s 加入常用</string>
+    <string name="dock_removed">已把 %1$s 移出常用</string>
+    <string name="dock_full">常用位只有 %1$d 个，请先移出一个再添加</string>
 </resources>

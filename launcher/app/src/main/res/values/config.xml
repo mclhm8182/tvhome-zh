@@ -23,6 +23,32 @@
     <!-- The TV's Live TV / tuner app, offered at the end of the Inputs menu. Leave empty to omit. -->
     <string name="live_tv_package" translatable="false"></string>
 
+    <!-- Intent action that opens the tuner directly, when the box needs more than the package name. -->
+    <string name="live_tv_action" translatable="false"></string>
+
+    <!-- Optional: a system service + action that show a nicer input/source panel, e.g. the vendor's own. -->
+    <string name="source_panel_service" translatable="false"></string>
+    <string name="source_panel_action" translatable="false"></string>
+
+    <!-- Optional: what the remote's Input/TV button should do. Empty falls back to Android's own. -->
+    <string name="input_action" translatable="false"></string>
+
     <!-- Tiles per row in the grid; the dock always has this many slots. -->
     <integer name="columns">4</integer>
+
+    <!-- How many grid rows stay visible between the top bar and the dock. -->
+    <integer name="rows_below_dock">0</integer>
+
+    <!-- Persian (Jalali) calendar for the date, for Iranian boxes. -->
+    <bool name="shamsi_date">false</bool>
+
+    <!-- Let other apps plug a card into the launcher (see CardFeature). Off by default: a module only
+         appears when the user explicitly enables it. -->
+    <bool name="module_cards">false</bool>
+
+    <!-- An app to show as a badge on the Wi-Fi pill, e.g. a VPN client. Empty hides the badge. -->
+    <string name="vpn_app" translatable="false"></string>
+
+    <!-- Add a "Default home" tile at the end of the grid, so the desktop can be changed from the sofa. -->
+    <bool name="show_home_settings_shortcut">true</bool>
 </resources>
