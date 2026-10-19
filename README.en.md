@@ -11,6 +11,10 @@ An open-source **Apple TV (tvOS)-style home screen** for Android TV and Google T
 copyright (c) 2026 Gathin (see [LICENSE](LICENSE) and [NOTICE](NOTICE.md)). It is **not affiliated
 with the original author or the upstream project.**
 
+> Upstream is now **CleanYourTV** (site: [cleanyour.tv](https://cleanyour.tv)); old tv-vibehack links
+> redirect there. It moves faster and has more features, but its premise is that you are comfortable
+> letting an AI drive your TV. This fork solves a different problem.
+
 Upstream's own summary is "a GitHub repo, an AI and ten minutes": it turns the whole TV-cleanup
 workflow into a prompt and some scripts that you hand to Claude Code or a similar assistant, which
 then drives your TV over ADB. **That approach assumes you enjoy tinkering.**
@@ -33,9 +37,10 @@ moves faster and has more features.
 
 See the [Releases page](https://github.com/mclhm8182/tvhome-zh/releases) for every version.
 
-> Upstream publishes no release; you are expected to compile it yourself with the prompt. This
-> repository **ships a compiled APK** — one `adb install` and you are done. That is the single most
-> practical difference between the two.
+> Upstream still ships **no binaries** — its releases carry source archives only, so you are expected
+> to install a JDK/SDK and run `launcher/build-and-install.sh` yourself. This repository **ships a
+> compiled APK**: one command and you are done. That is the single most practical difference between
+> the two.
 
 ## What it is
 
@@ -78,7 +83,7 @@ remote control.**
 | 🔢 **Icons per row, 3 to 6** | push `config.json` or recompile | Tap to cycle in the panel; first run **recommends a value from the actual screen width** |
 | 🌓 **Adaptive dock band** | fixed opaque; a black slab over a bright wallpaper | Turns translucent over a wallpaper, stays as upstream drew it on plain black |
 | 🌍 **Eight languages** | has Chinese already | Same, plus German, Spanish, French, Russian, Catalan and Thai completed |
-| 📦 **A compiled APK** | no release at all | Downloaded straight from the Releases page |
+| 📦 **A compiled APK** | no binaries; build it yourself | downloaded straight from the Releases page |
 
 ### Only in upstream (not here)
 
