@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">电视桌面</string>
+    <string name="inputs">输入源</string>
+    <string name="wifi">Wi-Fi</string>
+    <string name="settings">设置</string>
+    <string name="choose_input">选择输入源</string>
+    <string name="connected">已连接</string>
+    <string name="standby">待机</string>
+    <string name="not_connected">无设备</string>
+    <string name="live_tv">直播电视</string>
+    <string name="no_inputs">未找到输入源</string>
+    <string name="good_morning">早上好</string>
+    <string name="good_afternoon">下午好</string>
+    <string name="good_evening">晚上好</string>
+    <string name="good_night">晚安</string>
+    <string name="ethernet">有线网络</string>
+    <string name="offline">已断开</string>
+    <string name="not_available">此电视不支持</string>
+    <string name="cant_open">无法打开 %1$s</string>
+    <string name="date_format">M月d日 EEEE</string>
+    <string name="dream_name">时钟屏保</string>
+</resources>

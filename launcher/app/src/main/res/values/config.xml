@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Launcher configuration. Edit this file, then run launcher/build-and-install.sh.
+  Package names: on the TV run `pm list packages` (tools/tv.py 'pm list packages').
+-->
+<resources>
+
+    <!-- Apps pinned to the dock row at the bottom, in this order. Missing apps are skipped. -->
+    <string-array name="dock_apps">
+        <item>com.trim.tv</item>
+        <item>org.xinghe.tv</item>
+        <item>org.smarttube.stable</item>
+        <item>com.dangbeimarket</item>
+    </string-array>
+
+    <!-- Apps never shown as tiles (e.g. the Live TV app, which the Inputs menu already covers). -->
+    <string-array name="hidden_apps">
+    </string-array>
+
+    <!-- The TV's Live TV / tuner app, offered at the end of the Inputs menu. Leave empty to omit. -->
+    <string name="live_tv_package" translatable="false"></string>
+
+    <!-- Tiles per row in the grid; the dock always has this many slots. -->
+    <integer name="columns">4</integer>
+
+    <!-- Launch this app automatically once after each boot, so the TV is already playing when the
+         family walks in. Keyed on the global boot counter, so pressing Home afterwards never re-triggers
+         it. Leave the package empty to turn the behaviour off. -->
+    <string name="boot_launch_package" translatable="false">org.xinghe.tv</string>
+    <string name="boot_launch_activity" translatable="false">org.cqys.play.ui.activity.SplashActivity</string>
+</resources>

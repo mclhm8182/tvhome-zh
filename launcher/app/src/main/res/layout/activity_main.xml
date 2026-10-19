@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FF000000">
+
+    <!-- Ambient glow in the colour of the focused dock app. -->
+    <View
+        android:id="@+id/ambient"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0" />
+
+    <!-- Top shelf: the focused dock app's name, positioned above the dock in code. -->
+    <TextView
+        android:id="@+id/heroName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="68dp"
+        android:alpha="0"
+        android:textColor="#FFFFFFFF"
+        android:textSize="48sp"
+        android:fontFamily="@font/outfit"
+        android:fontVariationSettings="'wght' 300"
+        android:letterSpacing="-0.02"
+        android:includeFontPadding="false"
+        android:singleLine="true" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingStart="56dp"
+        android:paddingEnd="56dp"
+        android:paddingTop="26dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:id="@+id/leftBlock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/greeting"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:textColor="#8CFFFFFF"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/outfit"
+                    android:fontVariationSettings="'wght' 500"
+                    android:letterSpacing="0.22"
+                    android:textAllCaps="true" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:baselineAligned="true">
+
+                    <TextClock
+                        android:id="@+id/clock"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:format12Hour="h:mm"
+                        android:format24Hour="HH:mm"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="52sp"
+                        android:fontFamily="@font/outfit"
+                        android:fontVariationSettings="'wght' 300"
+                        android:letterSpacing="-0.04"
+                        android:includeFontPadding="false" />
+
+                    <TextClock
+                        android:id="@+id/ampm"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_gravity="bottom"
+                        android:layout_marginBottom="8dp"
+                        android:format12Hour="a"
+                        android:format24Hour=""
+                        android:textColor="#B3FFFFFF"
+                        android:textSize="15sp"
+                        android:fontFamily="@font/outfit"
+                        android:fontVariationSettings="'wght' 500"
+                        android:letterSpacing="0.08"
+                        android:textAllCaps="true" />
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="26dp"
+                        android:layout_gravity="bottom"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:layout_marginBottom="8dp"
+                        android:background="#33FFFFFF" />
+
+                    <TextClock
+                        android:id="@+id/date"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom"
+                        android:layout_marginBottom="9dp"
+                        android:format12Hour="@string/date_format"
+                        android:format24Hour="@string/date_format"
+                        android:textColor="#A6FFFFFF"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/outfit"
+                        android:fontVariationSettings="'wght' 400"
+                        android:letterSpacing="0.14"
+                        android:textAllCaps="true" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/topButtons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignBottom="@id/leftBlock"
+                android:layout_marginBottom="6dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/btnInputs"
+                    style="@style/TopButton"
+                    android:text="@string/inputs"
+                    android:drawableStart="@drawable/ic_input"
+                    android:nextFocusDown="@+id/grid" />
+
+                <TextView
+                    android:id="@+id/btnWifi"
+                    style="@style/TopButton"
+                    android:text="@string/wifi"
+                    android:drawableStart="@drawable/ic_wifi"
+                    android:nextFocusDown="@+id/grid" />
+
+                <TextView
+                    android:id="@+id/btnSettings"
+                    style="@style/TopButton"
+                    android:text="@string/settings"
+                    android:drawableStart="@drawable/ic_settings"
+                    android:nextFocusDown="@+id/grid" />
+            </LinearLayout>
+        </RelativeLayout>
+
+        <!-- The wrapper clips at the grid's edge; the grid itself must not clip so scaled tiles can overflow their cells. -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="10dp">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/grid"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingTop="10dp"
+                android:paddingBottom="40dp"
+                android:clipToPadding="false"
+                android:clipChildren="false"
+                android:overScrollMode="never"
+                android:scrollbars="none"
+                android:descendantFocusability="afterDescendants" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- The single floating glass highlight that springs between tiles. -->
+    <com.gathin.tvhome.GlassView
+        android:id="@+id/glass"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
+        android:alpha="0"
+        android:importantForAccessibility="no" />
+</FrameLayout>

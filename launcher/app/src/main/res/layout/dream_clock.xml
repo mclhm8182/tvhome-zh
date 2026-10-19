@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Screensaver (ClockDream): clock and date that drift around a black screen over an ambient glow. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FF000000">
+
+    <View
+        android:id="@+id/dreamAmbient"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:id="@+id/dreamContent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:baselineAligned="true">
+
+            <TextClock
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:format12Hour="h:mm"
+                android:format24Hour="HH:mm"
+                android:textColor="#E6FFFFFF"
+                android:textSize="120sp"
+                android:fontFamily="@font/outfit"
+                android:fontVariationSettings="'wght' 200"
+                android:letterSpacing="-0.04"
+                android:includeFontPadding="false" />
+
+            <TextClock
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:format12Hour="a"
+                android:format24Hour=""
+                android:textColor="#99FFFFFF"
+                android:textSize="22sp"
+                android:fontFamily="@font/outfit"
+                android:fontVariationSettings="'wght' 500"
+                android:letterSpacing="0.08"
+                android:textAllCaps="true" />
+        </LinearLayout>
+
+        <TextClock
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:layout_marginTop="4dp"
+            android:format12Hour="EEEE  d MMMM"
+            android:format24Hour="EEEE  d MMMM"
+            android:textColor="#8CFFFFFF"
+            android:textSize="18sp"
+            android:fontFamily="@font/outfit"
+            android:fontVariationSettings="'wght' 400"
+            android:letterSpacing="0.14"
+            android:textAllCaps="true" />
+    </LinearLayout>
+</FrameLayout>

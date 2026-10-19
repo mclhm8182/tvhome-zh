@@ -1,0 +1,32 @@
+# OnePlus TV (model D00, codename Dubai), Google TV / Android 14, firmware UTT1.240928.001
+# Live TV app: com.heytap.tv.livetv. Stock launcher: com.google.android.tvlauncher.
+#
+# Apply:   TV_HOST=<tv ip> tools/disable.sh examples/oneplus-tv-dubai/debloat.txt
+# Undo:    TV_HOST=<tv ip> tools/restore.sh examples/oneplus-tv-dubai/debloat.txt
+# Everything is DISABLED, not uninstalled. Comment out any line you want to keep.
+#
+# Kept on purpose: Google Assistant (com.google.android.katniss), Chromecast
+# (com.google.android.apps.mediashell) and the streaming apps. Left alone: the factory apps
+# (com.heytap.optvfactory, com.oneplus.tv.factory) and com.heytap.oprcupgradeservice (remote updates).
+# With the stock launcher disabled and no other home installed, Home falls back to Settings.
+# For the launcher's Inputs menu set live_tv_package to com.heytap.tv.livetv in config.xml.
+# Seen on this unit: Developer options -> "Don't keep activities" was switched on, which makes every
+# app restart when you leave it. Check it is off.
+
+# Google telemetry
+com.google.android.feedback
+
+# OnePlus / HeyTap extras
+com.heytap.olink                       # OnePlus Connect (phone link)
+oneplus.smarthome                      # OnePlus smart home control
+com.heytap.tv.assistant.oneplus        # OnePlus TV Assistant
+com.heytap.tv.btspeaker                # Bluetooth speaker mode
+com.heytap.tv.filebrowser              # File Browser
+com.oneplus.tv.launcher                # OnePlus content launcher page
+
+# Preloaded apps
+com.tcl.browser                        # "BrowseHere" web browser (not a system app: can also be uninstalled)
+
+# Stock Google TV launcher and its recommendation service, replaced by launcher/
+com.google.android.tvlauncher
+com.google.android.tvrecommendations

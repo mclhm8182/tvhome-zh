@@ -1,0 +1,52 @@
+# TCL 55" 4K Google TV, 2023 model year, US (device G10, product G10_4K_US_NF, Realtek RTD2875P)
+# Android 12 (Google TV, basic mode), firmware STT2.230203.001, software V8-R75PT01-LF1V499
+# Likely a good starting point for other 2023+ TCL Google TV sets on the Realtek G10 platform.
+#
+# Apply:   TV_HOST=<tv ip> tools/disable.sh examples/tcl-g10-google-tv/debloat.txt
+# Undo:    TV_HOST=<tv ip> tools/restore.sh examples/tcl-g10-google-tv/debloat.txt com.google.android.apps.tv.launcherx
+# Everything is DISABLED, not uninstalled. Comment out any line you want to keep.
+#
+# Stock launcher: com.google.android.apps.tv.launcherx (pass it to restore.sh, the default is wrong here).
+# Live TV app: com.tcl.tv (keep it, it also owns HDMI/antenna playback). Keep com.tcl.tvinput,
+# com.tcl.dashboard, com.tcl.suspension, com.tcl.autopair and com.tcl.systemserver too.
+# Already disabled at the factory: com.tcl.logkit, tv.samba.ssm.ui (Samba TV ACR), com.tcl.ttvs.
+#
+# Known quirks on this firmware:
+# - The red "TV" tile disappears from the Google TV Home row after this list (probably
+#   com.tcl.partnercustomizer). TV stays in the Apps row and behind the Inputs tile.
+# - Disabling dreamx leaves screensaver_components pointing at it. Switch to the AOSP fallback with
+#   tools/tv.py 'settings put secure screensaver_components com.android.dreams.basic/.Colors'
+# - screencap writes an empty file while Live TV/HDMI is on screen. Press Home first.
+# - The Google TV promo banner is drawn by launcherx itself, so only launcher/ removes it.
+
+# TCL content, ads and promos
+com.tcl.tv.plus                        # TCL TV+ content app
+com.tcl.channelplus                    # TCL Live FAST channels, also removes them from Live TV
+com.tcl.tv.tclhome_passive             # pushes TCL content to the home screen at boot
+com.tcl.partnercustomizer              # TCL tweaks to Google TV home rows
+com.tcl.interactive                    # TCL TIAS background service
+com.tcl.smartlink.core                 # bundles a silent app installer (CustomInstallService)
+
+# Retail demo / store mode
+com.tcl.exhibit
+com.tcl.esticker
+
+# Preloaded apps and services
+com.tcl.ocean.instructions             # e-manual
+com.tcl.repairguide
+com.tcl.gamebar                        # re-enable for the console game-mode overlay
+com.tcl.ui_mediaCenter                 # re-enable to play media from USB drives
+com.tcl.UpdatePeripheral               # re-enable to update a TCL soundbar
+android.autoinstalls.config.google.gtvpai
+com.google.android.feedback
+com.google.android.marvin.talkback
+com.google.android.apps.tv.dreamx      # ambient mode screensaver, see quirks above
+com.google.android.tv.remote.service   # Google TV phone-app remote
+
+# Optional: uncomment what you don't use
+# com.tcl.airplay2                     # AirPlay, together with the next line
+# com.realtek.airplay2
+# com.netflix.ninja                    # Netflix, together with the next line
+# com.netflix.tokenmanager
+# com.amazon.amazonvideo.livingroom    # Prime Video
+# com.google.android.youtube.tv

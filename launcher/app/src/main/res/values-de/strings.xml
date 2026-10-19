@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Home</string>
+    <string name="inputs">Quellen</string>
+    <string name="wifi">WLAN</string>
+    <string name="settings">Einstellungen</string>
+    <string name="choose_input">Quellen</string>
+    <string name="connected">Verbunden</string>
+    <string name="standby">Standby</string>
+    <string name="not_connected">Kein Gerät</string>
+    <string name="live_tv">Live TV</string>
+    <string name="no_inputs">Keine Quellen gefunden</string>
+    <string name="good_morning">Guten Morgen</string>
+    <string name="good_afternoon">Guten Tag</string>
+    <string name="good_evening">Guten Abend</string>
+    <string name="good_night">Gute Nacht</string>
+    <string name="ethernet">LAN</string>
+    <string name="offline">Offline</string>
+    <string name="not_available">Auf diesem TV nicht verfügbar</string>
+    <string name="cant_open">%1$s lässt sich nicht öffnen</string>
+    <string name="date_format">EEEE, d. MMMM</string>
+</resources>
