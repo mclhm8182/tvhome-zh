@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Thai. Core launcher strings are upstream's (Gathin23/tv-vibehack, MIT); the desktop,
+      favourites and wallpaper strings are this fork's additions.
+    -->
+    <string name="app_name">หน้าแรก</string>
+    <string name="inputs">แหล่งสัญญาณ</string>
+    <string name="wifi">Wi-Fi</string>
+    <string name="settings">ตั้งค่า</string>
+    <string name="choose_input">แหล่งสัญญาณ</string>
+    <string name="connected">เชื่อมต่อแล้ว</string>
+    <string name="standby">สแตนด์บาย</string>
+    <string name="not_connected">ไม่มีอุปกรณ์</string>
+    <string name="live_tv">ทีวีสด</string>
+    <string name="no_inputs">ไม่พบแหล่งสัญญาณ</string>
+    <string name="good_morning">สวัสดีตอนเช้า</string>
+    <string name="good_afternoon">สวัสดีตอนบ่าย</string>
+    <string name="good_evening">สวัสดีตอนเย็น</string>
+    <string name="good_night">สวัสดียามค่ำคืน</string>
+    <string name="ethernet">อีเทอร์เน็ต</string>
+    <string name="offline">ออฟไลน์</string>
+    <string name="not_available">ทีวีเครื่องนี้ไม่รองรับ</string>
+    <string name="cant_open">เปิด %1$s ไม่ได้</string>
+    <string name="date_format">EEEE  d MMMM</string>
+    <string name="dream_name">นาฬิกา</string>
+    <string name="desktop">หน้าแรก</string>
+    <string name="desktop_settings">การตั้งค่าหน้าแรก</string>
+    <string name="columns_title">ไอคอนต่อแถว</string>
+    <string name="columns_auto">ขณะนี้ %1$d · เลือกตามหน้าจอนี้</string>
+    <string name="columns_manual">ขณะนี้ %1$d · ตามที่คุณเลือก</string>
+    <string name="columns_set">%1$d ไอคอนต่อแถว</string>
+    <string name="columns_auto_toast">อัตโนมัติ · %1$d ไอคอนต่อแถว</string>
+    <string name="favourites">รายการโปรด</string>
+    <string name="dock_picker_title">รายการโปรด · เลือกได้สูงสุด %1$d รายการสำหรับด็อก</string>
+    <string name="dock_added">ตรึง %1$s ไว้ในด็อกแล้ว</string>
+    <string name="dock_removed">นำ %1$s ออกจากด็อกแล้ว</string>
+    <string name="dock_full">ด็อกมีที่สำหรับ %1$d แอป โปรดนำออกก่อน</string>
+    <string name="close">ปิด</string>
+    <string name="bing_daily">ภาพประจำวันจาก Bing</string>
+    <string name="bing_daily_hint">ภาพใหม่ทุกวัน</string>
+    <string name="bing_fetching">กำลังดึงภาพของวันนี้…</string>
+    <string name="bing_updated">อัปเดตภาพพื้นหลังแล้ว</string>
+    <string name="bing_failed">ดึงภาพไม่สำเร็จ</string>
+    <string name="bing_stopped">ปิดการเปลี่ยนรายวันแล้ว ภาพพื้นหลังปัจจุบันยังอยู่</string>
+    <string name="pick_wallpaper">เลือกรูปจากทีวีเครื่องนี้</string>
+    <string name="wallpaper_off">ลบภาพพื้นหลัง</string>
+    <string name="wallpaper_removed">ลบภาพพื้นหลังแล้ว</string>
+    <string name="wallpaper_none_toast">ไม่มีภาพพื้นหลังให้ลบ</string>
+    <string name="wallpaper_on">เปิดอยู่ · %1$d KB (เปลี่ยนใหม่ทุกวัน)</string>
+    <string name="wallpaper_none">ไม่มี · หน้าแรกเป็นสีดำ</string>
+    <string name="wallpaper_set">ตั้งภาพพื้นหลังแล้ว</string>
+    <string name="wallpaper_bad">ไม่สามารถใช้ไฟล์นี้ได้</string>
+</resources>
