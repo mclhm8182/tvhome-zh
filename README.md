@@ -127,13 +127,27 @@ Dock 就是底部那一排常用应用。两个入口，随你喜欢：
 仓库里的 [`tools/set-wallpaper.sh`](tools/set-wallpaper.sh) 是一键换壁纸脚本（`./set-wallpaper.sh <电视IP> <图片路径>`）。
 走 ADB 推配置文件是给进阶用户用的；不想碰命令行的话，上面那个面板就够了。
 
-## 为什么选它：Android 11 兼容性的一个细节
+## 设备兼容性
+
+### Android 11 的包可见性（本项目能解决）
 
 很多国产 TV 应用在 Android 11 上会出现「应用列表只显示几个 App」的问题——这是
 **Android 11 包可见性**（package visibility）限制：应用必须声明 `<queries>` 才能看到其他应用。
 本项目 `targetSdk 29`，在 Android 11 上属于「旧版行为」，能正常枚举全部应用，无需额外声明。
 
 这在国产盒子（普遍停留在 Android 11）上尤其重要。
+
+### 部分厂商固件拒绝安装第三方桌面（本项目解决不了）
+
+极少数国产电视固件会**以自家原生桌面的签名做校验**，任何签名不同的桌面 APK 都会被拒绝安装，
+在 ADB 下表现为 `INSTALL_FAILED_VERIFICATION_FAILURE`，日志里通常有类似
+`verifier: signature does not match ... will not be installed!` 的记录。
+
+已知情况：**部分 TCL 中国区固件**（如 tcl_mt5879_cn 等）会这样。这不是本项目的问题——
+上游 tv-vibehack 同样被拒（上游 README 亦记录 "A few China-market TCL sets refuse to install
+any launcher at all"）。若你的电视属于这类，**只能保留它自带的桌面**。
+
+仍然可用的是上游的去广告部分（用 ADB 禁用预装包），只是桌面换不了。
 
 ## 语言
 
@@ -149,22 +163,37 @@ Android 13 及以上的电视，还可以在「设置 → 应用 → tvhome → 
 
 ## 安装
 
-无需数据线，电视和电脑在同一局域网下：
+### 方式一：在电视上直接安装（多数盒子可行）
+
+1. 把 `tvhome-zh-debug.apk` 拷到电视上（U 盘、局域网共享、或者电脑下载后用数据线）；
+2. 在电视上用文件管理器点开这个 APK，按提示安装（第一次会要求允许「安装未知应用」）；
+3. 装好后尝试在 **设置 → 应用 → 默认桌面** 里选它。
+
+**这个方法会卡住的地方**：不少国产 ROM 不在设置里提供「默认桌面」入口，或者藏得很深；
+遇到这种情况改用下面的方式二。
+
+### 方式二：通过 ADB（更可靠，推荐）
+
+电视和电脑在同一局域网下，无需数据线：
 
 ```bash
 # 1. 电视：设置 → 关于 → 连按「版本号」7 次 → 开发者选项 → 打开「USB 调试」
 # 2. 电脑：连上电视
 adb connect <电视IP>:5555
 
-# 3. 安装并设为默认桌面
+# 3. 安装
 adb install -r tvhome-zh-debug.apk
+
+# 4. 设为默认桌面（这一步 TV 设置里没有入口时才需要）
 adb shell pm grant com.gathin.tvhome android.permission.ACCESS_FINE_LOCATION
 adb shell cmd package set-home-activity com.gathin.tvhome/.MainActivity
 
-# 4. 按 Home 键即可看到新桌面
+# 5. 按 Home 键即可看到新桌面
 ```
 
-从旧版本升级直接覆盖安装即可（`install -r`），已设置的常用应用和壁纸都会保留。
+从旧版本升级直接覆盖安装即可（`install -r`），**已设置的常用应用和壁纸都会保留**。
+
+> 装不上时，先看上面的[设备兼容性](#设备兼容性)：如果是厂商固件拒绝，换多少个桌面都一样。
 
 ### 还原
 
