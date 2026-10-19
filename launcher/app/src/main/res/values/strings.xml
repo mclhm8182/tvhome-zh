@@ -26,4 +26,25 @@
     <string name="dock_added">%1$s pinned to the dock</string>
     <string name="dock_removed">%1$s taken off the dock</string>
     <string name="dock_full">The dock holds %1$d apps. Take one out first.</string>
+    <string name="bing_daily">Bing daily picture</string>
+    <string name="bing_daily_hint">One new picture a day</string>
+    <string name="bing_fetching">Fetching today\'s picture…</string>
+    <string name="bing_updated">Wallpaper updated</string>
+    <string name="bing_failed">Could not fetch the picture</string>
+    <string name="pick_wallpaper">Choose a picture on this TV</string>
+    <string name="wallpaper_off">Remove the wallpaper</string>
+    <string name="wallpaper_on">On · %1$d KB (replaced daily)</string>
+    <string name="wallpaper_none">None · the desk is black</string>
+    <string name="wallpaper_set">Wallpaper set</string>
+    <string name="wallpaper_bad">That file could not be used</string>
+    <string name="bing_stopped">Daily changes off, the current wallpaper stays</string>
+    <string name="wallpaper_removed">Wallpaper removed</string>
+    <string name="wallpaper_none_toast">There was no wallpaper to remove</string>
+    <string name="desktop">Desktop</string>
+    <string name="desktop_settings">Desktop settings</string>
+    <string name="columns_title">Icons per row</string>
+    <string name="columns_auto">Now %1$d · picked for this screen</string>
+    <string name="columns_manual">Now %1$d · your choice</string>
+    <string name="columns_set">%1$d icons per row</string>
+    <string name="columns_auto_toast">Auto · %1$d icons per row</string>
 </resources>
