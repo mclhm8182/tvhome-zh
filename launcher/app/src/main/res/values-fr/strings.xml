@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      French. Core launcher strings are upstream's (Gathin23/tv-vibehack, MIT); the desktop,
+      favourites and wallpaper strings are this fork's additions.
+    -->
+    <string name="app_name">Accueil</string>
+    <string name="inputs">Sources</string>
+    <string name="wifi">Wi-Fi</string>
+    <string name="settings">Paramètres</string>
+    <string name="choose_input">Sources</string>
+    <string name="connected">Connecté</string>
+    <string name="standby">En veille</string>
+    <string name="not_connected">Aucun appareil</string>
+    <string name="live_tv">TV en direct</string>
+    <string name="no_inputs">Aucune source trouvée</string>
+    <string name="good_morning">Bonjour</string>
+    <string name="good_afternoon">Bon après-midi</string>
+    <string name="good_evening">Bonsoir</string>
+    <string name="good_night">Bonne nuit</string>
+    <string name="ethernet">Ethernet</string>
+    <string name="offline">Hors ligne</string>
+    <string name="not_available">Indisponible sur cette TV</string>
+    <string name="cant_open">Impossible d\'ouvrir %1$s</string>
+    <string name="date_format">EEEE d MMMM</string>
+    <string name="dream_name">Horloge</string>
+    <string name="desktop">Accueil</string>
+    <string name="desktop_settings">Réglages de l\'accueil</string>
+    <string name="columns_title">Icônes par ligne</string>
+    <string name="columns_auto">Maintenant %1$d · choisi pour cet écran</string>
+    <string name="columns_manual">Maintenant %1$d · votre choix</string>
+    <string name="columns_set">%1$d icônes par ligne</string>
+    <string name="columns_auto_toast">Auto · %1$d icônes par ligne</string>
+    <string name="favourites">Favoris</string>
+    <string name="dock_picker_title">Favoris · choisissez jusqu\'à %1$d pour le dock</string>
+    <string name="dock_added">%1$s épinglé dans le dock</string>
+    <string name="dock_removed">%1$s retiré du dock</string>
+    <string name="dock_full">Le dock contient %1$d apps. Retirez-en une d\'abord.</string>
+    <string name="close">Fermer</string>
+    <string name="bing_daily">Image du jour Bing</string>
+    <string name="bing_daily_hint">Une nouvelle image par jour</string>
+    <string name="bing_fetching">Récupération de l\'image du jour…</string>
+    <string name="bing_updated">Fond d\'écran mis à jour</string>
+    <string name="bing_failed">Impossible de récupérer l\'image</string>
+    <string name="bing_stopped">Changement quotidien désactivé, le fond actuel est conservé</string>
+    <string name="pick_wallpaper">Choisir une image sur cette TV</string>
+    <string name="wallpaper_off">Retirer le fond d\'écran</string>
+    <string name="wallpaper_removed">Fond d\'écran retiré</string>
+    <string name="wallpaper_none_toast">Il n\'y avait pas de fond d\'écran</string>
+    <string name="wallpaper_on">Activé · %1$d KB (remplacé chaque jour)</string>
+    <string name="wallpaper_none">Aucun · l\'accueil est noir</string>
+    <string name="wallpaper_set">Fond d\'écran défini</string>
+    <string name="wallpaper_bad">Ce fichier n\'a pas pu être utilisé</string>
+</resources>
