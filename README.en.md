@@ -6,10 +6,15 @@
 
 **Your TV, minus the ads.**
 
-> This repository is the **Chinese-localised fork** of
-> [Gathin23/tv-vibehack](https://github.com/Gathin23/tv-vibehack) (MIT © 2026 Gathin). The
-> English text below is the original upstream README; the Chinese version is the primary
-> README for this fork — see [README.md](README.md).
+> This repository is an **unofficial, community-run derivative** of
+> [Gathin23/tv-vibehack](https://github.com/Gathin23/tv-vibehack) (MIT © 2026 Gathin). It is not
+> affiliated with the original author or the upstream project.
+>
+> **In English:** upstream hands configuration to files and the command line; this fork hands it to
+> the remote control. The dock, the wallpaper and the icons-per-row can all be set from a panel on the
+> TV — no JDK, no rebuilding, no pushing files. It also ships a ready-made APK, which upstream does not.
+> Features upstream has and this fork does not are listed honestly in the
+> [Chinese README](README.md#和上游的差异).
 
 Strip the bloatware from any Android TV or Google TV over Wi-Fi, and replace the ad-filled home
 screen with a clean launcher that looks like an Apple TV. No root, no cable, nothing uninstalled,
