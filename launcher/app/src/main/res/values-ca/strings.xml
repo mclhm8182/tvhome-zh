@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Catalan. Core launcher strings are upstream's (Gathin23/tv-vibehack, MIT); the desktop,
+      favourites and wallpaper strings are this fork's additions. Upstream ships no Catalan date
+      format, so the English one is kept here.
+    -->
+    <string name="app_name">Inici</string>
+    <string name="inputs">Entrades</string>
+    <string name="wifi">Wi-Fi</string>
+    <string name="settings">Configuració</string>
+    <string name="choose_input">Entrades</string>
+    <string name="connected">Connectat</string>
+    <string name="standby">En espera</string>
+    <string name="not_connected">Cap dispositiu</string>
+    <string name="live_tv">TV en directe</string>
+    <string name="no_inputs">No s\'ha trobat cap entrada</string>
+    <string name="good_morning">Bon dia</string>
+    <string name="good_afternoon">Bona tarda</string>
+    <string name="good_evening">Bon vespre</string>
+    <string name="good_night">Bona nit</string>
+    <string name="ethernet">Ethernet</string>
+    <string name="offline">Sense connexió</string>
+    <string name="not_available">No disponible en aquest televisor</string>
+    <string name="cant_open">No s\'ha pogut obrir %1$s</string>
+    <string name="date_format">EEEE, d MMMM</string>
+    <string name="dream_name">Rellotge</string>
+    <string name="desktop">Inici</string>
+    <string name="desktop_settings">Configuració de l\'inici</string>
+    <string name="columns_title">Icones per fila</string>
+    <string name="columns_auto">Ara %1$d · triat per aquesta pantalla</string>
+    <string name="columns_manual">Ara %1$d · la teva elecció</string>
+    <string name="columns_set">%1$d icones per fila</string>
+    <string name="columns_auto_toast">Automàtic · %1$d icones per fila</string>
+    <string name="favourites">Preferits</string>
+    <string name="dock_picker_title">Preferits · tria fins a %1$d per al dock</string>
+    <string name="dock_added">%1$s fixat al dock</string>
+    <string name="dock_removed">%1$s tret del dock</string>
+    <string name="dock_full">El dock admet %1$d aplicacions. Treu-ne una primer.</string>
+    <string name="close">Tanca</string>
+    <string name="bing_daily">Imatge diària de Bing</string>
+    <string name="bing_daily_hint">Una imatge nova cada dia</string>
+    <string name="bing_fetching">S\'està baixant la imatge d\'avui…</string>
+    <string name="bing_updated">Fons actualitzat</string>
+    <string name="bing_failed">No s\'ha pogut baixar la imatge</string>
+    <string name="bing_stopped">Canvi diari desactivat, es manté el fons actual</string>
+    <string name="pick_wallpaper">Tria una imatge en aquest televisor</string>
+    <string name="wallpaper_off">Treure el fons</string>
+    <string name="wallpaper_removed">Fons retirat</string>
+    <string name="wallpaper_none_toast">No hi havia cap fons</string>
+    <string name="wallpaper_on">Activat · %1$d KB (es substitueix diàriament)</string>
+    <string name="wallpaper_none">Cap · l\'inici és negre</string>
+    <string name="wallpaper_set">Fons establert</string>
+    <string name="wallpaper_bad">Aquest fitxer no s\'ha pogut fer servir</string>
+</resources>
