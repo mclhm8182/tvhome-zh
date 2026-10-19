@@ -12,7 +12,7 @@
 
 ## 📦 下载
 
-**➜ [下载最新版 tvhome-zh APK](https://github.com/mclhm8182/tvhome-zh/releases/latest)**
+**➜ [下载最新版 tvhome-zh APK](https://github.com/mclhm8182/tvhome-zh/releases/latest)** · 仅 **1.6 MB**，纯 Java，无广告 SDK
 
 前往 [Releases 页面](https://github.com/mclhm8182/tvhome-zh/releases) 查看全部版本。
 
@@ -29,6 +29,14 @@
 - 可选的**时钟屏保**，防止烧屏
 
 **无广告、无账号、无需 root、无需数据线**，纯 ADB 覆盖安装，一条命令可还原。
+
+### 📦 轻量
+
+安装包仅 **1.6 MB**（APK，调试版未压缩），比同类的 TV 桌面轻得多——
+纯 Java 实现、仅依赖 `recyclerview` 与 `dynamicanimation` 两个轻量 AndroidX 库，
+**没有引入 Compose / Glance 等重型框架，也没有内置广告 SDK 或推荐引擎**。
+在 2 GB 内存的国产盒子上实测常驻内存约 **107 MB（PSS）**，运行流畅不拖后腿。
+对内存吃紧的低配盒子来说，体积小本身就是优势——装它几乎不占空间。
 
 ### 中文版实机截图
 
