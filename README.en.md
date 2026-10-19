@@ -2,272 +2,263 @@
 
 ---
 
-# tv-vibehack
+# tvhome-zh
 
-**Your TV, minus the ads.**
+An open-source **Apple TV (tvOS)-style home screen** for Android TV and Google TV — **install it and it just works, no tinkering**.
 
-> This repository is an **unofficial, community-run derivative** of
-> [Gathin23/tv-vibehack](https://github.com/Gathin23/tv-vibehack) (MIT © 2026 Gathin). It is not
-> affiliated with the original author or the upstream project.
->
-> **In English:** upstream hands configuration to files and the command line; this fork hands it to
-> the remote control. The dock, the wallpaper and the icons-per-row can all be set from a panel on the
-> TV — no JDK, no rebuilding, no pushing files. It also ships a ready-made APK, which upstream does not.
-> Features upstream has and this fork does not are listed honestly in the
-> [Chinese README](README.md#和上游的差异).
+**This repository is an unofficial, community-run derivative** of
+[Gathin23/tv-vibehack](https://github.com/Gathin23/tv-vibehack), under its MIT licence,
+copyright (c) 2026 Gathin (see [LICENSE](LICENSE) and [NOTICE](NOTICE.md)). It is **not affiliated
+with the original author or the upstream project.**
 
-Strip the bloatware from any Android TV or Google TV over Wi-Fi, and replace the ad-filled home
-screen with a clean launcher that looks like an Apple TV. No root, no cable, nothing uninstalled,
-and a one-line restore if you change your mind.
+Upstream's own summary is "a GitHub repo, an AI and ten minutes": it turns the whole TV-cleanup
+workflow into a prompt and some scripts that you hand to Claude Code or a similar assistant, which
+then drives your TV over ADB. **That approach assumes you enjoy tinkering.**
+
+This fork takes a different road: **everything upstream asks you to change in a config file, recompile,
+or push over ADB has become a button on the TV.** It suits you if:
+
+- you want the ad-filled home screen gone but **don't want to install a JDK, compile anything, or type
+  commands**;
+- someone at home uses the TV daily and it should simply work, with no "configure it first" step;
+- your TV runs a Chinese system locale, or you would rather read a Chinese interface.
+
+If you want upstream's full feature set (theme folders, module cards, the ~250 KB shrunk build), or you
+enjoy doing this yourself, **use the [upstream project](https://github.com/Gathin23/tv-vibehack)** — it
+moves faster and has more features.
+
+## 📦 Download
+
+**➜ [Download the latest tvhome-zh APK](https://github.com/mclhm8182/tvhome-zh/releases/latest)** · only **1.6 MB**, plain Java, no ad SDK
+
+See the [Releases page](https://github.com/mclhm8182/tvhome-zh/releases) for every version.
+
+> Upstream publishes no release; you are expected to compile it yourself with the prompt. This
+> repository **ships a compiled APK** — one `adb install` and you are done. That is the single most
+> practical difference between the two.
+
+## What it is
+
+The same clean, tvOS-looking home screen, replacing whatever came with the box:
+
+- **Pitch-black background with a dock of four favourite apps** in the rounded band where Apple TV puts it
+- **The focused app's name in large type**, with an ambient glow taken from its own artwork
+- **An app grid that slides up** when you press Down
+- **A single floating glass highlight** that springs between tiles instead of each tile drawing its own frame
+- **Four frosted pills**: desktop settings, favourites, inputs (HDMI / AV / live TV), Wi-Fi and settings
+- **A greeting, a large thin clock and the date**, set in Outfit
+- An optional **clock screensaver** to avoid burn-in
+
+**No ads, no account, no root, no cable** — installed over ADB, reversible with one command.
+
+### 📦 Lightweight
+
+The APK is **1.6 MB**. Plain Java, depending only on two light AndroidX libraries (`recyclerview`
+and `dynamicanimation`), **with no Compose or Glance, no ad SDK and no recommendation engine**.
+Measured on a 2 GB Chinese TV box it sits at about **107 MB resident (PSS)**.
+
+<details>
+<summary>Before: the stock ad-filled home (left) vs this launcher (right)</summary>
 
 ![Before: stock Google TV home with a sponsored ad. After: the tv-vibehack launcher](docs/stock-vs-new-side.jpg)
 
-It started as an afternoon fixing my parents' Mi TV, which showed them an advert before they
-could reach Netflix. The whole thing was done with Claude Code talking to the real TV, and the
-prompt that did it is in this repo so you can do the same with yours.
-
----
-
-## Table of contents
-
-- [How it works](#how-it-works)
-- [Quick start](#quick-start)
-- [What you get](#what-you-get)
-- [Supported TVs](#supported-tvs)
-- [Doing it by hand](#doing-it-by-hand)
-- [The launcher](#the-launcher)
-- [Troubleshooting](#troubleshooting)
-- [Questions people ask](#questions-people-ask)
-- [Contributing](#contributing)
-- [Licence](#licence)
-
----
-
-## How it works
-
-Android TVs have the same debug bridge as Android phones. Once you switch on USB debugging in the
-TV's developer options, the TV listens on your Wi-Fi and asks you once to allow your computer.
-After that, everything is standard Android tooling:
-
-1. **Back up** the list of installed packages and settings.
-2. **Disable** the manufacturer's telemetry, ad services, content rows and preloaded junk with
-   `pm disable-user`. Nothing is uninstalled, so a restore script can undo every step.
-3. **Install** a small native launcher and make it the default home screen.
-
-The bloat differs by brand, which is why the prompt asks your coding assistant to discover it
-on your TV and ask you before touching anything you might use.
-
-## Quick start
-
-You need a computer on the same Wi-Fi as the TV and a coding assistant with shell access
-(Claude Code, or anything similar).
-
-**1. On the TV**
-Settings → Device Preferences → About → press OK on **Build** seven times → go back →
-Developer options → turn on **USB debugging**. Some TVs also show a Network or ADB debugging
-toggle; turn it on too. Keep the TV switched on.
-
-**2. On your computer**
-Open your assistant, paste the prompt from [`PROMPT.md`](PROMPT.md), and fill in your TV model.
-
-**3. Follow along**
-Accept the "Allow USB debugging?" prompt when it appears on the TV, then answer the checklist
-questions: which streaming apps you use, which four go in the dock, whether to keep the voice
-assistant, Chromecast and firmware updates.
-
-That's it. The assistant backs up, debloats, builds and installs the launcher, and checks every
-step with screenshots pulled from the TV. On a 1 GB Mi TV the whole thing took one afternoon the
-first time; with this repo as context, people report about fifteen minutes.
-
-## What you get
-
-A home screen that is yours again:
-
-- **Pitch-black background** and a dock of your four favourite apps at the bottom, in a lighter
-  rounded band, exactly where Apple TV puts it.
-- **A top shelf** showing the focused app's name in large type, with an ambient glow in a colour
-  taken from the app's own artwork.
-- **The rest of your apps in a grid** that slides up when you press Down.
-- **One floating glass highlight** that springs from tile to tile instead of each tile drawing its
-  own border. The focused tile lifts slightly and shows its name.
-- **Three frosted buttons**: Inputs (a dropdown of HDMI ports, AV and Live TV), Wi-Fi (showing the
-  network you're on) and Settings.
-- **A greeting, a large thin clock and the date**, set in
-  [Outfit](https://fonts.google.com/specimen/Outfit).
-- **A matching Clock screensaver**, optional, that drifts around the screen so nothing burns in.
-
-And a TV that stops working against you: no sponsored rows, no "Discover" nags, no analytics
-phoning home, no apps you never asked for.
-
-## Supported TVs
-
-Anything running **Android TV** or **Google TV**: Xiaomi and Redmi, TCL, Hisense, Sony, OnePlus,
-Realme, Nvidia Shield and most others.
-
-Not supported: Samsung (Tizen), LG (webOS) and Amazon Fire TV. They run different systems or
-won't let a third-party launcher take over Home.
-
-Lists that people have tested and contributed live in [`examples/`](examples/):
-
-| TV | OS |
-|---|---|
-| Xiaomi Mi TV 4A (MiTV-MOOQ1) | Android TV 10 |
-| Xiaomi MiTV-AXSO0 | Android TV 9 |
-| TCL 55" 4K Google TV, 2023 (G10) | Google TV 12 |
-| SANYO ATV R2 | Android TV 9 |
-| OnePlus TV (D00) | Google TV 14 |
-
-Your TV not here? The prompt works regardless, it discovers the bloat itself. If you add your
-list afterwards, the next person with your model skips that step. See
-[Contributing](#contributing).
-
-## Doing it by hand
-
-Everything the assistant does, you can run yourself. The tools need Python 3 and nothing else.
-
-```bash
-python3 -m venv tools/venv && tools/venv/bin/pip install -r tools/requirements.txt
-export TV_HOST=192.168.1.50                                   # your TV's IP address
-
-tools/venv/bin/python -I tools/tv.py --probe                 # model, Android version, firmware
-tools/venv/bin/python -I tools/tv.py 'pm list packages'      # run one shell command on the TV
-printf 'cmd1\ncmd2\n' | tools/venv/bin/python -I tools/tv.py --batch   # several, one connection
-
-tools/disable.sh examples/xiaomi-mi-tv-4a/debloat.txt        # apply a debloat list
-tools/restore.sh examples/xiaomi-mi-tv-4a/debloat.txt        # undo it and restore the stock launcher
-```
-
-| Tool | What it does |
-|---|---|
-| [`tools/tv.py`](tools/tv.py) | A pure-Python ADB client: shell, batch, push, pull. Works where the stock `adb` binary is blocked. |
-| [`tools/b64push.py`](tools/b64push.py) | Uploads larger files such as APKs as base64 chunks and verifies the checksum. |
-| [`tools/disable.sh`](tools/disable.sh) / [`tools/restore.sh`](tools/restore.sh) | Apply or undo a debloat list. PowerShell versions sit next to them. |
-
-### Windows
-
-The PowerShell scripts work without WSL or Git Bash. With Android Studio installed nothing else
-is needed: the install script uses Android Studio's bundled JDK and the default SDK location.
-
-```powershell
-python -m venv tools\venv; tools\venv\Scripts\python.exe -m pip install -r tools\requirements.txt
-powershell -ExecutionPolicy Bypass -File launcher\build-and-install.ps1 -TvHost 192.168.1.50
-powershell -ExecutionPolicy Bypass -File tools\disable.ps1 -TvHost 192.168.1.50 examples\xiaomi-mi-tv-4a\debloat.txt
-powershell -ExecutionPolicy Bypass -File tools\restore.ps1 -TvHost 192.168.1.50 examples\xiaomi-mi-tv-4a\debloat.txt
-```
-
-The install script stops before touching the stock launcher if the install or the home-screen
-switch fails. Git Bash also works; the `.sh` scripts detect a Windows venv and disable MSYS path
-rewriting themselves.
-
-## The launcher
-
-A small native Android TV app (`com.gathin.tvhome`, about 1.6 MB), written in plain Java with
-AndroidX RecyclerView and nothing heavier. It is built for sets with 1 GB of RAM: no blur, no
-video, no network, no background services.
-
-**Configure** it in [`launcher/app/src/main/res/values/config.xml`](launcher/app/src/main/res/values/config.xml):
-the dock order, apps to hide, your TV's Live TV package, and the number of columns.
-
-**Build and install** with one command:
-
-```bash
-TV_HOST=192.168.1.50 launcher/build-and-install.sh
-```
-
-It needs JDK 17 and the Android SDK (platform 34, build-tools 34.0.0). On macOS:
-
-```bash
-brew install openjdk@17 android-commandlinetools
-sdkmanager "platforms;android-34" "build-tools;34.0.0"
-```
-
-Without Homebrew, the script also finds a JDK 17 known to `/usr/libexec/java_home` and an SDK in
-`~/Library/Android/sdk`, Android Studio's default. A release build (`./gradlew assembleRelease`)
-is smaller and faster on 1 GB sets; sign it yourself before installing.
-
-**Navigation** is deliberate: Up and Down move exactly one row, Up from the dock goes to the top
-buttons, the ends of the button row don't fall through to tiles, and the last focused app is
-remembered when you come back, even after the app list changes.
-
-<details>
-<summary><strong>Optional: the Clock screensaver</strong></summary>
-
-A large thin clock and the date over an ambient glow, in the launcher's style. Every minute the
-clock drifts to a new spot and the glow shifts colour. The system runs it only while the TV is
-idle. Turn it on over ADB, or pick "Clock" in the TV's screensaver settings:
-
-```bash
-tools/venv/bin/python -I tools/tv.py 'settings put secure screensaver_components com.gathin.tvhome/.ClockDream; settings put secure screensaver_enabled 1'
-```
-
-It starts after the TV's "screen off" idle time (`settings get system screen_off_timeout`).
 </details>
 
-## Troubleshooting
+## How this differs from upstream
 
-Things that bit us or contributors, so they don't bite you.
+In one line: **upstream hands configuration to files and the command line; this fork hands it to the
+remote control.**
 
-**Connecting**
+### Only in this fork
 
-- **macOS: `adb connect` says "No route to host"** although the port is open. Recent macOS treats
-  the Google-signed `adb` as its own app under Local Network privacy and silently blocks it.
-  `tools/tv.py` avoids the binary entirely.
-- **No "wireless debugging" toggle** on some TVs, Xiaomi among them. USB debugging alone opens
-  network ADB on port 5555.
-- **Windows PowerShell 5.1 adds a byte-order mark** to text piped into a program, which turned the
-  first batch command into gibberish. `tv.py` now strips it, and the `.ps1` scripts pipe clean UTF-8.
-- **Git Bash rewrites paths** like `/data/local/tmp` into Windows paths. The scripts set
-  `MSYS_NO_PATHCONV=1` for you. Set `JAVA_HOME` and `ANDROID_HOME` before building there.
+| Feature | Upstream | Here |
+|---|---|---|
+| ⭐ **Editable dock** | edit `config.xml` and recompile | **Menu key** opens a checklist, or **long-press** a tile to pin/unpin. Stored on the TV |
+| 🎨 **Wallpapers** | push `wallpaper.jpg` over ADB | Panel with a **Bing daily** toggle or **pick a picture on the TV**; a new picture always replaces the old one, so **space use never grows** |
+| 🔢 **Icons per row, 3 to 6** | push `config.json` or recompile | Tap to cycle in the panel; first run **recommends a value from the actual screen width** |
+| 🌓 **Adaptive dock band** | fixed opaque; a black slab over a bright wallpaper | Turns translucent over a wallpaper, stays as upstream drew it on plain black |
+| 🌍 **Eight languages** | has Chinese already | Same, plus German, Spanish, French, Russian, Catalan and Thai completed |
+| 📦 **A compiled APK** | no release at all | Downloaded straight from the Releases page |
 
-**Working on the TV**
+### Only in upstream (not here)
 
-- **Chained `pm` commands** (`pm disable a; pm disable b`) may silently stop after the first. Run
-  one per shell call; `--batch` does exactly that.
-- **Large pushes hang** through the Python client. Use `tools/b64push.py` for APKs.
-- **Screenshots come out empty** while Live TV or an HDMI input is on screen, seen on TCL. Press
-  Home before `screencap`.
-- **Disable the stock launcher only after the new one is installed**, or the Home button lands on
-  a factory test app.
-- **No on-screen keyboard** after switching launchers, seen on Xiaomi: the default input method
-  pointed at a Baidu keyboard that isn't installed. Fix:
-  `tools/tv.py 'ime set com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME'`
-- **Third-party launchers** often charge for basics like a custom wallpaper. That's why this repo
-  has its own.
+Listed honestly so you can decide:
 
-## Questions people ask
+- theme-folder workflow (`themes/`), module cards other apps can plug into
+- the ~250 KB shrunk build and first-launch AOT precompilation
+- a "switch home app" shortcut tile, VPN app badge, Jalali calendar display
 
-**Is this safe? Can it brick the TV?**
-No. Nothing is flashed, rooted or deleted. Packages are disabled for the user profile, which
-lives in the data partition, not in the system image. The firmware is untouched. If something
-goes wrong, `tools/restore.sh` puts everything back, and even without the tools you can re-enable
-apps from the TV's own settings.
+The rest — the tvOS look, the glass highlight, the clock screensaver, the `config.json` overlay, the
+debloat and restore scripts — comes from upstream under its MIT licence.
 
-**What about firmware updates?**
-Most lists disable the manufacturer's update service, so updates only arrive when you re-enable
-it on purpose. If an update does land, the worst case is that a package comes back enabled and
-you re-run the script.
+**The defaults stay generic**: no pre-set app lists, nothing vendor-specific, suitable for any brand of
+TV box.
 
-**Won't the apps break as their APIs change?**
-The streaming apps still update through the Play Store, which is left alone. The launcher
-doesn't talk to them; it lists what's installed and launches it, using Android launcher intents
-that have been stable for over a decade.
+### ⭐ Editing the dock
 
-**How did it get access? Isn't that a security hole?**
-Through the Android Debug Bridge, with one explicit "allow this computer" tap on the TV, the same
-as developing an Android app. The TV only trusts the key you approved. You can switch USB
-debugging off again afterwards and the launcher keeps working.
+- **Press the remote's Menu key** (some remotes call it "Options") → a Favourites panel lists every
+  installed app, ticked ones are in the dock, tap to toggle;
+- **Long-press any icon** → pin it to the dock; with a full dock it takes over the first slot.
 
-**Can I just download the launcher APK?**
-Build it yourself with the one-line script above; it takes about a minute and you control what
-goes on your TV. We don't publish prebuilt binaries.
+Your choice is stored on the TV and survives a reboot. Remove them one by one to clear the dock.
 
-## Contributing
+### 🎨 The desktop settings panel
 
-The most useful contribution is your TV's debloat list, so the next person with that model
-doesn't have to rediscover it. Launcher improvements and sharper prompt wording are welcome too.
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the format and the testing we ask for.
+The first frosted pill on the top bar. Everything lives here, **no config files involved**:
+
+- **Bing daily wallpaper** — switch it on and the picture changes every day. Switching it off stops the
+  daily change only; **the current wallpaper stays**. Removing it is a separate, explicit choice;
+- **Icons per row** — tap to cycle through auto / 3 / 4 / 5 / 6; the value and where it came from are
+  always written under the label;
+- **Choose a picture on this TV** — opens the system file picker; the picture is cropped and fitted
+  automatically;
+- **Remove the wallpaper** — back to the plain black background.
+
+### 🔧 Advanced: themes and pushed config
+
+The launcher also reads this folder on the TV at start-up (`config.json` and/or `wallpaper.jpg`):
+
+```
+/sdcard/Android/data/com.gathin.tvhome/files/
+```
+
+- drop in a `wallpaper.jpg` → it becomes the background on restart (delete it to go back to black);
+- drop in a `config.json` → overrides the dock, columns, background colour and other defaults.
+
+[`tools/set-wallpaper.sh`](tools/set-wallpaper.sh) is a one-liner for the wallpaper
+(`./tools/set-wallpaper.sh <TV-IP> <image>`). Pushing config files over ADB is there for advanced users;
+the panel above is enough for everyone else.
+
+## Device compatibility
+
+### Android 11 package visibility (this project handles it)
+
+On Android 11, many TV apps show only a handful of tiles in their app list — that is the **package
+visibility** restriction: an app must declare `<queries>` to see others. This project targets SDK 29,
+which keeps the old behaviour on Android 11 and therefore enumerates every app without extra
+declarations. Most Chinese TV boxes still run Android 11, so this matters.
+
+### Vendor firmware that refuses third-party launchers (this project cannot fix)
+
+A few Chinese TV firmware builds **verify the launcher against their own stock launcher's signature**
+and reject any APK signed differently. Over ADB this shows up as
+`INSTALL_FAILED_VERIFICATION_FAILURE`, usually with a log line like
+`verifier: signature does not match ... will not be installed!`.
+
+Known case: **some China-market TCL sets** (e.g. `tcl_mt5879_cn`). This is not a fault of this project —
+upstream is rejected too (upstream's README notes "A few China-market TCL sets refuse to install any
+launcher at all"). If your TV is one of those, **its own home screen is what you are stuck with**. The
+debloat half of the upstream toolkit still works; only the launcher cannot be replaced.
+
+## Language
+
+The launcher **follows the TV's system language automatically**; nothing to configure. Eight are
+supported:
+
+| | | | |
+|---|---|---|---|
+| English `en` | Simplified Chinese `zh-CN` | German `de` | Spanish `es` |
+| French `fr` | Russian `ru` | Catalan `ca` | Thai `th` |
+
+On Android 13+ you can also give the launcher a language of its own under
+**Settings → Apps → tvhome → Language**, without changing the system language.
+
+## Installing
+
+### Option 1: install the APK on the TV directly (works on most boxes)
+
+1. Copy `tvhome-zh-debug.apk` to the TV (USB stick, network share, or a download on the TV);
+2. Open it with a file manager on the TV and follow the prompts (you will be asked to allow
+   "install unknown apps");
+3. Then look under **Settings → Apps → Default home** and pick it.
+
+**Where this stalls**: plenty of Chinese ROMs hide or omit the "default home" entry in settings. When
+that happens, use option 2.
+
+### Option 2: over ADB (more reliable, recommended)
+
+Same network, no cable:
+
+```bash
+# 1. On the TV: Settings → About → press Build seven times → Developer options → USB debugging
+# 2. From the computer
+adb connect <TV-IP>:5555
+
+# 3. Install
+adb install -r tvhome-zh-debug.apk
+
+# 4. Make it the home app (only needed when the TV's own settings cannot do it)
+adb shell pm grant com.gathin.tvhome android.permission.ACCESS_FINE_LOCATION
+adb shell cmd package set-home-activity com.gathin.tvhome/.MainActivity
+
+# 5. Press Home
+```
+
+Upgrading from an older version is just `install -r` over the top — **your dock and wallpaper are kept**.
+
+> If it will not install at all, read [Device compatibility](#device-compatibility) above first: if the
+> vendor firmware refuses launchers, no launcher will install.
+
+### Restoring
+
+```bash
+adb shell cmd package set-home-activity <the stock launcher component>
+```
+
+## Customising (for those changing the source)
+
+**Day-to-day settings do not need any of this** — dock, wallpaper and icons-per-row are all in the
+desktop settings panel on the TV.
+
+For deeper changes, edit [`config.xml`](launcher/app/src/main/res/values/config.xml) and rebuild:
+
+- `dock_apps` — apps pinned to the dock (empty by default; alphabetical order when empty; once set from
+  the TV, the TV's choice wins)
+- `live_tv_package` — package name of the TV's tuner app (empty hides the entry)
+- `hidden_apps` — apps kept out of the grid (empty by default)
+- `columns` — icons per row (default 4; once set from the TV, the TV's choice wins)
+
+To find a package name: `adb shell pm list packages` on the TV.
+
+## Building from source
+
+You need a **full JDK** (not a JRE — AGP needs `jlink`) and the Android SDK:
+
+```bash
+# JDK 21 (Temurin)
+# Android SDK: platforms;android-34 (or 35) + build-tools
+
+cd launcher
+./gradlew assembleDebug
+# Output: app/build/outputs/apk/debug/app-debug.apk
+```
+
+> **Gotcha**: if `$HOME/.android` is not writable (common on machines where Android tooling has been run
+> as root), debug signing fails. Fix: generate a keystore and point a `signingConfigs.debug` entry at it
+> in `app/build.gradle`.
+
+## Known issues
+
+- On some TV ROMs a transparent "starting" placeholder window (`APPLICATION_ATTACHED_DIALOG`) is left
+  behind when the launcher starts and swallows key presses, so the remote appears dead. Fix:
+  `adb shell am force-stop com.gathin.tvhome` and start it again.
+- The Bing daily wallpaper needs the TV to be online; with no network it reports a failure and nothing
+  else is affected.
+- "Choose a picture on this TV" relies on the system file picker; ROMs without one report it as
+  unavailable.
+- The Bing wallpaper needs the `INTERNET` permission, which is only used while that feature is on and is
+  off by default.
+
+## Credits
+
+- **[Gathin23/tv-vibehack](https://github.com/Gathin23/tv-vibehack)** — the original project, MIT
+  licence, by Gathin. Most of the code here comes from it; thanks for the excellent open-source work.
+  This repository is an **unofficial derivative** and is not affiliated with the author or upstream.
+- The German, Spanish, French, Russian, Catalan and Thai translations are upstream's, extended with this
+  fork's new strings.
+- The **Outfit** typeface, SIL Open Font License (see `launcher/FONT-LICENSE-OFL.txt`).
 
 ## Licence
 
-MIT, see [`LICENSE`](LICENSE). The Outfit typeface is under the SIL Open Font License, see
-`launcher/FONT-LICENSE-OFL.txt`.
+MIT. Original project copyright (c) 2026 Gathin; the changes in this repository are copyright
+(c) 2026 mclhm8182.
