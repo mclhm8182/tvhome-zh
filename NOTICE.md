@@ -16,13 +16,12 @@ Modifications:
 1. **Simplified Chinese localisation** — added
    `launcher/app/src/main/res/values-zh/strings.xml` (translations for the
    greeting, inputs menu, settings, Wi-Fi status, error messages, and the
-   date format).
-2. **Boot auto-launch** — added `MainActivity.bootLaunchIfDue()`, which
-   launches a configured application once per boot, keyed on the system
-   `Settings.Global` `boot_count` so it fires exactly once per boot and is
-   never re-triggered when the user later presses Home.
-3. **Chinese-market defaults** — `config.xml` Dock entries set to a
-   common set of Chinese TV apps; Live TV input entry cleared.
+   date format), plus a Chinese primary `README.md` with a language switch
+   to the upstream English `README.en.md`.
+
+Everything else — including all default configuration in `config.xml` — is
+left as the upstream default, so the launcher ships generic and suits any
+brand of TV box. No box-specific or vendor-specific defaults are baked in.
 
 ## Fonts
 

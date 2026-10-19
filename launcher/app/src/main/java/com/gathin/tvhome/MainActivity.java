@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
 import android.graphics.Rect;
@@ -185,31 +184,6 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
         ConnectivityManager cm = getSystemService(ConnectivityManager.class);
         if (cm != null) cm.registerDefaultNetworkCallback(networkCallback);
-        bootLaunchIfDue();
-    }
-
-    /**
-     * Launch the configured app once per boot. The ROM's own auto-start manager (tv.autostart) crashes
-     * on this device during direct boot, so the family would otherwise walk in to an empty desktop; this
-     * does the job from the home screen instead. Keyed on Settings.Global boot_count, so it fires on the
-     * first home screen after a boot only — pressing Home later never bounces the user back out.
-     */
-    private void bootLaunchIfDue() {
-        String pkg = getString(R.string.boot_launch_package).trim();
-        String act = getString(R.string.boot_launch_activity).trim();
-        if (pkg.isEmpty() || act.isEmpty()) return;
-        int boot;
-        try {
-            boot = Settings.Global.getInt(getContentResolver(), "boot_count", -1);
-        } catch (Exception e) {
-            return;
-        }
-        if (boot < 0) return;
-        SharedPreferences sp = getSharedPreferences("boot_launch", MODE_PRIVATE);
-        if (sp.getInt("boot_count", -1) == boot) return;   // already done for this boot
-        sp.edit().putInt("boot_count", boot).apply();
-        // Let the home screen paint first, so the jump does not look like a flash of black.
-        handler.postDelayed(() -> open(new Intent().setClassName(pkg, act)), 2200);
     }
 
     @Override
