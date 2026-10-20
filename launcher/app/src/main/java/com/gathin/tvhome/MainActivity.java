@@ -415,8 +415,23 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (adapter == null || adapter.getItemCount() == 0) return;
         lastFocused = 0;
         lastFocusedKey = adapter.keyAt(0);
+        // Take the glass off first. The tile it is glued to is about to be moved to another row, and
+        // measuring it in between left the highlight sitting in the top-left corner of the screen.
+        hideGlass();
         grid.scrollToPosition(0);
-        focusTile(0);
+        // Focus after the layout pass that moves the rows. Straight after scrollToPosition the holder
+        // found for position 0 is still the old one, and asking a view that is about to be recycled for
+        // focus is how the highlight ended up nowhere at all.
+        grid.post(() -> {
+            RecyclerView.ViewHolder vh = grid.findViewHolderForAdapterPosition(0);
+            if (vh == null) {
+                focusTile(0);           // not laid out yet: focusTile waits for the scroll to settle
+                return;
+            }
+            View card = vh.itemView.findViewById(R.id.card);
+            onTileFocused(0, card);    // already focused: no focus event will fire, so place it by hand
+            card.requestFocus();
+        });
     }
 
     /**
