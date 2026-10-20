@@ -2,6 +2,7 @@ package com.gathin.tvhome;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -125,6 +126,18 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     };
 
     @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        // Only the Home key (re-issued by HomeKeyService, or the system on remotes that send
+        // KEYCODE_HOME) sends a HOME intent to an already-running desktop; treat it as "go to top".
+        if (intent == null || !intent.hasCategory(Intent.CATEGORY_HOME)) return;
+        lastFocused = 0;
+        lastFocusedKey = adapter.getItemCount() > 0 ? adapter.keyAt(0) : null;
+        grid.scrollToPosition(0);
+        focusTile(0);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -153,7 +166,34 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         btnWifi = findViewById(R.id.btnWifi);
 
         grid = findViewById(R.id.grid);
-        grid.setLayoutManager(new GridLayoutManager(this, COLUMNS));
+        grid.setLayoutManager(new GridLayoutManager(this, COLUMNS) {
+            /**
+             * Every "bring this tile on screen" scroll lands here, both RecyclerView's own on focus and
+             * onTileFocused's. The stock version treats the grid's top padding as the visible top, but that
+             * padding only pushes the dock down the screen: grid rows scroll up into it. With the stock rule,
+             * Up into a row above the padding dragged that row down to the padding line, cut it off at the
+             * bottom of the screen and could scroll the focused tile out entirely, dropping focus into the
+             * top bar. Grid tiles now scroll just enough to show the rect between the grid's top edge and its
+             * bottom; dock tiles are left to onTileFocused, which parks the dock row on the padding line.
+             */
+            @Override
+            public boolean requestChildRectangleOnScreen(@NonNull RecyclerView parent, @NonNull View child,
+                                                         @NonNull Rect rect, boolean immediate,
+                                                         boolean focusedChildVisible) {
+                if (getPosition(child) < COLUMNS) return false;
+                int top = child.getTop() + rect.top;
+                int bottom = top + rect.height();
+                int limitBottom = getHeight() - getPaddingBottom();
+                int dy;
+                if (top < 0) dy = top;
+                else if (bottom > limitBottom) dy = Math.min(top, bottom - limitBottom);
+                else dy = 0;
+                if (dy == 0) return false;
+                if (immediate) parent.scrollBy(0, dy);
+                else parent.smoothScrollBy(0, dy);
+                return true;
+            }
+        });
         grid.setHasFixedSize(true);
         grid.setItemAnimator(null);
         dockDecoration = new DockDecoration(COLUMNS, density, wallpaperPresent());
@@ -196,14 +236,19 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         findViewById(R.id.btnDock).setOnClickListener(v -> showDockPicker());
         findViewById(R.id.btnWallpaper).setOnClickListener(v -> showWallpaperPicker());
         btnInputs.setOnClickListener(v -> showInputs());
-        btnWifi.setOnClickListener(v -> open(new Intent(Settings.ACTION_WIFI_SETTINGS)));
-        btnSettings.setOnClickListener(v -> open(new Intent(Settings.ACTION_SETTINGS)));
+        btnWifi.setOnClickListener(v -> open(systemIntent(Settings.ACTION_WIFI_SETTINGS)));
+        btnSettings.setOnClickListener(v -> open(systemIntent(Settings.ACTION_SETTINGS)));
 
         // Keep focus on the top bar at its ends and at the top: Android's focus finder would otherwise
         // jump to a tile far below when there is nothing in that direction.
         View.OnKeyListener pillKeys = (v, keyCode, event) -> {
             if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
             if (keyCode == KeyEvent.KEYCODE_DPAD_UP) return true;
+            if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                // Back to the dock tile Up came from, not wherever the focus finder happens to land.
+                focusTile(lastFocused % COLUMNS);
+                return true;
+            }
             if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && v.getId() == R.id.btnWallpaper) return true;
             return keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && v.getId() == R.id.btnSettings;
         };
@@ -409,9 +454,18 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
         View close = panel.findViewById(R.id.close);
         close.setOnClickListener(v -> dockPicker.dismiss());
+        View anchor = findViewById(R.id.btnDock);
         dockPicker = new PopupWindow(panel, (int) (420 * density), (int) (440 * density), true);
         dockPicker.setElevation(12 * density);
-        dockPicker.showAtLocation(root, Gravity.END, (int) (56 * density), (int) (86 * density));
+        // Hang right under the 常用 button, left edges aligned — not floating mid-screen.
+        dockPicker.showAsDropDown(anchor, 0, (int) (10 * density), Gravity.START);
+        // Unfold from the button's bottom edge, the same drop-in as the Inputs menu.
+        panel.setAlpha(0f);
+        panel.setPivotY(0f);
+        panel.setScaleY(0.92f);
+        panel.setTranslationY(-8 * density);
+        panel.animate().alpha(1f).scaleY(1f).translationY(0f).setDuration(220)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f)).start();
     }
 
     private void toast(String text) {
@@ -517,12 +571,21 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             });
         }
 
+        View anchor = findViewById(R.id.btnWallpaper);
         wallpaperPanel = new PopupWindow(panel, (int) (440 * density), (int) (410 * density), true);
         // A focused row scales a little wider than its cell; without this the popup window clips the
         // left and right glow even though there is room on screen for it.
         wallpaperPanel.setClippingEnabled(false);
         wallpaperPanel.setElevation(12 * density);
-        wallpaperPanel.showAtLocation(root, Gravity.END, (int) (56 * density), (int) (86 * density));
+        // Hang right under the 桌面 button, left edges aligned — not floating mid-screen.
+        wallpaperPanel.showAsDropDown(anchor, 0, (int) (10 * density), Gravity.START);
+        // Unfold from the button's bottom edge, the same drop-in as the Inputs menu.
+        panel.setAlpha(0f);
+        panel.setPivotY(0f);
+        panel.setScaleY(0.92f);
+        panel.setTranslationY(-8 * density);
+        panel.animate().alpha(1f).scaleY(1f).translationY(0f).setDuration(220)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f)).start();
     }
 
     /** One line telling the user what the wallpaper is right now. */
@@ -563,11 +626,19 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             android.graphics.BitmapFactory.Options opts = new android.graphics.BitmapFactory.Options();
             opts.inJustDecodeBounds = true;
             android.graphics.BitmapFactory.decodeFile(file.getPath(), opts);
-            int sample = 1;
-            while (opts.outWidth / (sample * 2) >= dm.widthPixels
-                    && opts.outHeight / (sample * 2) >= dm.heightPixels) sample *= 2;
+            int w = opts.outWidth, h = opts.outHeight;
+            if (w <= 0 || h <= 0) return;
+            int sample = WallpaperSize.sampleSize(w, h, dm.widthPixels, dm.heightPixels);
+            // The limit applies to what is decoded, so a 12 MP photo still works once it is sampled down.
+            if (!WallpaperSize.accepted(w / sample, h / sample)) return;
             opts.inJustDecodeBounds = false;
             opts.inSampleSize = sample;
+            int[] scale = WallpaperSize.coverScale(w / sample, h / sample, dm.widthPixels, dm.heightPixels);
+            if (scale != null) {
+                opts.inScaled = true;
+                opts.inDensity = scale[0];
+                opts.inTargetDensity = scale[1];
+            }
             opts.inPreferredConfig = android.graphics.Bitmap.Config.RGB_565;   // no alpha needed, half the memory
             android.graphics.Bitmap bmp = android.graphics.BitmapFactory.decodeFile(file.getPath(), opts);
             if (bmp == null) return;
@@ -696,7 +767,8 @@ private int recommendColumns() {
             lp.width = (int) w;
             lp.height = (int) h;
             glass.setLayoutParams(lp);
-            glass.setRadius(16f * density * AppAdapter.FOCUS_SCALE + pad);
+            // GlassView draws its slab inset by pad, i.e. exactly over the zoomed tile: same corners as the tile.
+            glass.setRadius(16f * density * AppAdapter.FOCUS_SCALE);
         }
         glassTargetX = x;
         glassTargetY = y;
@@ -867,6 +939,21 @@ private int recommendColumns() {
         } catch (ActivityNotFoundException e) {
             Toast.makeText(this, R.string.not_available, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /**
+     * China-market MIUI TV firmware answers no standard Settings intent at all — both
+     * android.settings.SETTINGS and WIFI_SETTINGS resolve to nothing on those sets — so the Settings
+     * and Wi-Fi pills dead-end there. Open Xiaomi's own settings app (com.xiaomi.mitv.settings) instead.
+     * On firmware that has a standard handler this returns the standard intent unchanged.
+     */
+    private Intent systemIntent(String standardAction) {
+        Intent i = new Intent(standardAction);
+        if (i.resolveActivity(getPackageManager()) != null) return i;
+        i = new Intent().setComponent(new ComponentName(
+                "com.xiaomi.mitv.settings", "com.xiaomi.mitv.settings.entry.MainActivity"));
+        if (i.resolveActivity(getPackageManager()) != null) return i;
+        return new Intent(standardAction);   // nothing found: let open() show the can't-open toast
     }
 
     /** Dropdown menu under the Inputs pill: HDMI ports (with connection state), AV and Live TV. */

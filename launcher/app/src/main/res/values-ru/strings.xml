@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!--
-      Russian. Core launcher strings are upstream's (Gathin23/tv-vibehack, MIT); the desktop,
-      favourites and wallpaper strings are this fork's additions.
-    -->
     <string name="app_name">Главный экран</string>
     <string name="inputs">Источники</string>
     <string name="wifi">Wi-Fi</string>
@@ -24,6 +20,26 @@
     <string name="cant_open">Не удалось открыть %1$s</string>
     <string name="date_format">EEEE, d MMMM</string>
     <string name="dream_name">Часы</string>
+    <string name="favourites">Избранное</string>
+    <string name="close">Закрыть</string>
+    <string name="dock_picker_title">Избранное · выберите до %1$d для панели</string>
+    <string name="dock_added">%1$s закреплено в панели</string>
+    <string name="dock_removed">%1$s убрано из панели</string>
+    <string name="dock_full">На панели помещается %1$d приложений. Сначала уберите одно.</string>
+    <string name="bing_daily">Картинка дня Bing</string>
+    <string name="bing_daily_hint">Новая картинка каждый день</string>
+    <string name="bing_fetching">Загрузка картинки дня…</string>
+    <string name="bing_updated">Обои обновлены</string>
+    <string name="bing_failed">Не удалось загрузить картинку</string>
+    <string name="pick_wallpaper">Выбрать картинку на этом телевизоре</string>
+    <string name="wallpaper_off">Убрать обои</string>
+    <string name="wallpaper_on">Включены · %1$d КБ (меняются каждый день)</string>
+    <string name="wallpaper_none">Нет · главный экран чёрный</string>
+    <string name="wallpaper_set">Обои установлены</string>
+    <string name="wallpaper_bad">Не удалось использовать этот файл</string>
+    <string name="bing_stopped">Ежедневная смена отключена, текущие обои сохранены</string>
+    <string name="wallpaper_removed">Обои убраны</string>
+    <string name="wallpaper_none_toast">Обоев не было</string>
     <string name="desktop">Главный экран</string>
     <string name="desktop_settings">Настройки главного экрана</string>
     <string name="columns_title">Значков в строке</string>
@@ -31,24 +47,4 @@
     <string name="columns_manual">Сейчас %1$d · ваш выбор</string>
     <string name="columns_set">%1$d значков в строке</string>
     <string name="columns_auto_toast">Авто · %1$d значков в строке</string>
-    <string name="favourites">Избранное</string>
-    <string name="dock_picker_title">Избранное · выберите до %1$d для панели</string>
-    <string name="dock_added">%1$s закреплено в панели</string>
-    <string name="dock_removed">%1$s убрано из панели</string>
-    <string name="dock_full">На панели помещается %1$d приложений. Сначала уберите одно.</string>
-    <string name="close">Закрыть</string>
-    <string name="bing_daily">Картинка дня Bing</string>
-    <string name="bing_daily_hint">Новая картинка каждый день</string>
-    <string name="bing_fetching">Загрузка картинки дня…</string>
-    <string name="bing_updated">Обои обновлены</string>
-    <string name="bing_failed">Не удалось загрузить картинку</string>
-    <string name="bing_stopped">Ежедневная смена отключена, текущие обои сохранены</string>
-    <string name="pick_wallpaper">Выбрать картинку на этом телевизоре</string>
-    <string name="wallpaper_off">Убрать обои</string>
-    <string name="wallpaper_removed">Обои убраны</string>
-    <string name="wallpaper_none_toast">Обоев не было</string>
-    <string name="wallpaper_on">Включены · %1$d КБ (меняются каждый день)</string>
-    <string name="wallpaper_none">Нет · главный экран чёрный</string>
-    <string name="wallpaper_set">Обои установлены</string>
-    <string name="wallpaper_bad">Не удалось использовать этот файл</string>
 </resources>

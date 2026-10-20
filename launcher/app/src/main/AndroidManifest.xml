@@ -11,6 +11,12 @@
     <!-- Only for the optional Bing daily wallpaper, which stays off until the user turns it on. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Android 11+ hides other packages from us unless we name them; the Settings/Wi-Fi fallback
+         in MainActivity needs to see Xiaomi's own settings app. -->
+    <queries>
+        <package android:name="com.xiaomi.mitv.settings" />
+    </queries>
+
     <application
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
@@ -46,6 +52,22 @@
                 <action android:name="android.service.dreams.DreamService" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+        </service>
+
+        <!-- Remote Home button returns to the top (Xiaomi remotes send KEYCODE_ALL_APPS for Home).
+             Off by default — only runs if the user enables it in Settings > Accessibility. Declaring
+             it requests no permission at install; see HomeKeyService. -->
+        <service
+            android:name=".HomeKeyService"
+            android:label="@string/home_key_name"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/home_key_service" />
         </service>
     </application>
 </manifest>

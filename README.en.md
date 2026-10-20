@@ -82,7 +82,7 @@ remote control.**
 | 🎨 **Wallpapers** | push `wallpaper.jpg` over ADB | Panel with a **Bing daily** toggle or **pick a picture on the TV**; a new picture always replaces the old one, so **space use never grows** |
 | 🔢 **Icons per row, 3 to 6** | push `config.json` or recompile | Tap to cycle in the panel; first run **recommends a value from the actual screen width** |
 | 🌓 **Adaptive dock band** | fixed opaque; a black slab over a bright wallpaper | Turns translucent over a wallpaper, stays as upstream drew it on plain black |
-| 🌍 **Eight languages** | has Chinese already | Same, plus German, Spanish, French, Russian, Catalan and Thai completed |
+| 🌍 **Thirteen languages** | has Chinese already | Simplified **and** Traditional Chinese, plus German, Spanish, French, Russian, Catalan, Thai, Arabic, Polish, Serbian and Turkish |
 | 📦 **A compiled APK** | no binaries; build it yourself | downloaded straight from the Releases page |
 
 ### Only in upstream (not here)
@@ -157,13 +157,18 @@ debloat half of the upstream toolkit still works; only the launcher cannot be re
 
 ## Language
 
-The launcher **follows the TV's system language automatically**; nothing to configure. Eight are
+The launcher **follows the TV's system language automatically**; nothing to configure. Thirteen are
 supported:
 
 | | | | |
 |---|---|---|---|
-| English `en` | Simplified Chinese `zh-CN` | German `de` | Spanish `es` |
-| French `fr` | Russian `ru` | Catalan `ca` | Thai `th` |
+| English `en` | Simplified Chinese `zh-CN` | Traditional Chinese `zh-TW` | German `de` |
+| Spanish `es` | French `fr` | Russian `ru` | Catalan `ca` |
+| Thai `th` | Arabic `ar` | Polish `pl` | Serbian (Latin) `sr-Latn` |
+| Turkish `tr` | | | |
+
+The wording follows local convention rather than being machine-translated — Hong Kong and Taiwan
+get 桌布 ("wallpaper") where mainland Chinese gets 壁纸, and the settings entry reads 桌面設定.
 
 On Android 13+ you can also give the launcher a language of its own under
 **Settings → Apps → tvhome → Language**, without changing the system language.
@@ -200,6 +205,11 @@ adb shell cmd package set-home-activity com.gathin.tvhome/.MainActivity
 ```
 
 Upgrading from an older version is just `install -r` over the top — **your dock and wallpaper are kept**.
+
+> **Upgrading from v1.2.0 needs one uninstall first.** v1.3.0 uses a different signing key (an ordinary
+> consequence of debug signing, not a deliberate choice), so installing over v1.2.0 fails with
+> `INSTALL_FAILED_UPDATE_INCOMPATIBLE`. Uninstall, then install; you will need to set your dock and
+> wallpaper once more. **Every release from v1.3.0 onwards upgrades in place** — this happens once.
 
 > If it will not install at all, read [Device compatibility](#device-compatibility) above first: if the
 > vendor firmware refuses launchers, no launcher will install.

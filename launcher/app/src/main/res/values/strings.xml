@@ -17,7 +17,7 @@
     <string name="ethernet">Ethernet</string>
     <string name="offline">Offline</string>
     <string name="not_available">Not available on this TV</string>
-    <string name="cant_open">Can\'t open %1$s</string>
+    <string name="cant_open">"Can't open %1$s"</string>
     <string name="date_format">EEEE  d MMMM</string>
     <string name="dream_name">Clock</string>
     <string name="favourites">Favourites</string>
@@ -28,7 +28,7 @@
     <string name="dock_full">The dock holds %1$d apps. Take one out first.</string>
     <string name="bing_daily">Bing daily picture</string>
     <string name="bing_daily_hint">One new picture a day</string>
-    <string name="bing_fetching">Fetching today\'s picture…</string>
+    <string name="bing_fetching">"Fetching today's picture…"</string>
     <string name="bing_updated">Wallpaper updated</string>
     <string name="bing_failed">Could not fetch the picture</string>
     <string name="pick_wallpaper">Choose a picture on this TV</string>
@@ -47,4 +47,6 @@
     <string name="columns_manual">Now %1$d · your choice</string>
     <string name="columns_set">%1$d icons per row</string>
     <string name="columns_auto_toast">Auto · %1$d icons per row</string>
+    <string name="home_key_name">Home button</string>
+    <string name="home_key_description">Makes the remote Home button open this launcher and return to the top.</string>
 </resources>

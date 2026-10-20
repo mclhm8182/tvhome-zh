@@ -47,4 +47,6 @@
     <string name="columns_manual">当前 %1$d 个 · 手动设置</string>
     <string name="columns_set">每行 %1$d 个图标</string>
     <string name="columns_auto_toast">自动 · 每行 %1$d 个图标</string>
+    <string name="home_key_name">Home 键回顶</string>
+    <string name="home_key_description">让遥控器的 Home 键打开本桌面，并回到顶部。</string>
 </resources>

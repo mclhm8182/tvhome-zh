@@ -22,7 +22,7 @@
     <string name="offline">Sin conexión</string>
     <string name="not_available">No disponible en este TV</string>
     <string name="cant_open">No se puede abrir %1$s</string>
-    <string name="date_format">EEEE d \'de\' MMMM</string>
+    <string name="date_format">"EEEE d 'de' MMMM"</string>
     <string name="dream_name">Reloj</string>
     <string name="desktop">Inicio</string>
     <string name="desktop_settings">Ajustes de inicio</string>

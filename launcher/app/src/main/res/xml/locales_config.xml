@@ -15,11 +15,16 @@
 -->
 <locale-config xmlns:android="http://schemas.android.com/apk/res/android">
     <locale android:name="en" />
+    <locale android:name="ar" />
     <locale android:name="ca" />
     <locale android:name="de" />
     <locale android:name="es" />
     <locale android:name="fr" />
+    <locale android:name="pl" />
     <locale android:name="ru" />
+    <locale android:name="sr-Latn" />
     <locale android:name="th" />
+    <locale android:name="tr" />
     <locale android:name="zh-CN" />
+    <locale android:name="zh-TW" />
 </locale-config>
