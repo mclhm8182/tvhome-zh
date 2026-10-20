@@ -59,4 +59,9 @@
     <string name="quick_apps_hint">Desinstalar o desactivar</string>
     <string name="launcher_settings">Ajustes del escritorio</string>
     <string name="quick_dock">Favoritos</string>
+    <string name="menu_key_everywhere">Botón de menú también en otras apps</string>
+    <string name="menu_key_scope_on">Abre este panel desde otras aplicaciones</string>
+    <string name="menu_key_scope_off">Solo en el escritorio</string>
+    <string name="menu_key_on">El botón de menú abre los ajustes rápidos en todas las aplicaciones</string>
+    <string name="menu_key_off">El botón de menú solo abre los ajustes rápidos en el escritorio</string>
 </resources>

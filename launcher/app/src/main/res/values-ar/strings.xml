@@ -55,4 +55,9 @@
     <string name="quick_apps_hint">إزالة التثبيت أو التعطيل</string>
     <string name="launcher_settings">إعدادات سطح المكتب</string>
     <string name="quick_dock">المفضلة</string>
+    <string name="menu_key_everywhere">زر القائمة في التطبيقات الأخرى أيضًا</string>
+    <string name="menu_key_scope_on">يفتح هذه اللوحة من التطبيقات الأخرى أيضًا</string>
+    <string name="menu_key_scope_off">على سطح المكتب فقط</string>
+    <string name="menu_key_on">يفتح زر القائمة الإعدادات السريعة الآن في كل التطبيقات</string>
+    <string name="menu_key_off">يفتح زر القائمة الإعدادات السريعة على سطح المكتب فقط</string>
 </resources>

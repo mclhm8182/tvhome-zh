@@ -55,4 +55,9 @@
     <string name="quick_apps_hint">Kaldır veya devre dışı bırak</string>
     <string name="launcher_settings">Masaüstü ayarları</string>
     <string name="quick_dock">Sık Kullanılanlar</string>
+    <string name="menu_key_everywhere">Menü tuşu diğer uygulamalarda da</string>
+    <string name="menu_key_scope_on">Bu paneli diğer uygulamalardan da açar</string>
+    <string name="menu_key_scope_off">Yalnızca masaüstünde</string>
+    <string name="menu_key_on">Menü tuşu artık her uygulamada hızlı ayarları açıyor</string>
+    <string name="menu_key_off">Menü tuşu hızlı ayarları yalnızca masaüstünde açıyor</string>
 </resources>

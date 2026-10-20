@@ -26,6 +26,10 @@ import android.view.accessibility.AccessibilityEvent;
  */
 public class HomeKeyService extends AccessibilityService {
 
+    /** The desktop's own panel writes this; see {@link MainActivity#menuKeyEverywhere()}. */
+    static final String PREFS = "keys";
+    static final String KEY_MENU_EVERYWHERE = "menu_key_everywhere";
+
     /** Remote buttons that should open quick settings rather than fall through to the app behind. */
     private int[] settingsScancodes = new int[0];
 
@@ -41,9 +45,21 @@ public class HomeKeyService extends AccessibilityService {
         return false;
     }
 
+    /**
+     * True when the user asked for the Menu button to open quick settings from other apps too.
+     *
+     * <p>This is the one trade-off in the whole feature: catching Menu everywhere means an app that
+     * uses that button for its own menu loses it. Off by default, so nothing is taken away silently —
+     * the desktop's settings panel turns it on explicitly.
+     */
+    private boolean menuOpensQuickSettings() {
+        return getSharedPreferences(PREFS, MODE_PRIVATE).getBoolean(KEY_MENU_EVERYWHERE, false);
+    }
+
     @Override
     protected boolean onKeyEvent(KeyEvent event) {
-        if (isSettingsKey(event)) {
+        if (isSettingsKey(event)
+                || (event.getKeyCode() == KeyEvent.KEYCODE_MENU && menuOpensQuickSettings())) {
             if (event.getAction() == KeyEvent.ACTION_UP && !event.isCanceled()) {
                 startActivity(new Intent(this, QuickSettingsActivity.class)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));

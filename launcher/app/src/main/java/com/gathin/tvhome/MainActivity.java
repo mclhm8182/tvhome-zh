@@ -352,6 +352,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // Home screen: Back goes nowhere.
     }
 
+    /** Whether the Menu button should open quick settings from other apps too (see HomeKeyService). */
+    boolean menuKeyEverywhere() {
+        return getSharedPreferences(HomeKeyService.PREFS, MODE_PRIVATE)
+                .getBoolean(HomeKeyService.KEY_MENU_EVERYWHERE, false);
+    }
+
     /**
      * The remote's Menu (or Settings) button opens the quick settings panel, the way TV boxes with a
      * built-in launcher do it: one press for the handful of places you actually go, including this
@@ -559,6 +565,19 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         });
 
         rowColumns.setOnClickListener(v -> cycleColumns(columnsStatus));
+
+        final TextView menuKeyStatus = panel.findViewById(R.id.menuKeyStatus);
+        final View rowMenuKey = panel.findViewById(R.id.rowMenuKey);
+        menuKeyStatus.setText(menuKeyEverywhere()
+                ? getString(R.string.menu_key_scope_on) : getString(R.string.menu_key_scope_off));
+        rowMenuKey.setOnClickListener(v -> {
+            boolean on = !menuKeyEverywhere();
+            getSharedPreferences(HomeKeyService.PREFS, MODE_PRIVATE)
+                    .edit().putBoolean(HomeKeyService.KEY_MENU_EVERYWHERE, on).apply();
+            menuKeyStatus.setText(on
+                    ? getString(R.string.menu_key_scope_on) : getString(R.string.menu_key_scope_off));
+            toast(getString(on ? R.string.menu_key_on : R.string.menu_key_off));
+        });
 
         rowPick.setOnClickListener(v -> {
             Intent pick = new Intent(Intent.ACTION_OPEN_DOCUMENT)

@@ -55,4 +55,9 @@
     <string name="quick_apps_hint">Удалить или отключить</string>
     <string name="launcher_settings">Настройки рабочего стола</string>
     <string name="quick_dock">Избранное</string>
+    <string name="menu_key_everywhere">Кнопка меню и в других приложениях</string>
+    <string name="menu_key_scope_on">Открывает эту панель и из других приложений</string>
+    <string name="menu_key_scope_off">Только на рабочем столе</string>
+    <string name="menu_key_on">Кнопка меню теперь открывает быстрые настройки везде</string>
+    <string name="menu_key_off">Кнопка меню открывает быстрые настройки только на рабочем столе</string>
 </resources>
