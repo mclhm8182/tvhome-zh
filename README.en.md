@@ -33,7 +33,7 @@ moves faster and has more features.
 
 ## 📦 Download
 
-**➜ [Download the latest tvhome-zh APK](https://github.com/mclhm8182/tvhome-zh/releases/latest)** · only **1.6 MB**, plain Java, no ad SDK
+**➜ [Download the latest tvhome-zh APK](https://github.com/mclhm8182/tvhome-zh/releases/latest)** · only **275 KB**, plain Java, no ad SDK
 
 See the [Releases page](https://github.com/mclhm8182/tvhome-zh/releases) for every version.
 
@@ -58,7 +58,7 @@ The same clean, tvOS-looking home screen, replacing whatever came with the box:
 
 ### 📦 Lightweight
 
-The APK is **1.6 MB**. Plain Java, depending only on two light AndroidX libraries (`recyclerview`
+The APK is **275 KB** (R8-minified, resources shrunk). Plain Java, depending only on two light AndroidX libraries (`recyclerview`
 and `dynamicanimation`), **with no Compose or Glance, no ad SDK and no recommendation engine**.
 Measured on a 2 GB Chinese TV box it sits at about **107 MB resident (PSS)**.
 
@@ -177,7 +177,7 @@ On Android 13+ you can also give the launcher a language of its own under
 
 ### Option 1: install the APK on the TV directly (works on most boxes)
 
-1. Copy `tvhome-zh-debug.apk` to the TV (USB stick, network share, or a download on the TV);
+1. Copy `tvhome-zh.apk` to the TV (USB stick, network share, or a download on the TV);
 2. Open it with a file manager on the TV and follow the prompts (you will be asked to allow
    "install unknown apps");
 3. Then look under **Settings → Apps → Default home** and pick it.
@@ -213,6 +213,15 @@ Upgrading from an older version is just `install -r` over the top — **your doc
 
 > If it will not install at all, read [Device compatibility](#device-compatibility) above first: if the
 > vendor firmware refuses launchers, no launcher will install.
+
+### Want the Home button to really go back to the top?
+
+Android swallows the Home key when the launcher is already in front, so this needs one **accessibility
+service**: **Settings → Accessibility → Downloaded services → "Home button" → turn it on.**
+
+With it on: Home returns to the top of the desk, and the Menu button opens the quick settings panel
+even from another app (that last one can be switched off under *Desktop settings → Menu button in
+other apps too*). Without it the launcher works fine; those two simply do not happen.
 
 ### Restoring
 
