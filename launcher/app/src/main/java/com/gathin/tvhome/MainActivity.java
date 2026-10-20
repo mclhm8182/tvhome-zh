@@ -353,18 +353,22 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     /**
-     * The remote's Menu (or app-switch) button opens the dock editor, the way TV boxes with a
-     * built-in launcher do it. Dispatched here rather than through a key listener so it works from
-     * anywhere on the home screen, including when nothing is focused.
+     * The remote's Menu (or Settings) button opens the quick settings panel, the way TV boxes with a
+     * built-in launcher do it: one press for the handful of places you actually go, including this
+     * launcher's own two panels. Dispatched here rather than through a key listener so it works from
+     * anywhere on the desk, including when nothing is focused.
      *
-     * <p>A remote that sends a real Settings button (KEYCODE_SETTINGS / KEYCODE_HELP) opens the quick
-     * settings panel instead. That half deliberately lives here and not in {@link HomeKeyService}:
-     * inside another app those keys belong to that app, and swallowing them globally would break them.
+     * <p>This used to open the dock editor on its own. The panel carries a Favourites row for it, so
+     * nothing is lost, and the Favourites pill on the top bar still opens it in one press. A remote
+     * that sends a real KEYCODE_SETTINGS or KEYCODE_HELP gets the same panel, and HomeKeyService
+     * opens it from other apps; swallowing it globally would break it inside other apps.
      */
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         int code = event.getKeyCode();
-        if (code == KeyEvent.KEYCODE_SETTINGS || code == KeyEvent.KEYCODE_HELP) {
+        if (code == KeyEvent.KEYCODE_MENU
+                || code == KeyEvent.KEYCODE_SETTINGS
+                || code == KeyEvent.KEYCODE_HELP) {
             // Both actions are consumed: an unhandled remote key gets the system's "this app does not
             // support that button" toast on some boxes.
             if (event.getAction() == KeyEvent.ACTION_DOWN) {
@@ -373,8 +377,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             return true;
         }
         if (event.getAction() == KeyEvent.ACTION_DOWN
-                && (code == KeyEvent.KEYCODE_MENU
-                || code == KeyEvent.KEYCODE_APP_SWITCH
+                && (code == KeyEvent.KEYCODE_APP_SWITCH
                 || code == KeyEvent.KEYCODE_GUIDE)) {
             if (dockPicker != null && dockPicker.isShowing()) {
                 dockPicker.dismiss();
