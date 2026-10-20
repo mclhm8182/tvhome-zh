@@ -60,4 +60,5 @@
     <string name="menu_key_scope_off">Nur auf dem Desktop</string>
     <string name="menu_key_on">Die Menütaste öffnet jetzt in jeder App die Schnelleinstellungen</string>
     <string name="menu_key_off">Die Menütaste öffnet die Schnelleinstellungen nur auf dem Desktop</string>
+    <string name="input_source_settings">Eingangswahl</string>
 </resources>

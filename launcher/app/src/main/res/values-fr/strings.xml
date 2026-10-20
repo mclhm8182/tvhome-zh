@@ -64,4 +64,5 @@
     <string name="menu_key_scope_off">Uniquement sur le bureau</string>
     <string name="menu_key_on">Le bouton menu ouvre désormais les réglages rapides dans toutes les applications</string>
     <string name="menu_key_off">"Le bouton menu n'ouvre les réglages rapides que sur le bureau"</string>
+    <string name="input_source_settings">Source d’entrée</string>
 </resources>

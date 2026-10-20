@@ -359,6 +359,31 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     /**
+     * The TV's own source-selection panel, for sets that do not report their inputs to the launcher.
+     *
+     * <p>Tried in order: the component named in config.xml (per vendor), then the action named there,
+     * then AOSP's own input-source page — the platform has no constant for it, but TV ROMs answer this
+     * action string — and finally plain system settings, which every box has somewhere near the ports.
+     * Returns null when nothing on this box answers, so the caller can say so instead of opening nothing.
+     */
+    private Intent sourcePanelIntent() {
+        String service = cfg.sourcePanelService == null ? "" : cfg.sourcePanelService.trim();
+        String action = cfg.sourcePanelAction == null ? "" : cfg.sourcePanelAction.trim();
+        if (!service.isEmpty()) {
+            Intent byComponent = new Intent().setComponent(ComponentName.unflattenFromString(service));
+            if (byComponent.resolveActivity(getPackageManager()) != null) return byComponent;
+        }
+        if (!action.isEmpty()) {
+            Intent byAction = new Intent(action);
+            if (byAction.resolveActivity(getPackageManager()) != null) return byAction;
+        }
+        Intent tvInputs = new Intent("android.settings.INPUT_SOURCE_SETTINGS");
+        if (tvInputs.resolveActivity(getPackageManager()) != null) return tvInputs;
+        Intent settings = new Intent(Settings.ACTION_SETTINGS);
+        return settings.resolveActivity(getPackageManager()) != null ? settings : null;
+    }
+
+    /**
      * The remote's Menu (or Settings) button opens the quick settings panel, the way TV boxes with a
      * built-in launcher do it: one press for the handful of places you actually go, including this
      * launcher's own two panels. Dispatched here rather than through a key listener so it works from
@@ -1062,8 +1087,18 @@ private int recommendColumns() {
             addInputRow(rows, popup, R.drawable.ic_livetv, getString(R.string.live_tv), -1, () -> open(liveTvIntent));
         }
         if (rows.getChildCount() == 0) {
-            Toast.makeText(this, R.string.no_inputs, Toast.LENGTH_SHORT).show();
-            return;
+            // Nothing to list (Xiaomi and some Chinese ROMs do not report their ports). Rather than a
+            // dead end, hand the user the TV's own source panel: the vendor's when config.xml names
+            // one, otherwise the system's input-source settings page, which lists the ports even on
+            // firmware that keeps them to itself.
+            Intent own = sourcePanelIntent();
+            if (own == null) {
+                Toast.makeText(this, R.string.no_inputs, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            final Intent target = own;
+            addInputRow(rows, popup, R.drawable.ic_av, getString(R.string.input_source_settings), -1,
+                    () -> open(target));
         }
 
         // Fit the widest row: TVs that report a status on every port (Sony) would otherwise squeeze the names out.

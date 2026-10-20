@@ -61,4 +61,5 @@
     <string name="menu_key_scope_off">Only on the desktop</string>
     <string name="menu_key_on">The Menu button now opens quick settings in every app</string>
     <string name="menu_key_off">The Menu button only opens quick settings on the desktop</string>
+    <string name="input_source_settings">Input source settings</string>
 </resources>

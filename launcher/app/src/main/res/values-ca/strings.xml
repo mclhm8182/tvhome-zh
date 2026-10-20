@@ -65,4 +65,5 @@
     <string name="menu_key_scope_off">"Només a l'escriptori"</string>
     <string name="menu_key_on">El botó de menú obre ara els ajustos ràpids a totes les aplicacions</string>
     <string name="menu_key_off">"El botó de menú només obre els ajustos ràpids a l'escriptori"</string>
+    <string name="input_source_settings">Configuració d’entrada</string>
 </resources>

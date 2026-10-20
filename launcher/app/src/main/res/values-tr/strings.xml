@@ -60,4 +60,5 @@
     <string name="menu_key_scope_off">Yalnızca masaüstünde</string>
     <string name="menu_key_on">Menü tuşu artık her uygulamada hızlı ayarları açıyor</string>
     <string name="menu_key_off">Menü tuşu hızlı ayarları yalnızca masaüstünde açıyor</string>
+    <string name="input_source_settings">Giriş kaynağı ayarları</string>
 </resources>
