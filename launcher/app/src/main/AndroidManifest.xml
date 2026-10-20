@@ -41,6 +41,18 @@
             </intent-filter>
         </activity>
 
+        <!-- Quick settings, opened by the remote's Settings (选项) button through HomeKeyService.
+             Its own task and no history, so the app behind keeps running and Back returns to it. -->
+        <activity
+            android:name=".QuickSettingsActivity"
+            android:exported="false"
+            android:taskAffinity=""
+            android:launchMode="singleTop"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:screenOrientation="landscape"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" />
+
         <!-- Screensaver: pick it in Settings, or `settings put secure screensaver_components
              com.gathin.tvhome/.ClockDream` over adb. -->
         <service

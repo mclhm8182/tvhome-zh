@@ -47,4 +47,12 @@
     <string name="columns_manual">الآن %1$d · اختيارك</string>
     <string name="columns_set">%1$d أيقونات في الصف</string>
     <string name="columns_auto_toast">تلقائي · %1$d أيقونات في الصف</string>
+    <string name="home_key_description">يجعل زر Home في الريموت يفتح سطح المكتب هذا ويعود إلى الأعلى، ويجعل زر الإعدادات (الخيارات) يفتح الإعدادات السريعة.</string>
+    <string name="tv_settings">إعدادات التلفاز</string>
+    <string name="quick_picture">الشاشة والصورة</string>
+    <string name="quick_network">الشبكة</string>
+    <string name="quick_apps">إدارة التطبيقات</string>
+    <string name="quick_apps_hint">إزالة التثبيت أو التعطيل</string>
+    <string name="launcher_settings">إعدادات سطح المكتب</string>
+    <string name="quick_dock">المفضلة</string>
 </resources>

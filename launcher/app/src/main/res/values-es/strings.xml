@@ -51,4 +51,12 @@
     <string name="wallpaper_none">Ninguno · el inicio es negro</string>
     <string name="wallpaper_set">Fondo aplicado</string>
     <string name="wallpaper_bad">Ese archivo no se pudo usar</string>
+    <string name="home_key_description">El botón Inicio del mando abre este escritorio y vuelve arriba; el botón de Ajustes (opciones) abre los ajustes rápidos.</string>
+    <string name="tv_settings">Ajustes del televisor</string>
+    <string name="quick_picture">Pantalla e imagen</string>
+    <string name="quick_network">Red</string>
+    <string name="quick_apps">Gestionar aplicaciones</string>
+    <string name="quick_apps_hint">Desinstalar o desactivar</string>
+    <string name="launcher_settings">Ajustes del escritorio</string>
+    <string name="quick_dock">Favoritos</string>
 </resources>

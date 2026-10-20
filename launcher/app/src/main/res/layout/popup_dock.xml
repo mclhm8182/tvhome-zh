@@ -1,37 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Favourites panel: a glass dropdown that hangs under the 常用 button, built like the Inputs menu
+  upstream — no title bar, no close button (Back dismisses it), 6dp of padding and rows that carry
+  their own focus pill. Width and height are set from the content when the popup is built.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@drawable/glass_panel"
-    android:paddingStart="22dp"
-    android:paddingEnd="22dp"
-    android:paddingTop="20dp"
-    android:paddingBottom="12dp">
-
-    <TextView
-        android:id="@+id/title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="#FFFFFFFF"
-        android:textSize="17sp"
-        android:fontFamily="@font/outfit"
-        android:fontVariationSettings="'wght' 500"
-        android:letterSpacing="0.02" />
+    android:padding="6dp"
+    android:elevation="12dp">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rows"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="10dp"
+        android:layout_height="wrap_content"
         android:clipToPadding="false"
         android:scrollbars="none" />
-
-    <TextView
-        android:id="@+id/close"
-        style="@style/TopButton"
-        android:layout_gravity="end"
-        android:layout_marginTop="10dp"
-        android:text="@string/close" />
 </LinearLayout>

@@ -48,5 +48,12 @@
     <string name="columns_set">每行 %1$d 個圖示</string>
     <string name="columns_auto_toast">自動 · 每行 %1$d 個圖示</string>
     <string name="home_key_name">Home 鍵回頂</string>
-    <string name="home_key_description">讓遙控器的 Home 鍵開啟這個桌面並回到頂部。</string>
+    <string name="home_key_description">讓遙控器的 Home 鍵開啟這個桌面並回到頂部，設定（選項）鍵開啟快速設定。</string>
+    <string name="tv_settings">電視設定</string>
+    <string name="quick_picture">顯示與畫面</string>
+    <string name="quick_network">網路</string>
+    <string name="quick_apps">管理應用程式</string>
+    <string name="quick_apps_hint">解除安裝或停用</string>
+    <string name="launcher_settings">桌面設定</string>
+    <string name="quick_dock">常用應用程式</string>
 </resources>

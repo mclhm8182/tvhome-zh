@@ -47,4 +47,12 @@
     <string name="columns_manual">Teraz %1$d · twój wybór</string>
     <string name="columns_set">%1$d ikon w wierszu</string>
     <string name="columns_auto_toast">Auto · %1$d ikon w wierszu</string>
+    <string name="home_key_description">Przycisk Home na pilocie otwiera ten pulpit i wraca na górę, a przycisk Ustawienia (opcje) otwiera szybkie ustawienia.</string>
+    <string name="tv_settings">Ustawienia telewizora</string>
+    <string name="quick_picture">Ekran i obraz</string>
+    <string name="quick_network">Sieć</string>
+    <string name="quick_apps">Zarządzaj aplikacjami</string>
+    <string name="quick_apps_hint">Odinstaluj lub wyłącz</string>
+    <string name="launcher_settings">Ustawienia pulpitu</string>
+    <string name="quick_dock">Ulubione</string>
 </resources>

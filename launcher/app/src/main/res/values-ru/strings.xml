@@ -47,4 +47,12 @@
     <string name="columns_manual">Сейчас %1$d · ваш выбор</string>
     <string name="columns_set">%1$d значков в строке</string>
     <string name="columns_auto_toast">Авто · %1$d значков в строке</string>
+    <string name="home_key_description">Кнопка «Домой» на пульте открывает этот рабочий стол и возвращает наверх, а кнопка «Настройки» — быстрые настройки.</string>
+    <string name="tv_settings">Настройки ТВ</string>
+    <string name="quick_picture">Экран и изображение</string>
+    <string name="quick_network">Сеть</string>
+    <string name="quick_apps">Управление приложениями</string>
+    <string name="quick_apps_hint">Удалить или отключить</string>
+    <string name="launcher_settings">Настройки рабочего стола</string>
+    <string name="quick_dock">Избранное</string>
 </resources>

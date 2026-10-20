@@ -51,4 +51,12 @@
     <string name="wallpaper_none">ไม่มี · หน้าแรกเป็นสีดำ</string>
     <string name="wallpaper_set">ตั้งภาพพื้นหลังแล้ว</string>
     <string name="wallpaper_bad">ไม่สามารถใช้ไฟล์นี้ได้</string>
+    <string name="home_key_description">ปุ่ม Home ของรีโมทเปิดเดสก์ท็อปนี้และเลื่อนกลับขึ้นด้านบน และปุ่มตั้งค่า (ตัวเลือก) เปิดการตั้งค่าด่วน</string>
+    <string name="tv_settings">การตั้งค่าโทรทัศน์</string>
+    <string name="quick_picture">จอภาพและภาพ</string>
+    <string name="quick_network">เครือข่าย</string>
+    <string name="quick_apps">จัดการแอป</string>
+    <string name="quick_apps_hint">ถอนการติดตั้งหรือปิดใช้งาน</string>
+    <string name="launcher_settings">การตั้งค่าเดสก์ท็อป</string>
+    <string name="quick_dock">รายการโปรด</string>
 </resources>

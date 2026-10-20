@@ -47,4 +47,12 @@
     <string name="columns_manual">Sada %1$d · vaš izbor</string>
     <string name="columns_set">%1$d ikona u redu</string>
     <string name="columns_auto_toast">Auto · %1$d ikona u redu</string>
+    <string name="home_key_description">Taster Home na daljinskom otvara ovu radnu površinu i vraća se na vrh, a taster Podešavanja (opcije) otvara brza podešavanja.</string>
+    <string name="tv_settings">Podešavanja televizora</string>
+    <string name="quick_picture">Ekran i slika</string>
+    <string name="quick_network">Mreža</string>
+    <string name="quick_apps">Upravljanje aplikacijama</string>
+    <string name="quick_apps_hint">Deinstaliraj ili onemogući</string>
+    <string name="launcher_settings">Podešavanja radne površine</string>
+    <string name="quick_dock">Favoriti</string>
 </resources>

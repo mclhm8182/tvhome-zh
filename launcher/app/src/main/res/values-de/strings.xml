@@ -47,4 +47,12 @@
     <string name="wallpaper_none">Keines · die Startseite ist schwarz</string>
     <string name="wallpaper_set">Hintergrundbild gesetzt</string>
     <string name="wallpaper_bad">Diese Datei konnte nicht verwendet werden</string>
+    <string name="home_key_description">Die Home-Taste der Fernbedienung öffnet diesen Desktop und springt nach oben; die Einstellungstaste (Optionen) öffnet die Schnelleinstellungen.</string>
+    <string name="tv_settings">TV-Einstellungen</string>
+    <string name="quick_picture">Anzeige &amp; Bild</string>
+    <string name="quick_network">Netzwerk</string>
+    <string name="quick_apps">Apps verwalten</string>
+    <string name="quick_apps_hint">Deinstallieren oder deaktivieren</string>
+    <string name="launcher_settings">Desktop-Einstellungen</string>
+    <string name="quick_dock">Favoriten</string>
 </resources>

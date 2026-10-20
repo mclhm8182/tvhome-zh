@@ -65,6 +65,39 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
     }
 
     static final float FOCUS_SCALE = 1.10f;
+    /** Design size of a tile (dp). Tiles shrink from here when the chosen column count cannot fit them. */
+    static final float DESIGN_W_DP = 180f, DESIGN_H_DP = 101f;
+
+    /**
+     * Tile width for a grid of this inner width: the cell, minus room for the focus zoom and the glass
+     * highlight, capped at the design size so four columns on a 1080p TV look exactly as they always did.
+     *
+     * <p>The cap is what the XML cannot do. item_app.xml ships one fixed 180dp card, so from five
+     * columns on a 960dp-wide screen the card no longer fits its cell: the neighbours touch, and at six
+     * they overlap. Deriving the width from the cell instead means any column count the user picks lays
+     * out with the same breathing room, just smaller tiles.
+     */
+    static int tileWidthPx(int innerWidthPx, int columns, float density) {
+        int design = Math.round(DESIGN_W_DP * density);
+        if (innerWidthPx <= 0 || columns <= 0) return design;
+        int cell = innerWidthPx / columns;
+        int fit = (int) ((cell - 12 * density) / FOCUS_SCALE);
+        return Math.max(Math.round(80 * density), Math.min(design, fit));
+    }
+
+    static int tileHeightPx(int tileWidthPx) {
+        return Math.round(tileWidthPx * DESIGN_H_DP / DESIGN_W_DP);
+    }
+
+    /** Height of one grid item: the tile, the name label under it and the item's own padding. */
+    static int itemHeightPx(int tileHeightPx, float density) {
+        return tileHeightPx + Math.round(45 * density);
+    }
+
+    /** 16dp at the design width, proportionally less on a smaller tile, so the shape stays the same. */
+    static float cornerRadius(int tileWidthPx, float density) {
+        return 16f * density * Math.min(1f, tileWidthPx / (DESIGN_W_DP * density));
+    }
 
     private final Context ctx;
     private final TileListener listener;
@@ -129,6 +162,25 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
     @Override
     public Holder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_app, parent, false);
+        // Size the tile from the cell it has to live in; the XML's 180dp is only the design size.
+        // Falling back to the screen width rather than the design size matters: a holder created
+        // before the grid has been measured would otherwise keep an oversized tile for its lifetime.
+        float density = parent.getResources().getDisplayMetrics().density;
+        int parentWidth = parent.getWidth() > 0
+                ? parent.getWidth() : parent.getResources().getDisplayMetrics().widthPixels;
+        int inner = parentWidth - parent.getPaddingLeft() - parent.getPaddingRight();
+        int w = tileWidthPx(inner, dockSize, density);
+        int h = tileHeightPx(w);
+        View card = v.findViewById(R.id.card);
+        ViewGroup.LayoutParams cardLp = card.getLayoutParams();
+        cardLp.width = w;
+        cardLp.height = h;
+        card.setLayoutParams(cardLp);
+        View name = v.findViewById(R.id.name);
+        ViewGroup.MarginLayoutParams nameLp = (ViewGroup.MarginLayoutParams) name.getLayoutParams();
+        nameLp.width = w;
+        nameLp.topMargin = h + Math.round(7 * density);
+        name.setLayoutParams(nameLp);
         return new Holder(v, listener);
     }
 
@@ -269,11 +321,11 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
             name = v.findViewById(R.id.name);
 
             final float density = v.getResources().getDisplayMetrics().density;
-            final float radius = density * 16f;
             card.setOutlineProvider(new ViewOutlineProvider() {
                 @Override
                 public void getOutline(View view, Outline outline) {
-                    outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), radius);
+                    outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(),
+                            cornerRadius(view.getWidth(), density));
                 }
             });
             card.setClipToOutline(true);

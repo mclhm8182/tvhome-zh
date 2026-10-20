@@ -51,4 +51,12 @@
     <string name="wallpaper_none">"Aucun · l'accueil est noir"</string>
     <string name="wallpaper_set">"Fond d'écran défini"</string>
     <string name="wallpaper_bad">"Ce fichier n'a pas pu être utilisé"</string>
+    <string name="home_key_description">Le bouton Accueil de la télécommande ouvre ce bureau et remonte en haut ; le bouton Réglages (options) ouvre les réglages rapides.</string>
+    <string name="tv_settings">Réglages de la TV</string>
+    <string name="quick_picture">Affichage et image</string>
+    <string name="quick_network">Réseau</string>
+    <string name="quick_apps">Gérer les applications</string>
+    <string name="quick_apps_hint">Désinstaller ou désactiver</string>
+    <string name="launcher_settings">Réglages du bureau</string>
+    <string name="quick_dock">Favoris</string>
 </resources>

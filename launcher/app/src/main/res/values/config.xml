@@ -51,4 +51,14 @@
 
     <!-- Add a "Default home" tile at the end of the grid, so the desktop can be changed from the sofa. -->
     <bool name="show_home_settings_shortcut">true</bool>
+
+    <!--
+      Remote buttons that should open the quick settings panel (HomeKeyService), for boxes that report
+      the Settings/选项 button under a raw scan code instead of KEYCODE_SETTINGS. Empty by default:
+      KEYCODE_SETTINGS is handled without any configuration, and nothing else is taken from the app
+      behind until it is listed here. To find your remote's code, watch it with
+      `adb shell getevent -lt` and press the button.
+    -->
+    <integer-array name="settings_key_scancodes">
+    </integer-array>
 </resources>

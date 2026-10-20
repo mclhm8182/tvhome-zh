@@ -52,4 +52,12 @@
     <string name="wallpaper_none">"Cap · l'inici és negre"</string>
     <string name="wallpaper_set">Fons establert</string>
     <string name="wallpaper_bad">"Aquest fitxer no s'ha pogut fer servir"</string>
+    <string name="home_key_description">El botó Inici del comandament obri aquest escriptori i torna a dalt; el botó de Configuració (opcions) obri la configuració ràpida.</string>
+    <string name="tv_settings">Configuració de la TV</string>
+    <string name="quick_picture">Pantalla i imatge</string>
+    <string name="quick_network">Xarxa</string>
+    <string name="quick_apps">Gestiona les aplicacions</string>
+    <string name="quick_apps_hint">Desinstal·la o desactiva</string>
+    <string name="launcher_settings">"Configuració de l'escriptori"</string>
+    <string name="quick_dock">Preferits</string>
 </resources>

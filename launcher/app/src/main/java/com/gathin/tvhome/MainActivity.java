@@ -37,7 +37,6 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -76,7 +75,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private static final String PREFS_LAYOUT = "layout";
     private static final String KEY_COLUMNS = "columns";
     /** The range the panel offers, in the order the row cycles through them. */
-    private static final int[] COLUMN_CHOICES = {3, 4, 5, 6};
+    private static final int[] COLUMN_CHOICES = {3, 4, 5, 6, 7, 8};
+    /**
+     * Launch the desk straight into its own settings panel. The quick settings overlay
+     * ({@link QuickSettingsActivity}) sends this, so the remote's Settings button can reach the wallpaper
+     * and icon-per-row settings without a second settings screen.
+     */
+    public static final String ACTION_DESKTOP_SETTINGS = "com.gathin.tvhome.action.DESKTOP_SETTINGS";
+    /** Same route for the Favourites (dock) panel, so the quick settings overlay can offer it too. */
+    public static final String ACTION_DOCK_PICKER = "com.gathin.tvhome.action.DOCK_PICKER";
     private static final long MINUTE_MS = 60_000L;
     private String liveTvPkg;
 
@@ -128,9 +135,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        if (intent == null) return;
+        // Quick settings asking for one of the desk's own panels (the desk is singleTask, so it lands
+        // here whenever it is already running).
+        openPanelFromQuickSettings(intent.getAction());
+        if (intent.getAction() != null) return;
         // Only the Home key (re-issued by HomeKeyService, or the system on remotes that send
         // KEYCODE_HOME) sends a HOME intent to an already-running desktop; treat it as "go to top".
-        if (intent == null || !intent.hasCategory(Intent.CATEGORY_HOME)) return;
+        if (!intent.hasCategory(Intent.CATEGORY_HOME)) return;
         lastFocused = 0;
         lastFocusedKey = adapter.getItemCount() > 0 ? adapter.keyAt(0) : null;
         grid.scrollToPosition(0);
@@ -146,7 +158,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         cfg = Config.load(this);
         // The user's own choice wins; otherwise fall back to what this screen can carry comfortably.
         int wanted = getSharedPreferences(PREFS_LAYOUT, MODE_PRIVATE).getInt(KEY_COLUMNS, 0);
-        COLUMNS = wanted >= 3 && wanted <= 6 ? wanted : recommendColumns();
+        COLUMNS = isColumnChoice(wanted) ? wanted : recommendColumns();
         liveTvPkg = cfg.liveTvPackage.trim();
 
         root = findViewById(R.id.root);
@@ -206,7 +218,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // tvOS layout: push the dock row to the bottom of the screen; the grid hides below until you press Down.
         grid.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
             int h = b - t;
-            int dockRow = (int) ((145 + 6 + 12) * density);   // item height plus DockDecoration offsets
+            // The item height follows the tile, and the tile follows the column count, so this cannot be
+            // a constant: at six columns the tiles are smaller and the dock row sits lower.
+            int inner = (r - l) - grid.getPaddingLeft() - grid.getPaddingRight();
+            int tile = AppAdapter.tileWidthPx(inner, COLUMNS, density);
+            int dockRow = AppAdapter.itemHeightPx(AppAdapter.tileHeightPx(tile), density)
+                    + (int) ((6 + 12) * density);   // item height plus DockDecoration offsets
             int want = Math.max(0, h - dockRow - (int) (30 * density));
             if (grid.getPaddingTop() != want) {
                 grid.setPadding(grid.getPaddingLeft(), want, grid.getPaddingRight(), grid.getPaddingBottom());
@@ -276,6 +293,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 if (done) handler.post(this::applyWallpaper);
             }).start();
         }
+
+        // Started by the quick settings overlay when the desk was not running yet (the usual case,
+        // since the panel also floats over apps, not just over the desktop).
+        openPanelFromQuickSettings(getIntent().getAction());
+    }
+
+    /** Opens one of the desk's own panels, whichever route asked for it (quick settings or a cold start). */
+    private void openPanelFromQuickSettings(String action) {
+        if (ACTION_DESKTOP_SETTINGS.equals(action)) grid.post(this::showWallpaperPicker);
+        else if (ACTION_DOCK_PICKER.equals(action)) grid.post(this::showDockPicker);
     }
 
     @Override
@@ -329,13 +356,26 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      * The remote's Menu (or app-switch) button opens the dock editor, the way TV boxes with a
      * built-in launcher do it. Dispatched here rather than through a key listener so it works from
      * anywhere on the home screen, including when nothing is focused.
+     *
+     * <p>A remote that sends a real Settings button (KEYCODE_SETTINGS / KEYCODE_HELP) opens the quick
+     * settings panel instead. That half deliberately lives here and not in {@link HomeKeyService}:
+     * inside another app those keys belong to that app, and swallowing them globally would break them.
      */
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
+        int code = event.getKeyCode();
+        if (code == KeyEvent.KEYCODE_SETTINGS || code == KeyEvent.KEYCODE_HELP) {
+            // Both actions are consumed: an unhandled remote key gets the system's "this app does not
+            // support that button" toast on some boxes.
+            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                startActivity(new Intent(this, QuickSettingsActivity.class));
+            }
+            return true;
+        }
         if (event.getAction() == KeyEvent.ACTION_DOWN
-                && (event.getKeyCode() == KeyEvent.KEYCODE_MENU
-                || event.getKeyCode() == KeyEvent.KEYCODE_APP_SWITCH
-                || event.getKeyCode() == KeyEvent.KEYCODE_GUIDE)) {
+                && (code == KeyEvent.KEYCODE_MENU
+                || code == KeyEvent.KEYCODE_APP_SWITCH
+                || code == KeyEvent.KEYCODE_GUIDE)) {
             if (dockPicker != null && dockPicker.isShowing()) {
                 dockPicker.dismiss();
             } else {
@@ -395,8 +435,6 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
         View panel = getLayoutInflater().inflate(R.layout.popup_dock, root, false);
         RecyclerView list = panel.findViewById(R.id.rows);
-        TextView title = panel.findViewById(R.id.title);
-        title.setText(getString(R.string.dock_picker_title, adapter.dockSize()));
         list.setLayoutManager(new LinearLayoutManager(this));
 
         final List<ResolveInfo> found = new ArrayList<>();
@@ -452,20 +490,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             }
         });
 
-        View close = panel.findViewById(R.id.close);
-        close.setOnClickListener(v -> dockPicker.dismiss());
         View anchor = findViewById(R.id.btnDock);
-        dockPicker = new PopupWindow(panel, (int) (420 * density), (int) (440 * density), true);
-        dockPicker.setElevation(12 * density);
-        // Hang right under the 常用 button, left edges aligned — not floating mid-screen.
-        dockPicker.showAsDropDown(anchor, 0, (int) (10 * density), Gravity.START);
-        // Unfold from the button's bottom edge, the same drop-in as the Inputs menu.
-        panel.setAlpha(0f);
-        panel.setPivotY(0f);
-        panel.setScaleY(0.92f);
-        panel.setTranslationY(-8 * density);
-        panel.animate().alpha(1f).scaleY(1f).translationY(0f).setDuration(220)
-                .setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f)).start();
+        // Sized from its content and hung under the button with the left edges aligned: the same
+        // glass dropdown as the Inputs menu, not a settings sheet floating mid-screen.
+        dockPicker = glassPanel(panel, anchor, 260);
+        dropIn(dockPicker, panel, anchor, Gravity.START);
     }
 
     private void toast(String text) {
@@ -487,7 +516,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         wall = new Wallpaper(this);
 
         View panel = getLayoutInflater().inflate(R.layout.popup_wallpaper, root, false);
-        Switch bing = panel.findViewById(R.id.switchBing);
+        ImageView bingTick = panel.findViewById(R.id.bingTick);
         TextView status = panel.findViewById(R.id.bingStatus);
         TextView columnsStatus = panel.findViewById(R.id.columnsStatus);
         View rowBing = panel.findViewById(R.id.rowBing);
@@ -495,14 +524,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         View rowPick = panel.findViewById(R.id.rowPick);
         View rowOff = panel.findViewById(R.id.rowOff);
 
-        bing.setChecked(wall.autoDaily());
+        bingTick.setVisibility(wall.autoDaily() ? View.VISIBLE : View.INVISIBLE);
         status.setText(wallpaperStatus());
         columnsStatus.setText(columnsStatus());
 
         rowBing.setOnClickListener(v -> {
             boolean on = !wall.autoDaily();
             wall.setAutoDaily(on);
-            bing.setChecked(on);
+            bingTick.setVisibility(on ? View.VISIBLE : View.INVISIBLE);
             if (on) {
                 status.setText(getString(R.string.bing_fetching));
                 toast(getString(R.string.bing_fetching));
@@ -542,7 +571,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
         rowOff.setOnClickListener(v -> {
             boolean removed = wall.clear();
-            bing.setChecked(false);
+            bingTick.setVisibility(View.INVISIBLE);
             wall.setAutoDaily(false);
             status.setText(wallpaperStatus());
             // Drop the picture from the desk straight away; a wallpaper that stays on screen after
@@ -555,37 +584,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             toast(getString(removed ? R.string.wallpaper_removed : R.string.wallpaper_none_toast));
         });
 
-        View close = panel.findViewById(R.id.close);
-        close.setOnClickListener(v -> wallpaperPanel.dismiss());
-
-        // The same lift-and-spring the app tiles use, so a focused row feels like part of the same
-        // desktop rather than a different kind of control.
-        final float rowScale = 1.03f;
-        for (View row : new View[]{rowBing, rowColumns, rowPick, rowOff}) {
-            row.setOnFocusChangeListener((v, focused) -> {
-                float s = focused ? rowScale : 1.0f;
-                v.animate().scaleX(s).scaleY(s)
-                        .setDuration(focused ? 220 : 160)
-                        .setInterpolator(new OvershootInterpolator(focused ? 1.4f : 0f))
-                        .start();
-            });
-        }
-
         View anchor = findViewById(R.id.btnWallpaper);
-        wallpaperPanel = new PopupWindow(panel, (int) (440 * density), (int) (410 * density), true);
-        // A focused row scales a little wider than its cell; without this the popup window clips the
-        // left and right glow even though there is room on screen for it.
-        wallpaperPanel.setClippingEnabled(false);
-        wallpaperPanel.setElevation(12 * density);
-        // Hang right under the 桌面 button, left edges aligned — not floating mid-screen.
-        wallpaperPanel.showAsDropDown(anchor, 0, (int) (10 * density), Gravity.START);
-        // Unfold from the button's bottom edge, the same drop-in as the Inputs menu.
-        panel.setAlpha(0f);
-        panel.setPivotY(0f);
-        panel.setScaleY(0.92f);
-        panel.setTranslationY(-8 * density);
-        panel.animate().alpha(1f).scaleY(1f).translationY(0f).setDuration(220)
-                .setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f)).start();
+        // Sized from its content and hung under the button with the left edges aligned, exactly like
+        // the Inputs menu. No row scaling: a scaled row is what used to need clipping turned off, and
+        // the focus pill alone is enough to see where you are.
+        wallpaperPanel = glassPanel(panel, anchor, 300);
+        dropIn(wallpaperPanel, panel, anchor, Gravity.START);
     }
 
     /** One line telling the user what the wallpaper is right now. */
@@ -660,23 +664,32 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
     }
 
+/** Whether a stored column count is one the panel offers (anything else means "automatic"). */
+    private boolean isColumnChoice(int n) {
+        for (int c : COLUMN_CHOICES) if (c == n) return true;
+        return false;
+    }
+
     /**
- * How many icons fit on this screen without them becoming postage stamps. Based on the width the
- * launcher actually gets (screen width minus its own margins) rather than the raw resolution, so a
- * 1080p panel set to hdpi and a 720p panel set to mdpi are judged on what they really show.
+ * How many icons fit on this screen without them becoming postage stamps: the most columns that still
+     * leave each tile at (near) its design size. It reuses the tile sizer's own arithmetic instead of a
+     * table of width thresholds, so "automatic" and "what the user sees" can never disagree — and a screen
+     * the table had never heard of gets a sensible answer rather than the 3-column fallback. Automatic
+     * stops at six: past that the tiles get small enough that asking for them should be deliberate.
  */
 private int recommendColumns() {
-        int usableDp = getResources().getConfiguration().screenWidthDp - 112;   // 56dp padding each side
-        if (usableDp >= 1500) return 6;
-        if (usableDp >= 1150) return 5;
-        if (usableDp >= 850) return 4;
-        return 3;
+        int innerDp = getResources().getConfiguration().screenWidthDp;   // the grid spans the window
+        int design = Math.round(AppAdapter.DESIGN_W_DP * 0.95f);        // a shade under, so 5 stays 5
+        int maxAuto = Math.min(COLUMN_CHOICES[COLUMN_CHOICES.length - 1], 6);
+        for (int c = maxAuto; c >= COLUMN_CHOICES[0]; c--) {
+            if (AppAdapter.tileWidthPx(innerDp, c, 1f) >= design) return c;
+        }
+        return COLUMN_CHOICES[0];
     }
 
     /** Whether the current column count came from the user's choice or from {@link #recommendColumns()}. */
     private boolean columnsAreAutomatic() {
-        int wanted = getSharedPreferences(PREFS_LAYOUT, MODE_PRIVATE).getInt(KEY_COLUMNS, 0);
-        return !(wanted >= 3 && wanted <= 6);
+        return !isColumnChoice(getSharedPreferences(PREFS_LAYOUT, MODE_PRIVATE).getInt(KEY_COLUMNS, 0));
     }
 
     /** One line saying how many icons per row the desk is using, and where that number came from. */
@@ -687,25 +700,20 @@ private int recommendColumns() {
     }
 
     /**
-     * Tapping the row steps through auto → 3 → 4 → 5 → 6 → auto. A row of four options is not worth
-     * a submenu on a remote, and the current value is printed under the title either way.
+     * Tapping the row steps through auto → 3 … 8 → auto. A submenu on a remote would cost more presses
+     * than it saves, and the current value is printed under the row either way.
      */
     private void cycleColumns(TextView status) {
         int current = getSharedPreferences(PREFS_LAYOUT, MODE_PRIVATE).getInt(KEY_COLUMNS, 0);
-        int next;
-        if (current < 3) {
-            next = COLUMN_CHOICES[0];                    // auto → 3
-        } else {
-            int at = -1;
-            for (int i = 0; i < COLUMN_CHOICES.length; i++) {
-                if (COLUMN_CHOICES[i] == current) { at = i; break; }
-            }
-            next = (at >= 0 && at + 1 < COLUMN_CHOICES.length) ? COLUMN_CHOICES[at + 1] : 0;
+        int at = -1;
+        for (int i = 0; i < COLUMN_CHOICES.length; i++) {
+            if (COLUMN_CHOICES[i] == current) { at = i; break; }
         }
+        int next = (at >= 0 && at + 1 < COLUMN_CHOICES.length) ? COLUMN_CHOICES[at + 1] : 0;
         getSharedPreferences(PREFS_LAYOUT, MODE_PRIVATE).edit().putInt(KEY_COLUMNS, next).apply();
-        COLUMNS = next >= 3 ? next : recommendColumns();
+        COLUMNS = next > 0 ? next : recommendColumns();
         if (status != null) status.setText(columnsStatus());
-        toast(next >= 3 ? getString(R.string.columns_set, COLUMNS)
+        toast(next > 0 ? getString(R.string.columns_set, COLUMNS)
                 : getString(R.string.columns_auto_toast, COLUMNS));
         // The row count changes the grid layout and the dock split, so the desk has to be rebuilt.
         // The panel is closed first: rebuilding underneath an open popup is what left a stuck
@@ -767,8 +775,9 @@ private int recommendColumns() {
             lp.width = (int) w;
             lp.height = (int) h;
             glass.setLayoutParams(lp);
-            // GlassView draws its slab inset by pad, i.e. exactly over the zoomed tile: same corners as the tile.
-            glass.setRadius(16f * density * AppAdapter.FOCUS_SCALE);
+            // GlassView draws its slab inset by pad, i.e. exactly over the zoomed tile: same corners as
+            // the tile, which is itself proportionally rounder when a narrow grid made it smaller.
+            glass.setRadius(AppAdapter.cornerRadius(card.getWidth(), density) * AppAdapter.FOCUS_SCALE);
         }
         glassTargetX = x;
         glassTargetY = y;
@@ -948,11 +957,20 @@ private int recommendColumns() {
      * On firmware that has a standard handler this returns the standard intent unchanged.
      */
     private Intent systemIntent(String standardAction) {
+        return systemIntent(this, standardAction);
+    }
+
+    /**
+     * A system settings screen that is not always there. China-market MIUI TV firmware ignores the
+     * standard action, so the Xiaomi settings app is tried as well — see {@code <queries>} in the
+     * manifest, without which resolveActivity cannot even see it on Android 11+.
+     */
+    static Intent systemIntent(android.content.Context ctx, String standardAction) {
         Intent i = new Intent(standardAction);
-        if (i.resolveActivity(getPackageManager()) != null) return i;
+        if (i.resolveActivity(ctx.getPackageManager()) != null) return i;
         i = new Intent().setComponent(new ComponentName(
                 "com.xiaomi.mitv.settings", "com.xiaomi.mitv.settings.entry.MainActivity"));
-        if (i.resolveActivity(getPackageManager()) != null) return i;
+        if (i.resolveActivity(ctx.getPackageManager()) != null) return i;
         return new Intent(standardAction);   // nothing found: let open() show the can't-open toast
     }
 
@@ -1030,15 +1048,38 @@ private int recommendColumns() {
         panel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
         popup.setWidth(Math.max(width, panel.getMeasuredWidth()));
 
-        // Drop in: fade and unfold from the top edge.
+        dropIn(popup, panel, anchor, Gravity.START);
+        rows.getChildAt(0).requestFocus();
+    }
+
+    /**
+     * A glass dropdown built the way the Inputs menu is: as wide as its widest row but never most of
+     * the screen, and no taller than the room under the button, so a long list scrolls inside the
+     * panel instead of running off the bottom of the TV.
+     */
+    private PopupWindow glassPanel(View panel, View anchor, int minWidthDp) {
+        panel.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        int width = Math.max(Math.max(anchor.getWidth(), (int) (minWidthDp * density)),
+                panel.getMeasuredWidth());
+        width = Math.min(width, (int) (getResources().getDisplayMetrics().widthPixels * 0.72f));
+        int[] at = new int[2];
+        anchor.getLocationInWindow(at);
+        int room = root.getHeight() - (at[1] + anchor.getHeight()) - (int) (34 * density);
+        int height = Math.min(panel.getMeasuredHeight(), Math.max(room, (int) (120 * density)));
+        PopupWindow popup = new PopupWindow(panel, width, height, true);
+        popup.setElevation(12 * density);
+        return popup;
+    }
+
+    /** Drop in: fade and unfold from the top edge, hanging under the anchor. */
+    private void dropIn(PopupWindow popup, View panel, View anchor, int gravity) {
         panel.setAlpha(0f);
         panel.setPivotY(0f);
         panel.setScaleY(0.92f);
         panel.setTranslationY(-8 * density);
-        popup.showAsDropDown(anchor, 0, (int) (10 * density), Gravity.START);
+        popup.showAsDropDown(anchor, 0, (int) (10 * density), gravity);
         panel.animate().alpha(1f).scaleY(1f).translationY(0f).setDuration(220)
                 .setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f)).start();
-        rows.getChildAt(0).requestFocus();
     }
 
     private void addSeparator(LinearLayout rows) {

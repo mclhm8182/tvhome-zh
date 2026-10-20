@@ -47,4 +47,12 @@
     <string name="columns_manual">Şu an %1$d · sizin seçiminiz</string>
     <string name="columns_set">Satır başına %1$d simge</string>
     <string name="columns_auto_toast">Otomatik · satır başına %1$d simge</string>
+    <string name="home_key_description">Uzaktan kumandadaki Home tuşu bu masaüstünü açıp en üste döner; Ayarlar (seçenekler) tuşu hızlı ayarları açar.</string>
+    <string name="tv_settings">TV ayarları</string>
+    <string name="quick_picture">Ekran ve görüntü</string>
+    <string name="quick_network">Ağ</string>
+    <string name="quick_apps">Uygulamaları yönet</string>
+    <string name="quick_apps_hint">Kaldır veya devre dışı bırak</string>
+    <string name="launcher_settings">Masaüstü ayarları</string>
+    <string name="quick_dock">Sık Kullanılanlar</string>
 </resources>

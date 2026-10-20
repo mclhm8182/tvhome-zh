@@ -16,7 +16,14 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            // Same switch upstream uses: R8 strips and optimises the code (AndroidX included),
+            // resource shrinking drops what the launcher never references.
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // Sideloaded over ADB, never published: sign with the debug key so it installs over a
+            // debug build instead of fighting it.
+            signingConfig signingConfigs.debug
         }
     }
 
@@ -33,6 +40,10 @@ android {
         // The launcher is sideloaded over ADB, never published to Google Play, so Play's minimum targetSdk
         // does not apply; without this, lintVitalRelease fails assembleRelease.
         disable 'ExpiredTargetSdkVersion'
+        // False positive: setHasFixedSize(true) is called on the desk grid only, whose size is the screen.
+        // The Favourites panel's list really does need wrap_content — it is measured so the popup can be
+        // as tall as its content — and lint cannot tell the two RecyclerViews apart.
+        disable 'InvalidSetHasFixedSize'
     }
 
     compileOptions {
