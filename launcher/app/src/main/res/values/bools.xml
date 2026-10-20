@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <bool name="rtl_app_grid">false</bool>
+    <bool name="rtl_menu_bar">false</bool>
+    <!-- Other locales keep the date on one line, ellipsized as before. -->
+    <bool name="date_single_line">true</bool>
+</resources>

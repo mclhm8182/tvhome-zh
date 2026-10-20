@@ -29,8 +29,7 @@
                 android:format24Hour="HH:mm"
                 android:textColor="#E6FFFFFF"
                 android:textSize="120sp"
-                android:fontFamily="@font/outfit"
-                android:fontVariationSettings="'wght' 200"
+                android:fontFamily="@font/outfit_extralight"
                 android:letterSpacing="-0.04"
                 android:includeFontPadding="false" />
 
@@ -42,8 +41,7 @@
                 android:format24Hour=""
                 android:textColor="#99FFFFFF"
                 android:textSize="22sp"
-                android:fontFamily="@font/outfit"
-                android:fontVariationSettings="'wght' 500"
+                android:fontFamily="@font/outfit_medium"
                 android:letterSpacing="0.08"
                 android:textAllCaps="true" />
         </LinearLayout>
@@ -53,12 +51,11 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="6dp"
             android:layout_marginTop="4dp"
-            android:format12Hour="EEEE  d MMMM"
-            android:format24Hour="EEEE  d MMMM"
+            android:format12Hour="@string/date_format"
+            android:format24Hour="@string/date_format"
             android:textColor="#8CFFFFFF"
             android:textSize="18sp"
-            android:fontFamily="@font/outfit"
-            android:fontVariationSettings="'wght' 400"
+            android:fontFamily="@font/outfit_regular"
             android:letterSpacing="0.14"
             android:textAllCaps="true" />
     </LinearLayout>

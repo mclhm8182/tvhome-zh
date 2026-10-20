@@ -1,9 +1,8 @@
 package com.gathin.tvhome;
 
 /**
- * How big a wallpaper may be and what size it is decoded at. A 1 GB TV cannot afford a picture
- * decoded at full size: a 65535x2159 image is about 283 MB even in RGB_565, so an over-wide or
- * over-tall pick would OOM (or silently fail) on the cheap boxes this launcher targets.
+ * How big a theme's wallpaper may be and what size it is decoded at (#166). A 1 GB TV cannot afford a
+ * picture decoded at full size: a 65535x2159 image is about 283 MB even in RGB_565.
  */
 final class WallpaperSize {
     private WallpaperSize() { }

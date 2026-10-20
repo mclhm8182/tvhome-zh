@@ -1,64 +1,140 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Launcher configuration. Edit this file, then run launcher/build-and-install.sh.
+  Or leave it and push a theme instead: tools/theme.sh themes/<name> puts a config.json (same keys, see
+  themes/README.md) and an optional wallpaper on the TV, and the launcher overlays it at start.
   Package names: on the TV run `pm list packages` (tools/tv.py 'pm list packages').
-
-  Everything here ships empty on purpose: the defaults suit nobody's box in
-  particular. Fill in the dock and boot app for the TV you actually own.
 -->
 <resources>
 
-    <!-- Apps pinned to the dock row at the bottom, in this order. Missing apps are skipped.
-         Left empty by default, so the grid is simply alphabetical. Examples:
-           com.netflix.ninja        (Netflix)
-           com.amazon.amazonvideo.livingroom (Prime Video)
-           com.google.android.youtube.tv     (YouTube) -->
+    <!-- Apps pinned to the dock row at the bottom, in this order. Missing apps are skipped. -->
     <string-array name="dock_apps">
+        <item>com.netflix.ninja</item>
+        <item>com.amazon.amazonvideo.livingroom</item>
+        <item>com.google.android.youtube.tv</item>
+        <item>in.startv.hotstar</item>
     </string-array>
+    <!-- With fewer dock_apps than columns (or a dock app that is not installed), the free dock slots take
+         the first grid apps, so the dock never shows a gap. false leaves them empty (#162); a theme can
+         set "fill_dock": false. -->
+    <bool name="fill_dock">true</bool>
 
     <!-- Apps never shown as tiles (e.g. the Live TV app, which the Inputs menu already covers). -->
     <string-array name="hidden_apps">
+        <item>com.mediatek.wwtv.tvcenter</item>
+        <item>com.mitv.gallery</item>
     </string-array>
 
     <!-- The TV's Live TV / tuner app, offered at the end of the Inputs menu. Leave empty to omit. -->
-    <string name="live_tv_package" translatable="false"></string>
+    <string name="live_tv_package" translatable="false">com.mediatek.wwtv.tvcenter</string>
 
-    <!-- Intent action that opens the tuner directly, when the box needs more than the package name. -->
+    <!-- Some TVs give their Live TV app no leanback entry point at all, so `live_tv_package` above
+         resolves to nothing (TCL Android TV 9 on China-market sets is one). This action is then sent
+         to that package instead, and the app starts normally. Leave empty to omit. -->
     <string name="live_tv_action" translatable="false"></string>
 
-    <!-- Optional: a system service + action that show a nicer input/source panel, e.g. the vendor's own. -->
+    <!-- TVs with no TvInputManager have no HDMI list to read, but their own source-selection panel
+         still switches inputs (TCL Android TV 9 again). When nothing could be listed, the Inputs menu
+         offers one row that starts this service: component first, then action. Leave empty to omit. -->
     <string name="source_panel_service" translatable="false"></string>
     <string name="source_panel_action" translatable="false"></string>
 
-    <!-- Optional: what the remote's Input/TV button should do. Empty falls back to Android's own. -->
+    <!-- Inputs menu: HDMI and AV rows normally open with ACTION_VIEW on the input's channel URI, which the
+         Live TV app handles. Where nothing answers that, this action is sent with the same URI instead
+         (XGIMI projectors: com.xgimi.action.hdmiPlayer). Leave empty to omit. -->
     <string name="input_action" translatable="false"></string>
 
-    <!-- Tiles per row in the grid; the dock always has this many slots. -->
-    <integer name="columns">4</integer>
-
-    <!-- How many grid rows stay visible between the top bar and the dock. -->
-    <integer name="rows_below_dock">0</integer>
-
-    <!-- Persian (Jalali) calendar for the date, for Iranian boxes. -->
-    <bool name="shamsi_date">false</bool>
-
-    <!-- Let other apps plug a card into the launcher (see CardFeature). Off by default: a module only
-         appears when the user explicitly enables it. -->
-    <bool name="module_cards">false</bool>
-
-    <!-- An app to show as a badge on the Wi-Fi pill, e.g. a VPN client. Empty hides the badge. -->
-    <string name="vpn_app" translatable="false"></string>
-
-    <!-- Add a "Default home" tile at the end of the grid, so the desktop can be changed from the sofa. -->
-    <bool name="show_home_settings_shortcut">true</bool>
-
-    <!--
-      Remote buttons that should open the quick settings panel (HomeKeyService), for boxes that report
-      the Settings/选项 button under a raw scan code instead of KEYCODE_SETTINGS. Empty by default:
-      KEYCODE_SETTINGS is handled without any configuration, and nothing else is taken from the app
-      behind until it is listed here. To find your remote's code, watch it with
-      `adb shell getevent -lt` and press the button.
-    -->
+    <!-- Remote buttons that open Settings, by Linux scancode (HOME_KEY_SERVICE=1 build-and-install.sh). Remotes
+         that send KEYCODE_SETTINGS need no entry. Some send a code Android does not map: the Xiaomi/Fengmi
+         projector remote's gear button is scancode 384 (KEY_TAPE). Find yours with
+         `tools/tv.py 'getevent -lt'` while pressing the button. Leave empty to omit. -->
     <integer-array name="settings_key_scancodes">
     </integer-array>
+    <!-- The same by Android keycode, for buttons whose scancode is shared. TCL Google TV remotes send their
+         Settings button as keycode 83 (KEYCODE_NOTIFICATION, which the stock Google TV home turned into its quick
+         settings panel) on scancode 240 (KEY_UNKNOWN), the scancode several TCL buttons share. Find the keycode
+         with `tools/tv.py 'logcat -v time -s InputReader:D'` while pressing the button. Leave empty to omit. -->
+    <integer-array name="settings_key_keycodes">
+    </integer-array>
+    <!-- What those Settings buttons open: false, the TV's Settings; true, a small glass panel at the top right
+         with TV settings, Display, Network, Apps (re-enable an app) and Launcher settings, over whatever is on screen.
+         Both keys can also be set from a theme's config.json ("settings_key_keycodes": [83]). -->
+    <bool name="settings_key_panel">false</bool>
+
+    <!-- More remote buttons that open the input switcher, by Android keycode (INPUT_KEY_SERVICE=1
+         build-and-install.sh; KEYCODE_TV always does). For buttons only a disabled app answered: the Xiaomi
+         MiTV-AXFR2 remote's PatchWall button is 192 (KEYCODE_BUTTON_5). `dumpsys window policy` lists which
+         app each such "global key" was routed to. Check with the real remote: keys injected over ADB never
+         reach InputKeyService. Leave empty to omit. -->
+    <integer-array name="input_key_keycodes">
+    </integer-array>
+    <!-- Remote buttons that open an app, as "keycode:package" or "KEYCODE_NAME:package" (INPUT_KEY_SERVICE=1 or
+         HOME_KEY_SERVICE=1; both read this one list, and a theme's config.json can set it too). On Google TV the
+         YouTube button sends 190 (KEYCODE_BUTTON_3) to the stock launcher, so it does nothing once launcherx
+         is disabled (Chromecast with Google TV, Xiaomi MiTV-AXFR2): 190:com.google.android.youtube.tv brings
+         it back. The KTC LUMIO VISION remote (Realtek Google TV) sends Netflix 191, YouTube 190, Prime Video 195
+         and TL;DR 200. A listed app that is not installed leaves the button doing nothing. Leave empty to omit. -->
+    <string-array name="app_keys" translatable="false">
+    </string-array>
+
+    <!-- Show the Solar Hijri (Shamsi) date used in Iran and Afghanistan, e.g. "27 Mehr 1405", above the
+         Gregorian date. -->
+    <bool name="shamsi_date">false</bool>
+
+    <!-- A name after the greeting: "Mr. Trịnh" shows GOOD MORNING, MR. TRỊNH. Empty: the greeting alone. -->
+    <string name="greeting_name" translatable="false"></string>
+    <!-- Optional VPN app the network pill opens (hold the pill for Wi-Fi settings), e.g. the package of the
+         VPN you use. Empty: the pill opens Wi-Fi settings. The green VPN badge shows for any VPN either way;
+         with an app set here, a red "VPN off" badge also shows while no VPN is up. -->
+    <string name="vpn_app" translatable="false"></string>
+    <!-- The dock as its own row: a lighter band, no names under the tiles, parked low on the screen with the top
+         shelf above it. false makes the dock apps simply the first tiles of one plain grid (still in dock_apps
+         order, no empty slots), with names under every tile and the glow behind every focused tile. -->
+    <bool name="dock_row">true</bool>
+    <!-- A reorder button (two arrows) in the top bar. Off by default: reordering is also in the Settings
+         button's long-press menu, so it needs no extra button on screen. -->
+    <bool name="reorder_button">false</bool>
+
+    <!-- Grid rows left visible under the dock on the home screen. 0 = dock sits at the very bottom. Tiles shrink if
+         the dock, its title and this many rows would not otherwise fit the screen height. -->
+    <integer name="rows_below_dock">0</integer>
+
+    <!-- The focused dock app's name in large type above the dock. false keeps only the glow, which leaves room
+         for bigger tiles when rows_below_dock is 2 or 3. -->
+    <bool name="dock_title">true</bool>
+
+    <!-- Tiles per row in the grid; the dock always has this many slots. Tiles are 180dp wide at 4 columns and
+         shrink to fit from 5 up (about 144dp at 5, 117dp at 6 on a 1080p TV). -->
+    <integer name="columns">4</integer>
+
+    <!-- Basic motion is on; advanced effects are opt-in in the launcher's own Settings screen. -->
+    <bool name="animations">true</bool>
+    <bool name="advanced_effects">false</bool>
+
+    <!-- Optional Default-home tile; keep this key for existing themes and tile-ordering work.
+         Off by default because the chooser is also available from launcher settings. -->
+    <bool name="show_home_settings_shortcut">false</bool>
+
+    <!-- Installed launchable apps, including ordinary Android apps. Also settable in config.json. -->
+    <bool name="app_library">false</bool>
+
+    <!-- Module cards: an app that declares a card (docs/specs/card.md) can stand in for its tile with its own
+         label, caption and glow colour, once you answer Show on the prompt. false: never look for cards or ask. -->
+    <bool name="module_cards">true</bool>
+
+    <!-- Reduced motion: for TVs whose GPU cannot keep up (MediaTek MT5895 on Android 10 is the known case).
+         true keeps the GPU drawing path but calms the movement: a stiff highlight spring with no bounce,
+         tiles that zoom without overshoot, shorter fades and no tile entrance when Home comes back. Set it
+         here or with "reduced_motion": true in a theme's config.json; false keeps the normal motion. -->
+    <bool name="reduced_motion">false</bool>
+
+    <!-- One line under the clock: CPU, free memory and free storage. Off by default; a theme can set
+         "show_stats": true. Nothing is read, and the clock does not move, while this is false. -->
+    <bool name="show_stats">false</bool>
+
+    <!-- Time-of-day backdrop behind everything: a dark gradient that follows the clock, with a warm
+         horizon glow around sunrise and sunset. 0 keeps the plain background (the default); 1 to 100
+         sets its opacity. Around 60 reads clearly without hiding a wallpaper. Can also be set with
+         "sky_intensity": 60 in a theme's config.json. -->
+    <integer name="sky_intensity">0</integer>
 </resources>
