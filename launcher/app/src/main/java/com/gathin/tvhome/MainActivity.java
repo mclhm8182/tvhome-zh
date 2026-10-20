@@ -48,6 +48,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -143,16 +144,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // Only the Home key (re-issued by HomeKeyService, or the system on remotes that send
         // KEYCODE_HOME) sends a HOME intent to an already-running desktop; treat it as "go to top".
         if (!intent.hasCategory(Intent.CATEGORY_HOME)) return;
-        lastFocused = 0;
-        lastFocusedKey = adapter.getItemCount() > 0 ? adapter.keyAt(0) : null;
-        grid.scrollToPosition(0);
-        focusTile(0);
+        scrollToTop();
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        live = new WeakReference<>(this);
         density = getResources().getDisplayMetrics().density;
         // config.xml defaults, then a config.json overlay pushed by tools/theme.sh if one is there.
         cfg = Config.load(this);
@@ -308,6 +307,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onResume() {
         super.onResume();
+        if (awayFromDesk) {
+            awayFromDesk = false;
+            grid.post(this::scrollToTop);
+        }
         glassShown = false;
         glass.setAlpha(0f);
         heroShown = false;
@@ -337,7 +340,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     @Override
+    protected void onStop() {
+        // Another app took the screen. A translucent overlay (the panels, the quick settings)
+        // only pauses us, so this really does mean the desk was left behind.
+        awayFromDesk = true;
+        super.onStop();
+    }
+
+    @Override
     protected void onDestroy() {
+        live = null;
         super.onDestroy();
         ConnectivityManager cm = getSystemService(ConnectivityManager.class);
         if (cm != null) cm.unregisterNetworkCallback(networkCallback);
@@ -363,8 +375,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      *
      * <p>Tried in order: the component named in config.xml (per vendor), then the action named there,
      * then AOSP's own input-source page — the platform has no constant for it, but TV ROMs answer this
-     * action string — and finally plain system settings, which every box has somewhere near the ports.
-     * Returns null when nothing on this box answers, so the caller can say so instead of opening nothing.
+     * action string. There is deliberately no "plain system settings" last resort: on a box with no
+     * source panel at all (a Google TV stick, say) that just opens the settings the user was already
+     *looking at, which reads like a bug. Null means we have nothing better to offer, and the caller
+     * says so instead.
      */
     private Intent sourcePanelIntent() {
         String service = cfg.sourcePanelService == null ? "" : cfg.sourcePanelService.trim();
@@ -378,9 +392,31 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (byAction.resolveActivity(getPackageManager()) != null) return byAction;
         }
         Intent tvInputs = new Intent("android.settings.INPUT_SOURCE_SETTINGS");
-        if (tvInputs.resolveActivity(getPackageManager()) != null) return tvInputs;
-        Intent settings = new Intent(Settings.ACTION_SETTINGS);
-        return settings.resolveActivity(getPackageManager()) != null ? settings : null;
+        return tvInputs.resolveActivity(getPackageManager()) != null ? tvInputs : null;
+    }
+
+    /**
+     * True while another app is in front. Coming back then means the user asked for the desk, and the
+     * desk opens at the top — the same thing the Home key does everywhere else. Inside the desk (a panel
+     * closing, the volume dialog, the quick settings overlay) onStop does not fire, so nothing moves.
+     */
+    private boolean awayFromDesk;
+    /** HomeKeyService cannot reach an activity directly; this is the live one, weakly held. */
+    private static WeakReference<MainActivity> live;
+
+    /** Called by {@link HomeKeyService} when Home is pressed while the desk is already in front. */
+    static void onHomeKeyFromService() {
+        MainActivity activity = live == null ? null : live.get();
+        if (activity != null) activity.runOnUiThread(activity::scrollToTop);
+    }
+
+    /** Back to the first tile, the way the Home button behaves on a phone launcher. */
+    private void scrollToTop() {
+        if (adapter == null || adapter.getItemCount() == 0) return;
+        lastFocused = 0;
+        lastFocusedKey = adapter.keyAt(0);
+        grid.scrollToPosition(0);
+        focusTile(0);
     }
 
     /**
@@ -397,6 +433,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         int code = event.getKeyCode();
+        // Home while the desk is already in front means "take me back to the top", not "relaunch me".
+        // Handling it here rather than in onNewIntent because plenty of paths (a remote that sends a
+        // plain KEYCODE_HOME, a shell-injected key) never re-deliver the HOME intent at all.
+        if (code == KeyEvent.KEYCODE_HOME) {
+            if (event.getAction() == KeyEvent.ACTION_DOWN) scrollToTop();
+            return true;
+        }
         if (code == KeyEvent.KEYCODE_MENU
                 || code == KeyEvent.KEYCODE_SETTINGS
                 || code == KeyEvent.KEYCODE_HELP) {

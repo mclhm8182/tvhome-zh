@@ -56,8 +56,30 @@ public class HomeKeyService extends AccessibilityService {
         return getSharedPreferences(PREFS, MODE_PRIVATE).getBoolean(KEY_MENU_EVERYWHERE, false);
     }
 
+    /** The package of the window that came to front last; decides whether Home is "ours" to handle. */
+    private String foreground = "";
+
     @Override
-    protected boolean onKeyEvent(KeyEvent event) {
+    public void onAccessibilityEvent(AccessibilityEvent event) {
+        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+                && event.getPackageName() != null) {
+            foreground = event.getPackageName().toString();
+        }
+    }
+
+    @Override
+    public boolean onKeyEvent(KeyEvent event) {
+        if (event.getKeyCode() == KeyEvent.KEYCODE_HOME) {
+            // The system swallows Home when the launcher is already in front — it re-sends the same
+            // intent and the task manager drops it as a duplicate, so the desk never hears about it.
+            // Here it does hear, and the desk can go back to the top. From another app the system has
+            // to do its job, so the key is passed straight through.
+            if (!getPackageName().equals(foreground)) return false;
+            if (event.getAction() == KeyEvent.ACTION_UP && !event.isCanceled()) {
+                MainActivity.onHomeKeyFromService();
+            }
+            return true;
+        }
         if (isSettingsKey(event)
                 || (event.getKeyCode() == KeyEvent.KEYCODE_MENU && menuOpensQuickSettings())) {
             if (event.getAction() == KeyEvent.ACTION_UP && !event.isCanceled()) {
@@ -75,10 +97,6 @@ public class HomeKeyService extends AccessibilityService {
             startActivity(home);
         }
         return true;
-    }
-
-    @Override
-    public void onAccessibilityEvent(AccessibilityEvent event) {
     }
 
     @Override
