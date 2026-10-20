@@ -1,25 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Languages the launcher is translated into. Lets Android 13+ give the launcher its own language
-     (set it with "cmd locale set-app-locales", see the README), since TVs rarely offer
-     every language system-wide. -->
+<!--
+  Languages this launcher is translated into.
+
+  The launcher follows the TV's system language on its own, because that is how Android resource
+  loading works: a values-de/strings.xml is picked up on a German TV without anything being switched
+  on. This file adds the second half. It lets Android 13+ give the launcher a language of its own,
+  through Settings > Apps > tvhome > Language, or through the "cmd locale set-app-locales" command
+  with the launcher package and a language code. That matters on TV boxes which never offer the
+  language you want system-wide.
+
+  Only languages that actually ship a translation are listed; offering one that silently falls back
+  to English would be worse than not offering it. To add a language: drop a values-<code>/strings.xml
+  next to the others and add its code here.
+-->
 <locale-config xmlns:android="http://schemas.android.com/apk/res/android">
     <locale android:name="en" />
-    <locale android:name="de" />
+    <locale android:name="ar" />
     <locale android:name="ca" />
+    <locale android:name="de" />
     <locale android:name="es" />
     <locale android:name="fr" />
+    <locale android:name="pl" />
     <locale android:name="ru" />
+    <locale android:name="sr-Latn" />
+    <locale android:name="th" />
+    <locale android:name="tr" />
     <locale android:name="zh-CN" />
     <locale android:name="zh-TW" />
-    <locale android:name="th" />
-    <locale android:name="sr-Latn" />
-    <locale android:name="pl" />
-    <locale android:name="ar" />
-    <!-- Android uses the legacy iw qualifier for Hebrew resources. -->
-    <locale android:name="iw" />
-    <locale android:name="tr" />
-    <locale android:name="pt" />
-    <locale android:name="fi" />
-    <locale android:name="vi" />
-    <locale android:name="bn" />
 </locale-config>

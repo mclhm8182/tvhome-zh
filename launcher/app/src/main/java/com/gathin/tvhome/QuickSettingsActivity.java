@@ -12,10 +12,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 /**
- * The panel the remote's Settings button opens when {@code settings_key_panel} is on (HomeKeyService):
- * a few glass rows under the Settings pill, over Home or whatever app is playing. Translucent and in a
- * task of its own, so the app behind keeps running and Back returns to it. Pressing Settings again
- * closes the panel.
+ * The panel the remote's Settings (选项) button opens, via {@link HomeKeyService}: a few glass rows
+ * under the Settings pill, floating over the desktop or over whatever app is playing. Translucent and
+ * in a task of its own, so the app behind keeps running and Back returns to it. Pressing the Settings
+ * button again closes the panel.
+ *
+ * <p>Every row is one press to a place people actually go: the TV's own settings, the picture
+ * settings, the network, the app list (where sideloaded junk gets uninstalled), and this launcher's own
+ * desktop settings — which is the panel on the desktop itself, not a second settings screen.
  */
 public final class QuickSettingsActivity extends Activity {
 
@@ -25,14 +29,19 @@ public final class QuickSettingsActivity extends Activity {
         setContentView(R.layout.activity_quick_settings);
         findViewById(R.id.scrim).setOnClickListener(v -> finish());
         LinearLayout rows = findViewById(R.id.rows);
-        addRow(rows, R.drawable.ic_settings, R.string.tv_settings, 0, new Intent(Settings.ACTION_SETTINGS));
-        addRow(rows, R.drawable.ic_picture, R.string.quick_picture, 0, new Intent(Settings.ACTION_DISPLAY_SETTINGS));
-        addRow(rows, R.drawable.ic_wifi, R.string.quick_network, 0, new Intent(Settings.ACTION_WIFI_SETTINGS));
+        addRow(rows, R.drawable.ic_settings, R.string.tv_settings, 0,
+                MainActivity.systemIntent(this, Settings.ACTION_SETTINGS));
+        addRow(rows, R.drawable.ic_picture, R.string.quick_picture, 0,
+                new Intent(Settings.ACTION_DISPLAY_SETTINGS));
+        addRow(rows, R.drawable.ic_wifi, R.string.quick_network, 0,
+                MainActivity.systemIntent(this, Settings.ACTION_WIFI_SETTINGS));
         addRow(rows, R.drawable.ic_apps, R.string.quick_apps, R.string.quick_apps_hint,
                 new Intent(Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS));
-        // Through Home, so it rebuilds with the new choices when Launcher settings closes.
-        addRow(rows, R.drawable.ic_home_settings, R.string.launcher_settings, 0,
-                new Intent(this, MainActivity.class).setAction(MainActivity.ACTION_LAUNCHER_SETTINGS));
+        // The two panels the desk itself owns, so the overlay is the one menu that has everything.
+        addRow(rows, R.drawable.ic_dock, R.string.quick_dock, 0,
+                new Intent(this, MainActivity.class).setAction(MainActivity.ACTION_DOCK_PICKER));
+        addRow(rows, R.drawable.ic_wallpaper, R.string.launcher_settings, 0,
+                new Intent(this, MainActivity.class).setAction(MainActivity.ACTION_DESKTOP_SETTINGS));
         rows.getChildAt(0).requestFocus();
     }
 
@@ -43,7 +52,23 @@ public final class QuickSettingsActivity extends Activity {
         finish();
     }
 
-    /** Anything else taking the screen (Home, an app, a screensaver) closes the panel. */
+    /**
+     * The desk opens this panel on Menu/Settings/Help; pressing the same button again should close it,
+     * the way the accessibility route does. Without this the key would reach this window and do nothing.
+     */
+    @Override
+    public boolean dispatchKeyEvent(android.view.KeyEvent event) {
+        int code = event.getKeyCode();
+        if (code == android.view.KeyEvent.KEYCODE_MENU
+                || code == android.view.KeyEvent.KEYCODE_HELP
+                || code == android.view.KeyEvent.KEYCODE_SETTINGS) {
+            if (event.getAction() == android.view.KeyEvent.ACTION_DOWN) finish();
+            return true;
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    /** Anything else taking the screen (Home, an app, the dream) closes the panel. */
     @Override
     protected void onPause() {
         super.onPause();

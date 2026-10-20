@@ -4,16 +4,14 @@ plugins {
 
 android {
     namespace 'com.gathin.tvhome'
-    // Upstream builds against 34; we compile against 35 (the platform installed here). Nothing in the
-    // launcher needs an API that 34 does not have.
     compileSdk 35
 
     defaultConfig {
         applicationId 'com.gathin.tvhome'
         minSdk 26
-        targetSdk 34
-        versionCode 6
-        versionName '1.8.0'
+        targetSdk 29
+        versionCode 5
+        versionName '1.3.0'
     }
 
     buildTypes {
@@ -42,6 +40,10 @@ android {
         // The launcher is sideloaded over ADB, never published to Google Play, so Play's minimum targetSdk
         // does not apply; without this, lintVitalRelease fails assembleRelease.
         disable 'ExpiredTargetSdkVersion'
+        // False positive: setHasFixedSize(true) is called on the desk grid only, whose size is the screen.
+        // The Favourites panel's list really does need wrap_content — it is measured so the popup can be
+        // as tall as its content — and lint cannot tell the two RecyclerViews apart.
+        disable 'InvalidSetHasFixedSize'
     }
 
     compileOptions {

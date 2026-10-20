@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!--
+      Catalan. Core launcher strings are upstream's (Gathin23/tv-vibehack, MIT); the desktop,
+      favourites and wallpaper strings are this fork's additions. Upstream ships no Catalan date
+      format, so the English one is kept here.
+    -->
     <string name="app_name">Inici</string>
     <string name="inputs">Entrades</string>
     <string name="wifi">Wi-Fi</string>
@@ -9,7 +14,7 @@
     <string name="standby">En espera</string>
     <string name="not_connected">Cap dispositiu</string>
     <string name="live_tv">TV en directe</string>
-    <string name="no_inputs">No s\'ha trobat cap entrada</string>
+    <string name="no_inputs">"No s'ha trobat cap entrada"</string>
     <string name="good_morning">Bon dia</string>
     <string name="good_afternoon">Bona tarda</string>
     <string name="good_evening">Bon vespre</string>
@@ -17,45 +22,42 @@
     <string name="ethernet">Ethernet</string>
     <string name="offline">Sense connexió</string>
     <string name="not_available">No disponible en aquest televisor</string>
-    <string name="cant_open">No s\'ha pogut obrir %1$s</string>
-    <string name="stats_cpu">CPU %1$d%%</string>
-    <string name="stats_memory">Memòria %1$d MB lliures</string>
-    <string name="stats_storage">Emmagatzematge %1$s lliure</string>
+    <string name="cant_open">"No s'ha pogut obrir %1$s"</string>
+    <string name="date_format">EEEE, d MMMM</string>
     <string name="dream_name">Rellotge</string>
-    <string name="launcher_settings">Configuració del llançador</string>
-    <string name="columns_label">Aplicacions per fila</string>
-    <string name="animations_state">Animacions: %1$s</string>
-    <string name="advanced_effects">Efectes avançats</string>
-    <string name="advanced_effects_state">Efectes avançats: %1$s</string>
-    <string name="advanced_effects_warning">Eleva les targetes, amplia les icones i suavitza els canvis de color. Pot augmentar l’ús de memòria; depèn del televisor.</string>
-    <string name="follow_theme">Segueix el tema (restableix els ajustos)</string>
-    <string name="follow_theme_hint">Utilitza la disposició i els efectes del tema actual o els valors integrats. Aplicar o restablir un tema també esborra aquests ajustos.</string>
-    <string name="tv_settings">Configuració del televisor</string>
-    <string name="on">Activat</string>
-    <string name="off">Desactivat</string>
-    <string name="enable">Activa</string>
-    <string name="dock_edit">Edita el dock</string>
-    <string name="dock_edit_hint">Tria la posició del dock que vols canviar i prem D\'acord. Enrere per acabar.</string>
-    <string name="dock_edit_pick_app">Ara tria l\'aplicació que hi vols posar i prem D\'acord. Enrere per triar una altra posició.</string>
-    <string name="reorder">Reordena les aplicacions</string>
-    <string name="reorder_hint">D\'acord agafa una aplicació, les fletxes la mouen, Enrere la deixa. Torna a prémer Enrere per acabar.</string>
-    <string name="reorder_not_saved">No s\'ha pogut desar el nou ordre</string>
-    <string name="app_library">Biblioteca d’aplicacions</string>
-    <string name="library_empty">No s’ha trobat cap aplicació que es pugui obrir</string>
-    <string name="library_on_home">A l’inici</string>
-    <string name="library_add_home">Afegeix a l’inici</string>
-    <string name="library_remove_shortcut">Elimina de l’inici</string>
-    <string name="library_open">Obre</string>
-    <string name="library_app_info">Informació de l’aplicació</string>
-    <string name="library_save_failed">No s’ha pogut desar la drecera</string>
-    <string name="library_recent">Nova · Afegeix a l’inici</string>
-    <string name="library_hint_add">Prem per afegir a Inici · Mantén per a opcions</string>
-    <string name="library_hint_open">Prem per obrir · Mantén per a opcions</string>
-    <plurals name="library_app_count">
-        <item quantity="one">%1$d aplicació</item>
-        <item quantity="other">%1$d aplicacions</item>
-    </plurals>
-    <string name="greeting_with_name">%1$s, %2$s</string>
-    <string name="bing_daily_state">Fons d pantalla di Bing diari: %1$s</string>
-    <string name="bing_daily_hint">Descarrega la imatge d’avui un cop al dia i substitueix el fons de l’escriptori. No hi ha res en segon pla; l’escriptori la baixa quan l’obres.</string>
+    <string name="desktop">Inici</string>
+    <string name="desktop_settings">"Configuració de l'inici"</string>
+    <string name="columns_title">Icones per fila</string>
+    <string name="columns_auto">Ara %1$d · triat per aquesta pantalla</string>
+    <string name="columns_manual">Ara %1$d · la teva elecció</string>
+    <string name="columns_set">%1$d icones per fila</string>
+    <string name="columns_auto_toast">Automàtic · %1$d icones per fila</string>
+    <string name="favourites">Preferits</string>
+    <string name="dock_picker_title">Preferits · tria fins a %1$d per al dock</string>
+    <string name="dock_added">%1$s fixat al dock</string>
+    <string name="dock_removed">%1$s tret del dock</string>
+    <string name="dock_full">El dock admet %1$d aplicacions. Treu-ne una primer.</string>
+    <string name="close">Tanca</string>
+    <string name="bing_daily">Imatge diària de Bing</string>
+    <string name="bing_daily_hint">Una imatge nova cada dia</string>
+    <string name="bing_fetching">"S'està baixant la imatge d'avui…"</string>
+    <string name="bing_updated">Fons actualitzat</string>
+    <string name="bing_failed">"No s'ha pogut baixar la imatge"</string>
+    <string name="bing_stopped">Canvi diari desactivat, es manté el fons actual</string>
+    <string name="pick_wallpaper">Tria una imatge en aquest televisor</string>
+    <string name="wallpaper_off">Treure el fons</string>
+    <string name="wallpaper_removed">Fons retirat</string>
+    <string name="wallpaper_none_toast">No hi havia cap fons</string>
+    <string name="wallpaper_on">Activat · %1$d KB (es substitueix diàriament)</string>
+    <string name="wallpaper_none">"Cap · l'inici és negre"</string>
+    <string name="wallpaper_set">Fons establert</string>
+    <string name="wallpaper_bad">"Aquest fitxer no s'ha pogut fer servir"</string>
+    <string name="home_key_description">El botó Inici del comandament obri aquest escriptori i torna a dalt; el botó de Configuració (opcions) obri la configuració ràpida.</string>
+    <string name="tv_settings">Configuració de la TV</string>
+    <string name="quick_picture">Pantalla i imatge</string>
+    <string name="quick_network">Xarxa</string>
+    <string name="quick_apps">Gestiona les aplicacions</string>
+    <string name="quick_apps_hint">Desinstal·la o desactiva</string>
+    <string name="launcher_settings">"Configuració de l'escriptori"</string>
+    <string name="quick_dock">Preferits</string>
 </resources>

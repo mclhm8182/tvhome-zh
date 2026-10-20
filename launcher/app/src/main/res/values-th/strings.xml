@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!--
+      Thai. Core launcher strings are upstream's (Gathin23/tv-vibehack, MIT); the desktop,
+      favourites and wallpaper strings are this fork's additions.
+    -->
     <string name="app_name">หน้าแรก</string>
     <string name="inputs">แหล่งสัญญาณ</string>
     <string name="wifi">Wi-Fi</string>
@@ -19,44 +23,40 @@
     <string name="not_available">ทีวีเครื่องนี้ไม่รองรับ</string>
     <string name="cant_open">เปิด %1$s ไม่ได้</string>
     <string name="date_format">EEEE  d MMMM</string>
-    <string name="stats_cpu">CPU %1$d%%</string>
-    <string name="stats_memory">หน่วยความจำว่าง %1$d MB</string>
-    <string name="stats_storage">พื้นที่ว่าง %1$s</string>
     <string name="dream_name">นาฬิกา</string>
-
-    <string name="launcher_settings">การตั้งค่าหน้าหลัก</string>
-    <string name="columns_label">แอปต่อแถว</string>
-    <string name="animations_state">ภาพเคลื่อนไหว: %1$s</string>
-    <string name="advanced_effects">เอฟเฟกต์ขั้นสูง</string>
-    <string name="advanced_effects_state">เอฟเฟกต์ขั้นสูง: %1$s</string>
-    <string name="advanced_effects_warning">ยกไทล์ ขยายไอคอน และเปลี่ยนสีพื้นหลังอย่างนุ่มนวล อาจใช้หน่วยความจำเพิ่มขึ้น ขึ้นอยู่กับทีวี</string>
-    <string name="follow_theme">ใช้ตามธีม (รีเซ็ตการตั้งค่า)</string>
-    <string name="follow_theme_hint">ใช้รูปแบบและภาพเคลื่อนไหวจากธีมปัจจุบันหรือค่าในแอป การใช้หรือรีเซ็ตธีมจะล้างตัวเลือกบนทีวีด้วย</string>
-    <string name="tv_settings">การตั้งค่าระบบทีวี</string>
-    <string name="on">เปิด</string>
-    <string name="off">ปิด</string>
-    <string name="enable">เปิดใช้งาน</string>
-    <string name="dock_edit">แก้ไขแถบแอป</string>
-    <string name="dock_edit_hint">เลือกตำแหน่งในแถบแอปที่ต้องการเปลี่ยน แล้วกด OK กดย้อนกลับเพื่อเสร็จสิ้น</string>
-    <string name="dock_edit_pick_app">จากนั้นเลือกแอปที่จะวางตรงนั้น แล้วกด OK กดย้อนกลับเพื่อเลือกตำแหน่งอื่น</string>
-    <string name="reorder">จัดเรียงแอป</string>
-    <string name="reorder_hint">กด OK เพื่อเลือกแอป ใช้ลูกศรเพื่อย้าย กดย้อนกลับเพื่อวาง กดย้อนกลับอีกครั้งเพื่อเสร็จสิ้น</string>
-    <string name="reorder_not_saved">บันทึกลำดับใหม่ไม่ได้</string>
-    <string name="app_library">คลังแอป</string>
-    <string name="library_empty">ไม่พบแอปที่เปิดได้</string>
-    <string name="library_on_home">อยู่ในหน้าหลัก</string>
-    <string name="library_add_home">เพิ่มในหน้าหลัก</string>
-    <string name="library_remove_shortcut">นำออกจากหน้าหลัก</string>
-    <string name="library_open">เปิด</string>
-    <string name="library_app_info">ข้อมูลแอป</string>
-    <string name="library_save_failed">บันทึกทางลัดไม่สำเร็จ</string>
-    <string name="library_recent">ใหม่ · เพิ่มในหน้าหลัก</string>
-    <string name="library_hint_add">กดเพื่อเพิ่มที่หน้าหลัก · กดค้างเพื่อดูตัวเลือก</string>
-    <string name="library_hint_open">กดเพื่อเปิด · กดค้างเพื่อดูตัวเลือก</string>
-    <plurals name="library_app_count">
-        <item quantity="other">%1$d แอป</item>
-    </plurals>
-    <string name="greeting_with_name">%1$s %2$s</string>
-    <string name="bing_daily_state">วอลเปเปอร์ Bing รายวัน: %1$s</string>
-    <string name="bing_daily_hint">ดาวน์โหลดภาพของวันนี้วันละครั้ง แล้วแทนที่วอลเปเปอร์บนเดสก์ท็อป ไม่มีอะไรทำงานอยู่เบื้องหลัง เดสก์ท็อปจะดึงเมื่อเปิดใช้งาน</string>
+    <string name="desktop">หน้าแรก</string>
+    <string name="desktop_settings">การตั้งค่าหน้าแรก</string>
+    <string name="columns_title">ไอคอนต่อแถว</string>
+    <string name="columns_auto">ขณะนี้ %1$d · เลือกตามหน้าจอนี้</string>
+    <string name="columns_manual">ขณะนี้ %1$d · ตามที่คุณเลือก</string>
+    <string name="columns_set">%1$d ไอคอนต่อแถว</string>
+    <string name="columns_auto_toast">อัตโนมัติ · %1$d ไอคอนต่อแถว</string>
+    <string name="favourites">รายการโปรด</string>
+    <string name="dock_picker_title">รายการโปรด · เลือกได้สูงสุด %1$d รายการสำหรับด็อก</string>
+    <string name="dock_added">ตรึง %1$s ไว้ในด็อกแล้ว</string>
+    <string name="dock_removed">นำ %1$s ออกจากด็อกแล้ว</string>
+    <string name="dock_full">ด็อกมีที่สำหรับ %1$d แอป โปรดนำออกก่อน</string>
+    <string name="close">ปิด</string>
+    <string name="bing_daily">ภาพประจำวันจาก Bing</string>
+    <string name="bing_daily_hint">ภาพใหม่ทุกวัน</string>
+    <string name="bing_fetching">กำลังดึงภาพของวันนี้…</string>
+    <string name="bing_updated">อัปเดตภาพพื้นหลังแล้ว</string>
+    <string name="bing_failed">ดึงภาพไม่สำเร็จ</string>
+    <string name="bing_stopped">ปิดการเปลี่ยนรายวันแล้ว ภาพพื้นหลังปัจจุบันยังอยู่</string>
+    <string name="pick_wallpaper">เลือกรูปจากทีวีเครื่องนี้</string>
+    <string name="wallpaper_off">ลบภาพพื้นหลัง</string>
+    <string name="wallpaper_removed">ลบภาพพื้นหลังแล้ว</string>
+    <string name="wallpaper_none_toast">ไม่มีภาพพื้นหลังให้ลบ</string>
+    <string name="wallpaper_on">เปิดอยู่ · %1$d KB (เปลี่ยนใหม่ทุกวัน)</string>
+    <string name="wallpaper_none">ไม่มี · หน้าแรกเป็นสีดำ</string>
+    <string name="wallpaper_set">ตั้งภาพพื้นหลังแล้ว</string>
+    <string name="wallpaper_bad">ไม่สามารถใช้ไฟล์นี้ได้</string>
+    <string name="home_key_description">ปุ่ม Home ของรีโมทเปิดเดสก์ท็อปนี้และเลื่อนกลับขึ้นด้านบน และปุ่มตั้งค่า (ตัวเลือก) เปิดการตั้งค่าด่วน</string>
+    <string name="tv_settings">การตั้งค่าโทรทัศน์</string>
+    <string name="quick_picture">จอภาพและภาพ</string>
+    <string name="quick_network">เครือข่าย</string>
+    <string name="quick_apps">จัดการแอป</string>
+    <string name="quick_apps_hint">ถอนการติดตั้งหรือปิดใช้งาน</string>
+    <string name="launcher_settings">การตั้งค่าเดสก์ท็อป</string>
+    <string name="quick_dock">รายการโปรด</string>
 </resources>

@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!--
+      Spanish. The core launcher strings are upstream's (Gathin23/tv-vibehack, MIT); the desktop,
+      favourites and wallpaper strings are this fork's additions.
+    -->
     <string name="app_name">Inicio</string>
     <string name="inputs">Entradas</string>
     <string name="wifi">Wi-Fi</string>
@@ -18,45 +22,41 @@
     <string name="offline">Sin conexión</string>
     <string name="not_available">No disponible en este TV</string>
     <string name="cant_open">No se puede abrir %1$s</string>
-    <string name="date_format">EEEE d \'de\' MMMM</string>
-    <string name="stats_cpu">CPU %1$d%%</string>
-    <string name="stats_memory">Memoria %1$d MB libres</string>
-    <string name="stats_storage">Almacenamiento %1$s libre</string>
+    <string name="date_format">"EEEE d 'de' MMMM"</string>
     <string name="dream_name">Reloj</string>
-    <string name="launcher_settings">Ajustes del lanzador</string>
-    <string name="columns_label">Aplicaciones por fila</string>
-    <string name="animations_state">Animaciones: %1$s</string>
-    <string name="advanced_effects">Efectos avanzados</string>
-    <string name="advanced_effects_state">Efectos avanzados: %1$s</string>
-    <string name="advanced_effects_warning">Eleva las tarjetas, amplía los iconos y suaviza los cambios de color. Puede aumentar el uso de memoria; depende del televisor.</string>
-    <string name="follow_theme">Seguir el tema (restablecer ajustes)</string>
-    <string name="follow_theme_hint">Usa el diseño y los efectos del tema actual o los valores integrados. Aplicar o restablecer un tema también borra estos ajustes.</string>
+    <string name="desktop">Inicio</string>
+    <string name="desktop_settings">Ajustes de inicio</string>
+    <string name="columns_title">Iconos por fila</string>
+    <string name="columns_auto">Ahora %1$d · elegido para esta pantalla</string>
+    <string name="columns_manual">Ahora %1$d · tu elección</string>
+    <string name="columns_set">%1$d iconos por fila</string>
+    <string name="columns_auto_toast">Automático · %1$d iconos por fila</string>
+    <string name="favourites">Favoritos</string>
+    <string name="dock_picker_title">Favoritos · elige hasta %1$d para el dock</string>
+    <string name="dock_added">%1$s fijado en el dock</string>
+    <string name="dock_removed">%1$s quitado del dock</string>
+    <string name="dock_full">El dock admite %1$d apps. Quita una primero.</string>
+    <string name="close">Cerrar</string>
+    <string name="bing_daily">Imagen diaria de Bing</string>
+    <string name="bing_daily_hint">Una imagen nueva al día</string>
+    <string name="bing_fetching">Descargando la imagen de hoy…</string>
+    <string name="bing_updated">Fondo actualizado</string>
+    <string name="bing_failed">No se pudo descargar la imagen</string>
+    <string name="bing_stopped">Cambio diario desactivado, el fondo actual se mantiene</string>
+    <string name="pick_wallpaper">Elige una imagen en este TV</string>
+    <string name="wallpaper_off">Quitar el fondo</string>
+    <string name="wallpaper_removed">Fondo eliminado</string>
+    <string name="wallpaper_none_toast">No había ningún fondo</string>
+    <string name="wallpaper_on">Activado · %1$d KB (se reemplaza a diario)</string>
+    <string name="wallpaper_none">Ninguno · el inicio es negro</string>
+    <string name="wallpaper_set">Fondo aplicado</string>
+    <string name="wallpaper_bad">Ese archivo no se pudo usar</string>
+    <string name="home_key_description">El botón Inicio del mando abre este escritorio y vuelve arriba; el botón de Ajustes (opciones) abre los ajustes rápidos.</string>
     <string name="tv_settings">Ajustes del televisor</string>
-    <string name="on">Sí</string>
-    <string name="off">No</string>
-    <string name="enable">Activar</string>
-    <string name="dock_edit">Editar el dock</string>
-    <string name="dock_edit_hint">Elige el hueco del dock que quieres cambiar y pulsa OK. Atrás para terminar.</string>
-    <string name="dock_edit_pick_app">Ahora elige la app que quieres poner ahí y pulsa OK. Atrás para elegir otro hueco.</string>
-    <string name="reorder">Reordenar apps</string>
-    <string name="reorder_hint">OK coge una app, las flechas la mueven, Atrás la suelta. Atrás de nuevo para terminar.</string>
-    <string name="reorder_not_saved">No se pudo guardar el nuevo orden</string>
-    <string name="app_library">Biblioteca de aplicaciones</string>
-    <string name="library_empty">No hay aplicaciones que se puedan abrir</string>
-    <string name="library_on_home">En Inicio</string>
-    <string name="library_add_home">Añadir a Inicio</string>
-    <string name="library_remove_shortcut">Quitar de Inicio</string>
-    <string name="library_open">Abrir</string>
-    <string name="library_app_info">Información de la aplicación</string>
-    <string name="library_save_failed">No se pudo guardar el acceso directo</string>
-    <string name="library_recent">Nueva · Añadir a Inicio</string>
-    <string name="library_hint_add">Pulsa para añadir a Inicio · Mantén para opciones</string>
-    <string name="library_hint_open">Pulsa para abrir · Mantén para opciones</string>
-    <plurals name="library_app_count">
-        <item quantity="one">%1$d aplicación</item>
-        <item quantity="other">%1$d aplicaciones</item>
-    </plurals>
-    <string name="greeting_with_name">%1$s, %2$s</string>
-    <string name="bing_daily_state">Fondo de pantalla diario de Bing: %1$s</string>
-    <string name="bing_daily_hint">Descarga la imagen de hoy una vez al día y cambia el fondo del escritorio. No hay nada en segundo plano; el escritorio la descarga al abrirse.</string>
+    <string name="quick_picture">Pantalla e imagen</string>
+    <string name="quick_network">Red</string>
+    <string name="quick_apps">Gestionar aplicaciones</string>
+    <string name="quick_apps_hint">Desinstalar o desactivar</string>
+    <string name="launcher_settings">Ajustes del escritorio</string>
+    <string name="quick_dock">Favoritos</string>
 </resources>

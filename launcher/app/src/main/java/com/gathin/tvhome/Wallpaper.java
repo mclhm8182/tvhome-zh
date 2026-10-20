@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.util.Log;
 
 import java.io.File;
@@ -79,9 +80,8 @@ void setAutoDaily(boolean on) {
     }
 
     /**
-     * Fetch today's Bing picture, unless it was already downloaded today. Blocking — call it off the
-     * main thread. Returns true only when a new picture was actually written, so the caller knows
-     * whether the desktop has anything new to show.
+     * Fetch today's Bing picture, unless it was already downloaded today or today is not available.
+     * Blocking — call it off the main thread. Returns true when the wallpaper changed.
      */
     boolean refreshBingIfDue() {
         if (!autoDaily()) return false;
@@ -97,9 +97,8 @@ void setAutoDaily(boolean on) {
         if (bytes == null) return false;
         // Only remember the day once the picture is on disk, or a failed download would block
         // today's retry until tomorrow.
-        if (!write(bytes)) return false;
-        prefs.edit().putString(KEY_LAST_DAY, today).apply();
-        return true;
+        if (write(bytes)) prefs.edit().putString(KEY_LAST_DAY, today).apply();
+        return hasWallpaper();
     }
 
     /** The Bing endpoint returns a small JSON document; read the first image URL out of it. */
@@ -168,6 +167,47 @@ void setAutoDaily(boolean on) {
             return false;
         }
         // BitmapFactory is the real test: a truncated or non-image file must not become the wallpaper.
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(tmp.getPath(), o);
+        if (o.outWidth <= 0) {
+            tmp.delete();
+            return false;
+        }
+        if (f.exists() && !f.delete()) {
+            tmp.delete();
+            return false;
+        }
+        return tmp.renameTo(f);
+    }
+
+    /**
+     * Copy a picture the user picked themselves. Anything already in place is replaced, so picking
+     * a new picture does not leave the previous one on disk.
+     */
+    boolean importFrom(Uri uri) {
+        File f = file();
+        if (f == null) return false;
+        File tmp = new File(f.getParentFile(), FILE_NAME + ".part");
+        try (InputStream in = ctx.getContentResolver().openInputStream(uri)) {
+            if (in == null) return false;
+            try (FileOutputStream out = new FileOutputStream(tmp)) {
+                byte[] buf = new byte[16384];
+                int n, total = 0;
+                while ((n = in.read(buf)) > 0) {
+                    total += n;
+                    if (total > MAX_BYTES) {
+                        tmp.delete();
+                        return false;
+                    }
+                    out.write(buf, 0, n);
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "import failed: " + e.getMessage());
+            tmp.delete();
+            return false;
+        }
         BitmapFactory.Options o = new BitmapFactory.Options();
         o.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(tmp.getPath(), o);

@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <bool name="rtl_app_grid">true</bool>
-    <bool name="rtl_menu_bar">true</bool>
-</resources>

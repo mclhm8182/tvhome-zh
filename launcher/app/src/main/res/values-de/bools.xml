@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- German weekday and month names need two lines (date_format_home has a line break). -->
-    <bool name="date_single_line">false</bool>
-</resources>
