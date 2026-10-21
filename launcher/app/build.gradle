@@ -46,6 +46,14 @@ android {
         disable 'InvalidSetHasFixedSize'
     }
 
+    packagingOptions {
+        resources {
+            // Kotlin metadata dragged in by AndroidX. This launcher is plain Java and never reads it;
+            // leaving it out takes about 14 KB off every install. (Upstream does the same.)
+            excludes += ['kotlin/**', 'META-INF/*.version', 'META-INF/*.kotlin_module', 'DebugProbesKt.bin']
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17

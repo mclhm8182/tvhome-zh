@@ -104,6 +104,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private SpringAnimation springX, springY;
     private float glassTargetX, glassTargetY;
     private boolean glassShown;
+    /** Width of the tile the glass was last fitted to, so a new column count refits it. */
+    private int glassCardW;
+    /** Scratch rects: onTileFocused runs on every focus change, so it allocates nothing. */
+    private final Rect tileRect = new Rect();
+    private final Rect revealRect = new Rect();
     // Static so they survive the activity being destroyed while another app is open (low-memory TVs,
     // or Developer options → "Don't keep activities"); they only reset when the process dies.
     private static int lastFocused = 0;
@@ -368,6 +373,34 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     boolean menuKeyEverywhere() {
         return getSharedPreferences(HomeKeyService.PREFS, MODE_PRIVATE)
                 .getBoolean(HomeKeyService.KEY_MENU_EVERYWHERE, false);
+    }
+
+    /** True when config.xml names the TV's own source panel. */
+    private boolean panelConfigured() {
+        String service = cfg.sourcePanelService == null ? "" : cfg.sourcePanelService.trim();
+        String action = cfg.sourcePanelAction == null ? "" : cfg.sourcePanelAction.trim();
+        return !service.isEmpty() || !action.isEmpty();
+    }
+
+    /**
+     * Open the TV's own source panel. The panel is sometimes an activity (a dialog on some sets) and
+     * sometimes a service, so try it as the activity it resolves to first and fall back to a service.
+     */
+    private void openSourcePanel() {
+        Intent panel = sourcePanelIntent();
+        if (panel == null) {
+            Toast.makeText(this, R.string.no_inputs, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            if (panel.getComponent() != null && getPackageManager().resolveService(panel, 0) != null) {
+                startService(panel.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            } else {
+                open(panel);
+            }
+        } catch (Exception e) {
+            Toast.makeText(this, R.string.not_available, Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
@@ -864,10 +897,20 @@ private int recommendColumns() {
 
     @Override
     public void onTileFocused(int position, View card) {
+        // Cold start, or a column count the grid has not laid out yet: the tile has no size, and fitting
+        // the glass to it would leave it at whatever the XML says until the next key press. Run again as
+        // soon as the tile has been measured.
+        if (card.getWidth() == 0 || card.getHeight() == 0) {
+            card.post(() -> {
+                if (card.isFocused() && card.getWidth() > 0) onTileFocused(position, card);
+            });
+            return;
+        }
         lastFocused = position;
         lastFocusedKey = adapter.keyAt(position);
         // Tile rect in root coordinates, using layout positions (ignores the scale animation).
-        Rect r = new Rect(0, 0, card.getWidth(), card.getHeight());
+        Rect r = tileRect;
+        r.set(0, 0, card.getWidth(), card.getHeight());
         root.offsetDescendantRectToMyCoords(card, r);
         float pad = 6f * density;        // matches GlassView's glow inset
         float w = card.getWidth() * AppAdapter.FOCUS_SCALE + 2 * pad;
@@ -876,9 +919,12 @@ private int recommendColumns() {
         float y = r.exactCenterY() - h / 2f;
 
         ViewGroup.LayoutParams lp = glass.getLayoutParams();
-        if (lp.width != (int) w || lp.height != (int) h) {
+        // The tile width changes with the column count and with the screen; refitting on the width alone
+        // catches both without measuring anything twice per frame.
+        if (lp.width != (int) w || lp.height != (int) h || card.getWidth() != glassCardW) {
             lp.width = (int) w;
             lp.height = (int) h;
+            glassCardW = card.getWidth();
             glass.setLayoutParams(lp);
             // GlassView draws its slab inset by pad, i.e. exactly over the zoomed tile: same corners as
             // the tile, which is itself proportionally rounder when a narrow grid made it smaller.
@@ -907,7 +953,8 @@ private int recommendColumns() {
         } else {
             hideHero();
             // Scroll just enough so the whole glass (not only the tile) is visible.
-            Rect want = new Rect(0, -(int) pad * 2, item.getWidth(), item.getHeight() + (int) pad);
+            Rect want = revealRect;
+            want.set(0, -(int) pad * 2, item.getWidth(), item.getHeight() + (int) pad);
             grid.requestChildRectangleOnScreen(item, want, false);
         }
     }
@@ -1139,24 +1186,29 @@ private int recommendColumns() {
                     .setDataAndType(TvContract.buildChannelUriForPassthroughInput(tunerId), "vnd.android.cursor.item/channel")
                     .setPackage(liveTvPkg);
         }
+        // A vendor panel configured in config.xml, with no Live TV row to sit beside it: the panel is
+        // the whole menu. Sets like the BYINTEK U4 report HDMI ports they do not have, and their own
+        // picker is the honest one.
+        if (!panelConfigured() && liveTv == null) {
+            if (rows.getChildCount() == 0) {
+                // Nothing to list either (Xiaomi and some Chinese ROMs do not report their ports).
+                Intent own = sourcePanelIntent();
+                if (own == null) {
+                    Toast.makeText(this, R.string.no_inputs, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                final Intent target = own;
+                addInputRow(rows, popup, R.drawable.ic_av, getString(R.string.input_source_settings), -1,
+                        () -> openSourcePanel());
+            }
+        } else if (panelConfigured() && liveTv == null) {
+            openSourcePanel();
+            return;
+        }
         if (liveTv != null) {
             if (rows.getChildCount() > 0) addSeparator(rows);
             final Intent liveTvIntent = liveTv;
             addInputRow(rows, popup, R.drawable.ic_livetv, getString(R.string.live_tv), -1, () -> open(liveTvIntent));
-        }
-        if (rows.getChildCount() == 0) {
-            // Nothing to list (Xiaomi and some Chinese ROMs do not report their ports). Rather than a
-            // dead end, hand the user the TV's own source panel: the vendor's when config.xml names
-            // one, otherwise the system's input-source settings page, which lists the ports even on
-            // firmware that keeps them to itself.
-            Intent own = sourcePanelIntent();
-            if (own == null) {
-                Toast.makeText(this, R.string.no_inputs, Toast.LENGTH_SHORT).show();
-                return;
-            }
-            final Intent target = own;
-            addInputRow(rows, popup, R.drawable.ic_av, getString(R.string.input_source_settings), -1,
-                    () -> open(target));
         }
 
         // Fit the widest row: TVs that report a status on every port (Sony) would otherwise squeeze the names out.
