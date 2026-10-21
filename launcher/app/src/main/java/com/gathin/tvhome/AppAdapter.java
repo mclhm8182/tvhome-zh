@@ -141,6 +141,16 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         return dockSize;
     }
 
+    /**
+     * Lets go of every tile and its artwork. Called when the system says memory is short while Home is
+     * in the background: the banners are the biggest thing we hold, and they can be loaded again when
+     * the user comes back.
+     */
+    void clear() {
+        items.clear();
+        notifyDataSetChanged();
+    }
+
     void reload() {
         PackageManager pm = ctx.getPackageManager();
         Intent probe = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER);

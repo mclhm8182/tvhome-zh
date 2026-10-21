@@ -330,6 +330,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // Read these before reload(): rebinding can move focus to the first tile and overwrite them.
         final String returnKey = lastFocusedKey;
         final int returnSlot = lastFocused;
+        // The adapter was let go of when memory ran short: put it back before loading the tiles again.
+        if (grid.getAdapter() == null) grid.setAdapter(adapter);
+        if (wallpaperReleased) {
+            wallpaperReleased = false;
+            applyWallpaper();
+        }
         adapter.reload();
         grid.scheduleLayoutAnimation();
         updateGreeting();
@@ -351,11 +357,44 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        started = true;
+    }
+
+    @Override
     protected void onStop() {
         // Another app took the screen. A translucent overlay (the panels, the quick settings)
         // only pauses us, so this really does mean the desk was left behind.
         awayFromDesk = true;
+        started = false;
         super.onStop();
+    }
+
+    /**
+     * The system wants memory back. The banners behind the tiles are the largest thing this launcher
+     * holds, so when Home is in the background and the box is short on memory, they go: the tiles, the
+     * adapter itself and the wallpaper bitmap are let go, and onResume puts them back.
+     *
+     * <p>Not while the desk is on screen. RUNNING_LOW and CRITICAL also arrive then, because an
+     * accessibility service keeps the process in the foreground, and blanking the screen the owner is
+     * looking at would be worse than the memory.
+     */
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        boolean due = level >= TRIM_MEMORY_BACKGROUND
+                || level == TRIM_MEMORY_RUNNING_LOW || level == TRIM_MEMORY_RUNNING_CRITICAL;
+        if (!due || started || adapter == null) return;
+        adapter.clear();
+        // Detach the adapter as well: with Home stopped no layout pass runs, so the tile views (and the
+        // bitmaps they hold) would stay attached until Home comes back.
+        grid.setAdapter(null);
+        grid.getRecycledViewPool().clear();
+        if (wallpaperView != null) {
+            removeWallpaper();
+            wallpaperReleased = true;
+        }
     }
 
     @Override
@@ -446,6 +485,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      * closing, the volume dialog, the quick settings overlay) onStop does not fire, so nothing moves.
      */
     private boolean awayFromDesk;
+    /** True between onStart and onStop: the desk is (at least partly) on screen. */
+    private boolean started;
+    /** Set when the wallpaper bitmap was handed back to the system; it comes back on resume. */
+    private boolean wallpaperReleased;
     /** HomeKeyService cannot reach an activity directly; this is the live one, weakly held. */
     private static WeakReference<MainActivity> live;
 
