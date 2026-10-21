@@ -61,4 +61,9 @@
     <string name="menu_key_on">Die Menütaste öffnet jetzt in jeder App die Schnelleinstellungen</string>
     <string name="menu_key_off">Die Menütaste öffnet die Schnelleinstellungen nur auf dem Desktop</string>
     <string name="input_source_settings">Eingangswahl</string>
+    <string name="reduced_motion">Ruhige Animationen</string>
+    <string name="reduced_motion_off">Volle Animationen</string>
+    <string name="reduced_motion_on">Animationen aus</string>
+    <string name="reduced_motion_turned_off">Animationen aus – der Desktop ist ruhiger, aber weniger lebendig</string>
+    <string name="reduced_motion_turned_on">Animationen wieder an</string>
 </resources>

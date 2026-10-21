@@ -64,7 +64,20 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         }
     }
 
+    /**
+     * How much a focused tile grows. This is a state, not a motion: it stays on even with reduced
+     * motion, because the glass is fitted around it and a tile that does not grow would sit under a
+     * white slab instead of inside a halo.
+     */
     static final float FOCUS_SCALE = 1.10f;
+
+    /** Weak boxes get the same look, applied instantly instead of tweened. */
+    static boolean reducedMotion;
+
+    /** Called once at startup from MainActivity, before the first layout pass. */
+    static void setReducedMotion(boolean reduced) {
+        reducedMotion = reduced;
+    }
     /** Design size of a tile (dp). Tiles shrink from here when the chosen column count cannot fit them. */
     static final float DESIGN_W_DP = 180f, DESIGN_H_DP = 101f;
 
@@ -339,13 +352,20 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
 
             card.setOnFocusChangeListener((view, focused) -> {
                 float s = focused ? FOCUS_SCALE : 1.0f;
-                view.animate().scaleX(s).scaleY(s)
-                        .setDuration(focused ? 260 : 180)
-                        .setInterpolator(new OvershootInterpolator(focused ? 1.6f : 0f))
-                        .start();
-                name.animate().alpha(focused ? 1f : 0f)
-                        .translationY(focused ? density * 4f : -density * 6f)
-                        .setDuration(220).start();
+                if (reducedMotion) {
+                    view.setScaleX(s);
+                    view.setScaleY(s);
+                    name.setAlpha(focused ? 1f : 0f);
+                    name.setTranslationY(focused ? density * 4f : -density * 6f);
+                } else {
+                    view.animate().scaleX(s).scaleY(s)
+                            .setDuration(focused ? 260 : 180)
+                            .setInterpolator(new OvershootInterpolator(focused ? 1.6f : 0f))
+                            .start();
+                    name.animate().alpha(focused ? 1f : 0f)
+                            .translationY(focused ? density * 4f : -density * 6f)
+                            .setDuration(220).start();
+                }
                 int pos = getBindingAdapterPosition();
                 if (focused && listener != null && pos != RecyclerView.NO_POSITION) {
                     listener.onTileFocused(pos, view);

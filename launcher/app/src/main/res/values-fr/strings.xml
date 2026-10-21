@@ -65,4 +65,9 @@
     <string name="menu_key_on">Le bouton menu ouvre désormais les réglages rapides dans toutes les applications</string>
     <string name="menu_key_off">"Le bouton menu n'ouvre les réglages rapides que sur le bureau"</string>
     <string name="input_source_settings">Source d’entrée</string>
+    <string name="reduced_motion">Animations réduites</string>
+    <string name="reduced_motion_off">Animations complètes</string>
+    <string name="reduced_motion_on">Animations désactivées</string>
+    <string name="reduced_motion_turned_off">Animations désactivées : le bureau est plus net, mais moins vivant</string>
+    <string name="reduced_motion_turned_on">Animations réactivées</string>
 </resources>

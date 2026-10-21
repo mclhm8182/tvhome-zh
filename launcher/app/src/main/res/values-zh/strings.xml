@@ -62,4 +62,9 @@
     <string name="menu_key_on">菜单键现在会在所有应用里打开快捷设置</string>
     <string name="menu_key_off">菜单键只在桌面打开快捷设置</string>
     <string name="input_source_settings">输入源设置</string>
+    <string name="reduced_motion">减弱动画</string>
+    <string name="reduced_motion_off">完整动画</string>
+    <string name="reduced_motion_on">动画已关闭</string>
+    <string name="reduced_motion_turned_off">动画已关闭：桌面更干脆，但少了点灵动</string>
+    <string name="reduced_motion_turned_on">动画已恢复</string>
 </resources>

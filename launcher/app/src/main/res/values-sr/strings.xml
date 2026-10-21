@@ -61,4 +61,9 @@
     <string name="menu_key_on">Taster menija sada otvara brza podešavanja u svakoj aplikaciji</string>
     <string name="menu_key_off">Taster menija otvara brza podešavanja samo na radnoj površini</string>
     <string name="input_source_settings">Izbor ulaza</string>
+    <string name="reduced_motion">Smanjena animacija</string>
+    <string name="reduced_motion_off">Puna animacija</string>
+    <string name="reduced_motion_on">Animacija isključena</string>
+    <string name="reduced_motion_turned_off">Animacija isključena: radna površina je mirnija, ali manje živa</string>
+    <string name="reduced_motion_turned_on">Animacija je ponovo uključena</string>
 </resources>

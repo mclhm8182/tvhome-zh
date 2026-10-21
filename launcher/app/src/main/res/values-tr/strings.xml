@@ -61,4 +61,9 @@
     <string name="menu_key_on">Menü tuşu artık her uygulamada hızlı ayarları açıyor</string>
     <string name="menu_key_off">Menü tuşu hızlı ayarları yalnızca masaüstünde açıyor</string>
     <string name="input_source_settings">Giriş kaynağı ayarları</string>
+    <string name="reduced_motion">Azaltılmış animasyon</string>
+    <string name="reduced_motion_off">Tam animasyon</string>
+    <string name="reduced_motion_on">Animasyonlar kapalı</string>
+    <string name="reduced_motion_turned_off">Animasyonlar kapalı: masaüstü daha sakin ama daha canlı görünmez</string>
+    <string name="reduced_motion_turned_on">Animasyonlar tekrar açıldı</string>
 </resources>

@@ -65,4 +65,9 @@
     <string name="menu_key_on">El botón de menú abre los ajustes rápidos en todas las aplicaciones</string>
     <string name="menu_key_off">El botón de menú solo abre los ajustes rápidos en el escritorio</string>
     <string name="input_source_settings">Configuración de entrada</string>
+    <string name="reduced_motion">Movimiento reducido</string>
+    <string name="reduced_motion_off">Animaciones completas</string>
+    <string name="reduced_motion_on">Animaciones desactivadas</string>
+    <string name="reduced_motion_turned_off">Animaciones desactivadas: el escritorio es más sobrio, con menos vida</string>
+    <string name="reduced_motion_turned_on">Animaciones activadas de nuevo</string>
 </resources>

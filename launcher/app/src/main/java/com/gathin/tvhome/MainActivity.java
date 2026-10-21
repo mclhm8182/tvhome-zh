@@ -72,9 +72,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     /** Draws the band behind the dock row; kept so its colour can follow the wallpaper. */
     private DockDecoration dockDecoration;
     private static final int REQ_PICK_WALLPAPER = 41;
+    /** Weak boxes cannot keep up with the tweens; this turns the desk's motion down to a minimum. */
+    private boolean reducedMotion;
     /** User's icon-per-row choice; 0 means "whatever this screen is happy with". */
     private static final String PREFS_LAYOUT = "layout";
     private static final String KEY_COLUMNS = "columns";
+    private static final String KEY_REDUCED_MOTION = "reduced_motion";
     /** The range the panel offers, in the order the row cycles through them. */
     private static final int[] COLUMN_CHOICES = {3, 4, 5, 6, 7, 8};
     /**
@@ -216,6 +219,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         grid.addItemDecoration(dockDecoration);
         grid.setLayoutAnimation(new LayoutAnimationController(
                 AnimationUtils.loadAnimation(this, R.anim.tile_enter), 0.06f));
+        reducedMotion = getSharedPreferences(PREFS_LAYOUT, MODE_PRIVATE)
+                .getBoolean(KEY_REDUCED_MOTION, false);
+        AppAdapter.setReducedMotion(reducedMotion);
         adapter = new AppAdapter(this, this, COLUMNS, cfg.dockApps);
         grid.setAdapter(adapter);
 
@@ -373,6 +379,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     boolean menuKeyEverywhere() {
         return getSharedPreferences(HomeKeyService.PREFS, MODE_PRIVATE)
                 .getBoolean(HomeKeyService.KEY_MENU_EVERYWHERE, false);
+    }
+
+    /** Whether the tweens are turned down for a box that cannot keep up with them. */
+    boolean reducedMotion() {
+        return getSharedPreferences(PREFS_LAYOUT, MODE_PRIVATE)
+                .getBoolean(KEY_REDUCED_MOTION, false);
     }
 
     /** True when config.xml names the TV's own source panel. */
@@ -695,6 +707,19 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             toast(getString(on ? R.string.menu_key_on : R.string.menu_key_off));
         });
 
+        final TextView motionStatus = panel.findViewById(R.id.motionStatus);
+        final View rowMotion = panel.findViewById(R.id.rowMotion);
+        motionStatus.setText(reducedMotion()
+                ? getString(R.string.reduced_motion_on) : getString(R.string.reduced_motion_off));
+        rowMotion.setOnClickListener(v -> {
+            boolean on = !reducedMotion();
+            getSharedPreferences(PREFS_LAYOUT, MODE_PRIVATE).edit().putBoolean(KEY_REDUCED_MOTION, on).apply();
+            motionStatus.setText(on ? getString(R.string.reduced_motion_on) : getString(R.string.reduced_motion_off));
+            toast(getString(on ? R.string.reduced_motion_turned_on : R.string.reduced_motion_turned_off));
+            // The tile size maths reads the zoom factor, so the desk has to be rebuilt for it to apply.
+            recreate();
+        });
+
         rowPick.setOnClickListener(v -> {
             Intent pick = new Intent(Intent.ACTION_OPEN_DOCUMENT)
                     .addCategory(Intent.CATEGORY_OPENABLE)
@@ -937,8 +962,14 @@ private int recommendColumns() {
             springY.cancel();
             glass.setTranslationX(x);
             glass.setTranslationY(y);
-            glass.animate().alpha(1f).setDuration(180).start();
+            if (reducedMotion) glass.setAlpha(1f);
+            else glass.animate().alpha(1f).setDuration(180).start();
             glassShown = true;
+        } else if (reducedMotion) {
+            springX.cancel();
+            springY.cancel();
+            glass.setTranslationX(x);
+            glass.setTranslationY(y);
         } else {
             springX.animateToFinalPosition(x);
             springY.animateToFinalPosition(y);
@@ -971,10 +1002,25 @@ private int recommendColumns() {
             heroName.setText(label);
             heroName.setY(y);
             heroName.setTranslationX(0f);
-            heroName.animate().alpha(1f).setDuration(260).start();
             setAmbient(color);
-            ambient.animate().alpha(1f).setDuration(600).start();
+            if (reducedMotion) {
+                heroName.setAlpha(1f);
+                ambient.setAlpha(1f);
+            } else {
+                heroName.animate().alpha(1f).setDuration(260).start();
+                ambient.animate().alpha(1f).setDuration(600).start();
+            }
             heroShown = true;
+        } else if (reducedMotion) {
+            // No cross-fade: swap the label and the glow where they stand.
+            if (changed) {
+                heroName.setText(label);
+                heroName.setY(y);
+                heroName.setTranslationX(0f);
+            }
+            if (color != ambientColor) setAmbient(color);
+            heroName.setAlpha(1f);
+            ambient.setAlpha(1f);
         } else if (changed) {
             heroName.animate().alpha(0f).translationX(-12 * density).setDuration(120).withEndAction(() -> {
                 heroName.setText(label);
@@ -1002,6 +1048,11 @@ private int recommendColumns() {
     private void hideHero() {
         if (!heroShown) return;
         heroShown = false;
+        if (reducedMotion) {
+            heroName.setAlpha(0f);
+            ambient.setAlpha(0f);
+            return;
+        }
         heroName.animate().alpha(0f).setDuration(160).start();
         ambient.animate().alpha(0f).setDuration(300).start();
     }
@@ -1009,6 +1060,10 @@ private int recommendColumns() {
     private void hideGlass() {
         if (!glassShown) return;
         glassShown = false;
+        if (reducedMotion) {
+            glass.setAlpha(0f);
+            return;
+        }
         glass.animate().alpha(0f).setDuration(160).start();
     }
 
@@ -1240,6 +1295,11 @@ private int recommendColumns() {
 
     /** Drop in: fade and unfold from the top edge, hanging under the anchor. */
     private void dropIn(PopupWindow popup, View panel, View anchor, int gravity) {
+        if (reducedMotion) {
+            // Weak boxes: the unfold costs frames the user notices as lag, so just put it on screen.
+            popup.showAsDropDown(anchor, 0, (int) (10 * density), gravity);
+            return;
+        }
         panel.setAlpha(0f);
         panel.setPivotY(0f);
         panel.setScaleY(0.92f);

@@ -61,4 +61,9 @@
     <string name="menu_key_on">يفتح زر القائمة الإعدادات السريعة الآن في كل التطبيقات</string>
     <string name="menu_key_off">يفتح زر القائمة الإعدادات السريعة على سطح المكتب فقط</string>
     <string name="input_source_settings">إدخال الإشارة</string>
+    <string name="reduced_motion">حركة أقل</string>
+    <string name="reduced_motion_off">حركات كاملة</string>
+    <string name="reduced_motion_on">تم إيقاف الحركات</string>
+    <string name="reduced_motion_turned_off">تم إيقاف الحركات: سطح المكتب أهدأ لكنه أقل حيوية</string>
+    <string name="reduced_motion_turned_on">تم تشغيل الحركات من جديد</string>
 </resources>

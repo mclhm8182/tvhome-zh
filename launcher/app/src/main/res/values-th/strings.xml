@@ -65,4 +65,9 @@
     <string name="menu_key_on">ปุ่มเมนูจะเปิดการตั้งค่าด่วนในทุกแอปแล้ว</string>
     <string name="menu_key_off">ปุ่มเมนูจะเปิดการตั้งค่าด่วนเฉพาะบนเดสก์ท็อป</string>
     <string name="input_source_settings">เลือกแหล่งสัญญาณ</string>
+    <string name="reduced_motion">ลดการเคลื่อนไหว</string>
+    <string name="reduced_motion_off">แอนิเมชันเต็มรูปแบบ</string>
+    <string name="reduced_motion_on">ปิดแอนิเมชันแล้ว</string>
+    <string name="reduced_motion_turned_off">ปิดแอนิเมชันแล้ว เดสก์ท็อปจะดูนิ่งกว่าแต่ก็จืดชื่นลง</string>
+    <string name="reduced_motion_turned_on">เปิดแอนิเมชันกลับแล้ว</string>
 </resources>

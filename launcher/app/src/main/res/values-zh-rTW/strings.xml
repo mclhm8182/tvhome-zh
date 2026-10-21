@@ -62,4 +62,9 @@
     <string name="menu_key_on">選單鍵現在會在所有應用程式裡開啟快速設定</string>
     <string name="menu_key_off">選單鍵只在桌面開啟快速設定</string>
     <string name="input_source_settings">輸入源設定</string>
+    <string name="reduced_motion">減弱動畫</string>
+    <string name="reduced_motion_off">完整動畫</string>
+    <string name="reduced_motion_on">動畫已關閉</string>
+    <string name="reduced_motion_turned_off">動畫已關閉：桌面更乾脆，但少了點靈動</string>
+    <string name="reduced_motion_turned_on">動畫已恢復</string>
 </resources>

@@ -148,11 +148,20 @@ Dock 就是底部那一排常用应用。两个入口，随你喜欢：
 在 ADB 下表现为 `INSTALL_FAILED_VERIFICATION_FAILURE`，日志里通常有类似
 `verifier: signature does not match ... will not be installed!` 的记录。
 
-已知情况：**部分 TCL 中国区固件**（如 tcl_mt5879_cn 等）会这样。这不是本项目的问题——
-上游 tv-vibehack 同样被拒（上游 README 亦记录 "A few China-market TCL sets refuse to install
-any launcher at all"）。若你的电视属于这类，**只能保留它自带的桌面**。
+已知情况：**部分 TCL 中国区固件**（如 tcl_mt5879_cn、falcon 鹤 6 等）会这样。上游同样被拒
+（上游 README 亦记录 "A few China-market TCL sets refuse to install any launcher at all"）。
 
-仍然可用的是上游的去广告部分（用 ADB 禁用预装包），只是桌面换不了。
+**但多数情况下能绕过去**，因为被拒的是"安装校验"这一步，而不是桌面本身。装之前先关掉它：
+
+```bash
+adb shell settings put global verifier_verify_adb_installs 0
+adb install -r tvhome-zh.apk
+```
+
+或者在电视上：**设置 → 安全 → 安装验证 / 未知来源**，把"验证应用"之类的开关关掉（不同固件叫法不一，
+有的在"设置 → 开发者选项"里）。关掉后重新安装即可。
+
+实在关不掉的机型只能保留自带桌面；那种情况下上游的去广告部分（用 ADB 禁用预装包）仍然可用。
 
 ## 语言
 

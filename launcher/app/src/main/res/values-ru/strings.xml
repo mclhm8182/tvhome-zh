@@ -61,4 +61,9 @@
     <string name="menu_key_on">Кнопка меню теперь открывает быстрые настройки везде</string>
     <string name="menu_key_off">Кнопка меню открывает быстрые настройки только на рабочем столе</string>
     <string name="input_source_settings">Выбор источника</string>
+    <string name="reduced_motion">Меньше анимации</string>
+    <string name="reduced_motion_off">Полная анимация</string>
+    <string name="reduced_motion_on">Анимация выключена</string>
+    <string name="reduced_motion_turned_off">Анимация выключена: стол спокойнее, но менее живой</string>
+    <string name="reduced_motion_turned_on">Анимация включена</string>
 </resources>

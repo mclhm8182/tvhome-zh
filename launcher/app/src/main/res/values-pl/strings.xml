@@ -61,4 +61,9 @@
     <string name="menu_key_on">Przycisk menu otwiera teraz szybkie ustawienia w każdej aplikacji</string>
     <string name="menu_key_off">Przycisk menu otwiera szybkie ustawienia tylko na pulpicie</string>
     <string name="input_source_settings">Wybór źródła</string>
+    <string name="reduced_motion">Mniej animacji</string>
+    <string name="reduced_motion_off">Pełne animacje</string>
+    <string name="reduced_motion_on">Animacje wyłączone</string>
+    <string name="reduced_motion_turned_off">Animacje wyłączone: pulpit jest spokojniejszy, ale mniej żywy</string>
+    <string name="reduced_motion_turned_on">Animacje włączone</string>
 </resources>

@@ -150,10 +150,23 @@ and reject any APK signed differently. Over ADB this shows up as
 `INSTALL_FAILED_VERIFICATION_FAILURE`, usually with a log line like
 `verifier: signature does not match ... will not be installed!`.
 
-Known case: **some China-market TCL sets** (e.g. `tcl_mt5879_cn`). This is not a fault of this project —
-upstream is rejected too (upstream's README notes "A few China-market TCL sets refuse to install any
-launcher at all"). If your TV is one of those, **its own home screen is what you are stuck with**. The
-debloat half of the upstream toolkit still works; only the launcher cannot be replaced.
+Known case: **some China-market TCL sets** (e.g. `tcl_mt5879_cn`, the "falcon" 鹤 6). Upstream is
+rejected too (upstream's README notes "A few China-market TCL sets refuse to install any launcher at
+all").
+
+**Most of them can be talked out of it**, though: what refuses the install is the verification step, not
+the launcher. Turn it off before installing:
+
+```bash
+adb shell settings put global verifier_verify_adb_installs 0
+adb install -r tvhome-zh.apk
+```
+
+Or on the TV itself: **Settings → Security → Install verification** (wording varies by firmware; on some
+sets it sits under Developer options). Install again afterwards.
+
+Only the models where that cannot be switched off have to keep their own home screen; the debloat half
+of the upstream toolkit still works there.
 
 ## Language
 

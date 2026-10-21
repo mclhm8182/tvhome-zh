@@ -66,4 +66,9 @@
     <string name="menu_key_on">El botó de menú obre ara els ajustos ràpids a totes les aplicacions</string>
     <string name="menu_key_off">"El botó de menú només obre els ajustos ràpids a l'escriptori"</string>
     <string name="input_source_settings">Configuració d’entrada</string>
+    <string name="reduced_motion">Moviment reduït</string>
+    <string name="reduced_motion_off">Animacions completes</string>
+    <string name="reduced_motion_on">Animacions desactivades</string>
+    <string name="reduced_motion_turned_off">Animacions desactivades: l’escriptori és més sobri, però menys viu</string>
+    <string name="reduced_motion_turned_on">Animacions reactivades</string>
 </resources>
