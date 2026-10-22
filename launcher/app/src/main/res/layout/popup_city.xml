@@ -103,10 +103,18 @@
         android:fontVariationSettings="'wght' 400"
         android:visibility="gone" />
 
-    <LinearLayout
-        android:id="@+id/results"
+    <!-- The results scroll: there can be more of them than fit on the screen. -->
+    <ScrollView
+        android:id="@+id/resultsScroll"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
-        android:orientation="vertical" />
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/results"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
 </LinearLayout>

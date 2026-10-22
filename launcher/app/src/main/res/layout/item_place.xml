@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One result in the search: a full-width row, roomy enough to read from the sofa. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="6dp"
+    android:gravity="center_vertical"
+    android:minHeight="52dp"
+    android:background="@drawable/input_row_bg"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp"
+    android:textColor="@drawable/pill_text"
+    android:textSize="16sp"
+    android:fontFamily="@font/outfit"
+    android:fontVariationSettings="'wght' 500"
+    android:focusable="true"
+    android:clickable="true" />

@@ -294,6 +294,35 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             }
             return keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && v.getId() == R.id.btnSettings;
         };
+        // The top of the desk reads as one row: the buttons, the date and the little rule all sit on
+        // the clock's middle line. The clock's own box is taller than its digits — numbers do not
+        // descend — so the line is found from the font: the middle of the digits themselves.
+        final View clockRow = findViewById(R.id.clockRow);
+        final View topButtons = findViewById(R.id.topButtons);
+        final android.widget.TextClock clock = findViewById(R.id.clock);
+        final android.widget.TextClock date = findViewById(R.id.date);
+        final View divider = findViewById(R.id.clockDivider);
+        clockRow.post(() -> {
+            int rowH = clockRow.getHeight();
+            int barH = topButtons.getHeight();
+            if (rowH <= 0 || barH <= 0) return;
+            // The ink of a digit reaches from about 0.68 of the em above the baseline down to the
+            // baseline itself — numbers do not descend. Measured against the rendered clock, that is
+            // where the eye reads the middle of the digits.
+            float baseline = clock.getBaseline();
+            float digitMiddle = baseline - clock.getTextSize() * 0.34f;
+            float line = clock.getTop() + digitMiddle;          // where that is in the row
+            // The buttons hang from the row's bottom: lift them so their middle lands on the line.
+            android.widget.RelativeLayout.LayoutParams lp =
+                    (android.widget.RelativeLayout.LayoutParams) topButtons.getLayoutParams();
+            lp.bottomMargin = Math.round(rowH - (line + barH / 2f));
+            topButtons.setLayoutParams(lp);
+            // The date and the rule are centred in the row: move them the same distance.
+            float shift = line - rowH / 2f;
+            date.setTranslationY(shift);
+            divider.setTranslationY(shift);
+        });
+
         findViewById(R.id.btnDock).setOnKeyListener(pillKeys);
         findViewById(R.id.btnWallpaper).setOnKeyListener(pillKeys);
         btnInputs.setOnKeyListener(pillKeys);
@@ -1346,8 +1375,13 @@ private int recommendColumns() {
         LinearLayout results = panel.findViewById(R.id.results);
         TextView message = panel.findViewById(R.id.message);
         input.setText(weather.placeName());
+        // The list of places can be longer than the screen: it scrolls inside the panel, and the
+        // panel itself opens from the top so that everything stays on the screen.
+        results.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        int room = (int) (330 * density);
+        int height = Math.min(results.getMeasuredHeight(), room);
         final PopupWindow popup = new PopupWindow(panel, ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT, true);
+                height > 0 ? height : ViewGroup.LayoutParams.WRAP_CONTENT, true);
         popup.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         popup.setOutsideTouchable(true);
         popup.setElevation(12 * density);
@@ -1380,15 +1414,9 @@ private int recommendColumns() {
                         message.setText(getString(R.string.weather_pick_none, typed.trim()));
                     } else {
                         for (Weather.Place p : places) {
-                            TextView row = (TextView) getLayoutInflater().inflate(R.layout.item_city, results, false);
+                            TextView row = (TextView) getLayoutInflater().inflate(R.layout.item_place, results, false);
                             row.setText(p.row());
-                            row.setOnClickListener(v -> {
-                                weather.place(p.name, p.lat, p.lon);
-                                popup.dismiss();
-                                refreshWeather();
-                                if (weatherPanel != null && weatherPanel.isShowing()) fillWeatherPanel();
-                                toast(p.name);
-                            });
+                            pickPlace(row, p, popup);
                             results.addView(row);
                         }
                         results.getChildAt(0).requestFocus();
@@ -1403,13 +1431,7 @@ private int recommendColumns() {
         for (Weather.Place c : weather.common()) {
             TextView chip = (TextView) inflater.inflate(R.layout.item_city, commonRow, false);
             chip.setText(c.row());
-            chip.setOnClickListener(v -> {
-                weather.place(c.name, c.lat, c.lon);
-                popup.dismiss();
-                refreshWeather();
-                if (weatherPanel != null && weatherPanel.isShowing()) fillWeatherPanel();
-                toast(c.name);
-            });
+            pickPlace(chip, c, popup);
             commonRow.addView(chip);
         }
 
@@ -1429,8 +1451,37 @@ private int recommendColumns() {
             }
             return false;
         });
-        dropIn(popup, panel, weatherLine, Gravity.START);
+        int[] at = new int[2];
+        weatherLine.getLocationInWindow(at);
+        dropIn(popup, panel, weatherLine, Gravity.START, (int) (14 * density) - at[1]);
         input.requestFocus();
+    }
+
+    /**
+     * A place in the list: picked with the OK key. The key-up is swallowed too, so the key-up of the
+     * search press cannot land on the first result and pick it by accident.
+     */
+    private void pickPlace(View row, Weather.Place place, PopupWindow popup) {
+        row.setOnClickListener(v -> {
+            weather.place(place.name, place.lat, place.lon);
+            popup.dismiss();
+            refreshWeather();
+            if (weatherPanel != null && weatherPanel.isShowing()) fillWeatherPanel();
+            toast(place.name);
+        });
+        row.setOnKeyListener((v, keyCode, event) -> {
+            if (keyCode != KeyEvent.KEYCODE_DPAD_CENTER && keyCode != KeyEvent.KEYCODE_ENTER) {
+                return false;
+            }
+            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                weather.place(place.name, place.lat, place.lon);
+                popup.dismiss();
+                refreshWeather();
+                if (weatherPanel != null && weatherPanel.isShowing()) fillWeatherPanel();
+                toast(place.name);
+            }
+            return true;
+        });
     }
 
     /** One request to ipinfo.io, resolved through the geocoder so the name is the local one. */

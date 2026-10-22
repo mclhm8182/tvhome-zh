@@ -316,7 +316,7 @@ final class Weather {
             for (int i = 0; i < hTimes.length(); i++) {
                 if (hTimes.optString(i).compareTo(now) >= 0) { from = i; break; }
             }
-            int to = Math.min(hTimes.length(), from + 5);
+            int to = Math.min(hTimes.length(), from + 8);
             for (int i = from; i < to; i++) {
                 // "2026-10-22T23:00" -> "23时" in the TV's own language.
                 String t = hTimes.optString(i);
