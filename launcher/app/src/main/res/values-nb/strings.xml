@@ -107,4 +107,6 @@
     <string name="wx_aqi_hazardous">Farlig</string>
     <string name="weather_hourly">Time for time</string>
     <string name="weather_days">Varsel</string>
+    <string name="weather_common">Vanlige steder</string>
+    <string name="weather_search_places">Søk etter sted</string>
 </resources>

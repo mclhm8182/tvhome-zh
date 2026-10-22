@@ -107,4 +107,6 @@
     <string name="wx_aqi_hazardous">Xavfli</string>
     <string name="weather_hourly">Soatiga</string>
     <string name="weather_days">Prognoz</string>
+    <string name="weather_common">Mashhur joylar</string>
+    <string name="weather_search_places">Joy izlang</string>
 </resources>

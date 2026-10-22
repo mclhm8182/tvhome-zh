@@ -110,4 +110,6 @@
     <string name="wx_aqi_hazardous">Dangereuse</string>
     <string name="weather_hourly">Horaire</string>
     <string name="weather_days">Prévisions</string>
+    <string name="weather_common">Lieux courants</string>
+    <string name="weather_search_places">Rechercher un lieu</string>
 </resources>

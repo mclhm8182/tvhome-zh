@@ -107,4 +107,6 @@
     <string name="wx_aqi_hazardous">Pericolosa</string>
     <string name="weather_hourly">Orarie</string>
     <string name="weather_days">Previsioni</string>
+    <string name="weather_common">Luoghi comuni</string>
+    <string name="weather_search_places">Cerca un luogo</string>
 </resources>

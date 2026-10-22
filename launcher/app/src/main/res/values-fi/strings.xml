@@ -107,4 +107,6 @@
     <string name="wx_aqi_hazardous">Vaarallinen</string>
     <string name="weather_hourly">Tuntitaso</string>
     <string name="weather_days">Ennuste</string>
+    <string name="weather_common">Yleiset paikat</string>
+    <string name="weather_search_places">Etsi paikka</string>
 </resources>

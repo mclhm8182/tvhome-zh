@@ -107,4 +107,6 @@
     <string name="wx_aqi_hazardous">Berbahaya</string>
     <string name="weather_hourly">Per jam</string>
     <string name="weather_days">Prakiraan</string>
+    <string name="weather_common">Tempat umum</string>
+    <string name="weather_search_places">Cari tempat</string>
 </resources>

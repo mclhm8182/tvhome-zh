@@ -106,4 +106,6 @@
     <string name="wx_aqi_hazardous">Gesundheitsgefährdend</string>
     <string name="weather_hourly">Stündlich</string>
     <string name="weather_days">Vorhersage</string>
+    <string name="weather_common">Häufige Orte</string>
+    <string name="weather_search_places">Ort suchen</string>
 </resources>

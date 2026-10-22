@@ -107,4 +107,6 @@
     <string name="wx_aqi_hazardous">Небезпечно</string>
     <string name="weather_hourly">Щогодини</string>
     <string name="weather_days">Прогноз</string>
+    <string name="weather_common">Поширені місця</string>
+    <string name="weather_search_places">Знайти місце</string>
 </resources>

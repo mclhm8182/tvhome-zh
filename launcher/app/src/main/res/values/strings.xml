@@ -107,4 +107,6 @@
     <string name="wx_aqi_hazardous">Hazardous</string>
     <string name="weather_hourly">Hourly</string>
     <string name="weather_days">Forecast</string>
+    <string name="weather_common">Common places</string>
+    <string name="weather_search_places">Search for a place</string>
 </resources>

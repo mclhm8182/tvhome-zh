@@ -110,4 +110,6 @@
     <string name="wx_aqi_hazardous">อันตราย</string>
     <string name="weather_hourly">รายชั่วโมง</string>
     <string name="weather_days">พยากรณ์</string>
+    <string name="weather_common">เมืองที่พบบ่อย</string>
+    <string name="weather_search_places">ค้นหาเมือง</string>
 </resources>

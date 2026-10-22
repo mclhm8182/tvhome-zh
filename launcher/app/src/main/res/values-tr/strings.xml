@@ -106,4 +106,6 @@
     <string name="wx_aqi_hazardous">Tehlikeli</string>
     <string name="weather_hourly">Saatlik</string>
     <string name="weather_days">Tahmin</string>
+    <string name="weather_common">Yaygın yerler</string>
+    <string name="weather_search_places">Yer ara</string>
 </resources>

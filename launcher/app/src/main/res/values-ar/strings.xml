@@ -106,4 +106,6 @@
     <string name="wx_aqi_hazardous">خطر</string>
     <string name="weather_hourly">كل ساعة</string>
     <string name="weather_days">التوقعات</string>
+    <string name="weather_common">أماكن شائعة</string>
+    <string name="weather_search_places">ابحث عن مكان</string>
 </resources>

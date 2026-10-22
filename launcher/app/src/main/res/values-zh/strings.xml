@@ -107,4 +107,6 @@
     <string name="wx_aqi_hazardous">危险</string>
     <string name="weather_hourly">每小时</string>
     <string name="weather_days">未来几天</string>
+    <string name="weather_common">常用城市</string>
+    <string name="weather_search_places">搜索其他城市</string>
 </resources>

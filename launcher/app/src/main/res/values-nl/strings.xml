@@ -107,4 +107,6 @@
     <string name="wx_aqi_hazardous">Gevaarlijk</string>
     <string name="weather_hourly">Per uur</string>
     <string name="weather_days">Voorspelling</string>
+    <string name="weather_common">Veelvoorkomende plaatsen</string>
+    <string name="weather_search_places">Zoek een plaats</string>
 </resources>

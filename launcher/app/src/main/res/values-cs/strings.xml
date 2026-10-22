@@ -107,4 +107,6 @@
     <string name="wx_aqi_hazardous">Nebezpečné</string>
     <string name="weather_hourly">Po hodinách</string>
     <string name="weather_days">Předpověď</string>
+    <string name="weather_common">Častá místa</string>
+    <string name="weather_search_places">Hledat místo</string>
 </resources>

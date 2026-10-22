@@ -106,4 +106,6 @@
     <string name="wx_aqi_hazardous">Opasno</string>
     <string name="weather_hourly">Po časovima</string>
     <string name="weather_days">Prognoza</string>
+    <string name="weather_common">Уобичајени градови</string>
+    <string name="weather_search_places">Претражите град</string>
 </resources>

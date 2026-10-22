@@ -83,6 +83,27 @@ final class Weather {
                 .apply();
     }
 
+    /**
+     * The places offered without typing: the ones people actually live in. Typing on a TV keyboard is
+     * slow, and the keyboard may not even spell the name the way the geocoder does, so the common
+     * cities come first and the search box is the second way in.
+     */
+    private static final String[][] COMMON = {
+        {"北京", "Beijing"}, {"上海", "Shanghai"}, {"广州", "Guangzhou"}, {"深圳", "Shenzhen"},
+        {"天津", "Tianjin"}, {"重庆", "Chongqing"}, {"成都", "Chengdu"}, {"杭州", "Hangzhou"},
+        {"南京", "Nanjing"}, {"武汉", "Wuhan"}, {"西安", "Xi'an"}, {"苏州", "Suzhou"},
+        {"郑州", "Zhengzhou"}, {"长沙", "Changsha"}, {"青岛", "Qingdao"}, {"沈阳", "Shenyang"},
+        {"大连", "Dalian"}, {"厦门", "Xiamen"}, {"昆明", "Kunming"}, {"合肥", "Hefei"},
+        {"哈尔滨", "Harbin"}, {"济南", "Jinan"}, {"福州", "Fuzhou"}, {"贵阳", "Guiyang"},
+        {"南宁", "Nanning"}, {"石家庄", "Shijiazhuang"}, {"太原", "Taiyuan"}, {"兰州", "Lanzhou"},
+        {"乌鲁木齐", "Urumqi"}, {"拉萨", "Lhasa"}, {"海口", "Haikou"}, {"东莞", "Dongguan"},
+        {"宁波", "Ningbo"}, {"无锡", "Wuxi"}, {"温州", "Wenzhou"}, {"佛山", "Foshan"},
+        {"台北", "Taipei"}, {"香港", "Hong Kong"}, {"东京", "Tokyo"}, {"首尔", "Seoul"},
+        {"新加坡", "Singapore"}, {"曼谷", "Bangkok"}, {"伦敦", "London"}, {"巴黎", "Paris"},
+        {"柏林", "Berlin"}, {"纽约", "New York"}, {"洛杉矶", "Los Angeles"}, {"旧金山", "San Francisco"},
+        {"悉尼", "Sydney"}, {"多伦多", "Toronto"}, {"莫斯科", "Moscow"}, {"迪拜", "Dubai"},
+    };
+
     // ---- places -----------------------------------------------------------------------------------
 
     /** A candidate the geocoder returned; {@link #detail} is the province or country when there is one. */
@@ -105,7 +126,16 @@ final class Weather {
 
     /** Places matching what the user typed. Empty when there is no match, null when the request failed. */
     List<Place> search(String typed) throws Exception {
-        String json = get(GEO + "?name=" + enc(typed) + "&count=8&language=" + enc(lang) + "&format=json");
+        return searchIn(typed, lang);
+    }
+
+    /**
+     * The same, but in a named language. The geocoder takes a place name written in any script and
+     * answers in the language asked for, so a name typed in English finds a Chinese city and comes
+     * back as 南宁 — and asking it in English finds the name spelled the other way.
+     */
+    List<Place> searchIn(String typed, String language) throws Exception {
+        String json = get(GEO + "?name=" + enc(typed) + "&count=8&language=" + enc(language) + "&format=json");
         JSONArray results = new JSONObject(json).optJSONArray("results");
         List<Place> out = new ArrayList<>();
         if (results == null) return out;
@@ -145,6 +175,78 @@ final class Weather {
             }
         }
         return null;
+    }
+
+    /**
+     * The common places, ready to pick. Their positions are the city centres, which is close enough
+     * for a forecast; the geocoder is asked for the exact ones when the user searches.
+     */
+    List<Place> common() {
+        List<Place> out = new ArrayList<>();
+        for (String[] c : COMMON) {
+            double[] xy = cityCentre(c[0]);
+            if (xy != null) out.add(new Place(c[0], c[1], xy[0], xy[1]));
+        }
+        return out;
+    }
+
+    /** A rough position for the city, so the desk can show weather before anything is searched. */
+    private static double[] cityCentre(String name) {
+        switch (name) {
+            case "北京": return new double[]{39.9042, 116.4074};
+            case "上海": return new double[]{31.2304, 121.4737};
+            case "广州": return new double[]{23.1291, 113.2644};
+            case "深圳": return new double[]{22.5431, 114.0579};
+            case "天津": return new double[]{39.3434, 117.3616};
+            case "重庆": return new double[]{29.5630, 106.5516};
+            case "成都": return new double[]{30.5728, 104.0668};
+            case "杭州": return new double[]{30.2741, 120.1551};
+            case "南京": return new double[]{32.0603, 118.7969};
+            case "武汉": return new double[]{30.5928, 114.3055};
+            case "西安": return new double[]{34.3416, 108.9398};
+            case "苏州": return new double[]{31.2989, 120.5853};
+            case "郑州": return new double[]{34.7466, 113.6254};
+            case "长沙": return new double[]{28.2282, 112.9388};
+            case "青岛": return new double[]{36.0671, 120.3826};
+            case "沈阳": return new double[]{41.8057, 123.4315};
+            case "大连": return new double[]{38.9140, 121.6147};
+            case "厦门": return new double[]{24.4798, 118.0894};
+            case "昆明": return new double[]{25.0389, 102.7183};
+            case "合肥": return new double[]{31.8206, 117.2272};
+            case "哈尔滨": return new double[]{45.8038, 126.5349};
+            case "济南": return new double[]{36.6512, 117.1201};
+            case "福州": return new double[]{26.0745, 119.2965};
+            case "贵阳": return new double[]{26.6470, 106.6302};
+            case "南宁": return new double[]{22.8170, 108.3665};
+            case "石家庄": return new double[]{38.0428, 114.5149};
+            case "太原": return new double[]{37.8706, 112.5489};
+            case "兰州": return new double[]{36.0611, 103.8343};
+            case "乌鲁木齐": return new double[]{43.8256, 87.6168};
+            case "拉萨": return new double[]{29.6520, 91.1721};
+            case "海口": return new double[]{20.0444, 110.1999};
+            case "东莞": return new double[]{23.0207, 113.7518};
+            case "宁波": return new double[]{29.8683, 121.5440};
+            case "无锡": return new double[]{31.4912, 120.3119};
+            case "温州": return new double[]{27.9938, 120.6994};
+            case "佛山": return new double[]{23.0219, 113.1214};
+            case "台北": return new double[]{25.0330, 121.5654};
+            case "香港": return new double[]{22.3193, 114.1694};
+            case "东京": return new double[]{35.6895, 139.6917};
+            case "首尔": return new double[]{37.5665, 126.9780};
+            case "新加坡": return new double[]{1.3521, 103.8198};
+            case "曼谷": return new double[]{13.7563, 100.5018};
+            case "伦敦": return new double[]{51.5072, -0.1276};
+            case "巴黎": return new double[]{48.8566, 2.3522};
+            case "柏林": return new double[]{52.5200, 13.4050};
+            case "纽约": return new double[]{40.7128, -74.0060};
+            case "洛杉矶": return new double[]{34.0522, -118.2437};
+            case "旧金山": return new double[]{37.7749, -122.4194};
+            case "悉尼": return new double[]{-33.8688, 151.2093};
+            case "多伦多": return new double[]{43.6532, -79.3832};
+            case "莫斯科": return new double[]{55.7558, 37.6173};
+            case "迪拜": return new double[]{25.2048, 55.2708};
+            default: return null;
+        }
     }
 
     // ---- the report -------------------------------------------------------------------------------

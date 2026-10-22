@@ -107,4 +107,6 @@
     <string name="wx_aqi_hazardous">বিপজ্জনক</string>
     <string name="weather_hourly">প্রতি ঘণ্টায়</string>
     <string name="weather_days">পূর্বাভাস</string>
+    <string name="weather_common">সাধারণ জায়গা</string>
+    <string name="weather_search_places">একটি জায়গা খুঁজুন</string>
 </resources>

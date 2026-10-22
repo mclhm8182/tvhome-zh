@@ -284,7 +284,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 focusTile(lastFocused % COLUMNS);
                 return true;
             }
-            if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && v.getId() == R.id.btnWallpaper) return true;
+            if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && v.getId() == R.id.btnWallpaper) {
+                // The weather line sits under the clock, to the left of the bar: left from the first
+                // pill goes there, and the bar keeps the height it had before the weather existed.
+                if (weatherLine != null && weatherLine.getVisibility() == View.VISIBLE) {
+                    weatherLine.requestFocus();
+                }
+                return true;
+            }
             return keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && v.getId() == R.id.btnSettings;
         };
         findViewById(R.id.btnDock).setOnKeyListener(pillKeys);
@@ -1355,7 +1362,11 @@ private int recommendColumns() {
             executor.execute(() -> {
                 List<Weather.Place> found;
                 try {
+                    // The geocoder answers in the TV's language, and it takes a name written in any
+                    // script: "北京", "Beijing" and "Nanning" all find the same place. When the name
+                    // is written in a script the geocoder does not have, it is asked again in English.
                     found = weather.search(typed);
+                    if (found.isEmpty()) found = weather.searchIn(typed, "en");
                 } catch (Exception e) {
                     found = null;
                 }
@@ -1369,7 +1380,7 @@ private int recommendColumns() {
                         message.setText(getString(R.string.weather_pick_none, typed.trim()));
                     } else {
                         for (Weather.Place p : places) {
-                            TextView row = (TextView) getLayoutInflater().inflate(R.layout.item_input, results, false);
+                            TextView row = (TextView) getLayoutInflater().inflate(R.layout.item_city, results, false);
                             row.setText(p.row());
                             row.setOnClickListener(v -> {
                                 weather.place(p.name, p.lat, p.lon);
@@ -1385,9 +1396,34 @@ private int recommendColumns() {
                 });
             });
         };
+        // The common places, ready to pick: on a TV, scrolling a list beats typing a name.
+        LinearLayout commonRow = panel.findViewById(R.id.commonRow);
+        commonRow.removeAllViews();
+        LayoutInflater inflater = getLayoutInflater();
+        for (Weather.Place c : weather.common()) {
+            TextView chip = (TextView) inflater.inflate(R.layout.item_city, commonRow, false);
+            chip.setText(c.row());
+            chip.setOnClickListener(v -> {
+                weather.place(c.name, c.lat, c.lon);
+                popup.dismiss();
+                refreshWeather();
+                if (weatherPanel != null && weatherPanel.isShowing()) fillWeatherPanel();
+                toast(c.name);
+            });
+            commonRow.addView(chip);
+        }
+
         panel.findViewById(R.id.btnSearch).setOnClickListener(v -> search.run());
         input.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_GO) {
+                search.run();
+                return true;
+            }
+            // Some TV keyboards send the search key as a plain key event instead of an editor action.
+            if (event != null && event.getAction() == KeyEvent.ACTION_DOWN
+                    && (event.getKeyCode() == KeyEvent.KEYCODE_ENTER
+                        || event.getKeyCode() == KeyEvent.KEYCODE_SEARCH
+                        || event.getKeyCode() == KeyEvent.KEYCODE_NUMPAD_ENTER)) {
                 search.run();
                 return true;
             }
