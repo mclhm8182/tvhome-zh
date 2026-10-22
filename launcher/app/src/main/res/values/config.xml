@@ -32,6 +32,9 @@
 
     <!-- Optional: what the remote's Input/TV button should do. Empty falls back to Android's own. -->
     <string name="input_action" translatable="false"></string>
+    <!-- "HDMI1=23,HDMI2=24": the vendor panel's own source numbers, for TVs whose
+         input picker takes a number instead of a channel URI (MIUI TV does). -->
+    <string name="input_sources" translatable="false"></string>
 
     <!-- Tiles per row in the grid; the dock always has this many slots. -->
     <integer name="columns">4</integer>

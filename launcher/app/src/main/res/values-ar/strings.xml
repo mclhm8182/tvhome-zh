@@ -67,7 +67,7 @@
     <string name="reduced_motion_turned_off">تم إيقاف الحركات: سطح المكتب أهدأ لكنه أقل حيوية</string>
     <string name="reduced_motion_turned_on">تم تشغيل الحركات من جديد</string>
     <string name="weather">الطقس</string>
-    <string name="weather_line">%1$d° %2$s</string>
+    <string name="weather_line">%1$s %2$d° %3$s</string>
     <string name="weather_degrees">%1$d°</string>
     <string name="weather_feels">محسوس %1$d°</string>
     <string name="weather_aqi">الهواء %1$d · %2$s</string>
@@ -104,4 +104,6 @@
     <string name="wx_aqi_unhealthy">ضارّ</string>
     <string name="wx_aqi_very_unhealthy">ضارّ جدًا</string>
     <string name="wx_aqi_hazardous">خطر</string>
+    <string name="weather_hourly">كل ساعة</string>
+    <string name="weather_days">التوقعات</string>
 </resources>

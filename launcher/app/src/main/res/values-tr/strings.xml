@@ -67,7 +67,7 @@
     <string name="reduced_motion_turned_off">Animasyonlar kapalı: masaüstü daha sakin ama daha canlı görünmez</string>
     <string name="reduced_motion_turned_on">Animasyonlar tekrar açıldı</string>
     <string name="weather">Hava</string>
-    <string name="weather_line">%1$d° %2$s</string>
+    <string name="weather_line">%1$s %2$d° %3$s</string>
     <string name="weather_degrees">%1$d°</string>
     <string name="weather_feels">Hissedilen %1$d°</string>
     <string name="weather_aqi">Hava kalitesi %1$d · %2$s</string>
@@ -104,4 +104,6 @@
     <string name="wx_aqi_unhealthy">Sağlıksız</string>
     <string name="wx_aqi_very_unhealthy">Çok sağlıksız</string>
     <string name="wx_aqi_hazardous">Tehlikeli</string>
+    <string name="weather_hourly">Saatlik</string>
+    <string name="weather_days">Tahmin</string>
 </resources>

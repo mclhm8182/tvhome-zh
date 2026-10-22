@@ -68,7 +68,7 @@
     <string name="reduced_motion_turned_off">אנימציות כובו — השולחן שקט יותר אך פחית חי</string>
     <string name="reduced_motion_turned_on">אנימציות חזרו</string>
     <string name="weather">מזג אוויר</string>
-    <string name="weather_line">%1$d° %2$s</string>
+    <string name="weather_line">%1$s %2$d° %3$s</string>
     <string name="weather_degrees">%1$d°</string>
     <string name="weather_feels">מרגיש כמו %1$d°</string>
     <string name="weather_aqi">אוויר %1$d · %2$s</string>
@@ -105,4 +105,6 @@
     <string name="wx_aqi_unhealthy">מזיק</string>
     <string name="wx_aqi_very_unhealthy">מזיק מאוד</string>
     <string name="wx_aqi_hazardous">מסוכן</string>
+    <string name="weather_hourly">בכל שעה</string>
+    <string name="weather_days">תחזית</string>
 </resources>

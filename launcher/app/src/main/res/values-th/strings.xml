@@ -71,7 +71,7 @@
     <string name="reduced_motion_turned_off">ปิดแอนิเมชันแล้ว เดสก์ท็อปจะดูนิ่งกว่าแต่ก็จืดชื่นลง</string>
     <string name="reduced_motion_turned_on">เปิดแอนิเมชันกลับแล้ว</string>
     <string name="weather">อากาศ</string>
-    <string name="weather_line">%1$d° %2$s</string>
+    <string name="weather_line">%1$s %2$d° %3$s</string>
     <string name="weather_degrees">%1$d°</string>
     <string name="weather_feels">รู้สึกเหมือน %1$d°</string>
     <string name="weather_aqi">คุณภาพอากาศ %1$d · %2$s</string>
@@ -108,4 +108,6 @@
     <string name="wx_aqi_unhealthy">ไม่ดี</string>
     <string name="wx_aqi_very_unhealthy">ไม่ดีมาก</string>
     <string name="wx_aqi_hazardous">อันตราย</string>
+    <string name="weather_hourly">รายชั่วโมง</string>
+    <string name="weather_days">พยากรณ์</string>
 </resources>

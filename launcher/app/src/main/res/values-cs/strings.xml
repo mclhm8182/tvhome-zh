@@ -68,7 +68,7 @@
     <string name="reduced_motion_turned_off">Animace vypnuty — plocha je klidnější, ale méně živá</string>
     <string name="reduced_motion_turned_on">Animace zpět</string>
     <string name="weather">Počasí</string>
-    <string name="weather_line">%1$d° %2$s</string>
+    <string name="weather_line">%1$s %2$d° %3$s</string>
     <string name="weather_degrees">%1$d°</string>
     <string name="weather_feels">Pocitově %1$d°</string>
     <string name="weather_aqi">Vzduch %1$d · %2$s</string>
@@ -105,4 +105,6 @@
     <string name="wx_aqi_unhealthy">Škodlivé</string>
     <string name="wx_aqi_very_unhealthy">Velmi škodlivé</string>
     <string name="wx_aqi_hazardous">Nebezpečné</string>
+    <string name="weather_hourly">Po hodinách</string>
+    <string name="weather_days">Předpověď</string>
 </resources>

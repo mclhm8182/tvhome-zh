@@ -68,7 +68,7 @@
     <string name="reduced_motion_turned_off">Animations turned off — the desk is calmer but less lively</string>
     <string name="reduced_motion_turned_on">Animations back on</string>
     <string name="weather">Weather</string>
-    <string name="weather_line">%1$d° %2$s</string>
+    <string name="weather_line">%1$s %2$d° %3$s</string>
     <string name="weather_degrees">%1$d°</string>
     <string name="weather_feels">Feels like %1$d°</string>
     <string name="weather_aqi">AQI %1$d · %2$s</string>
@@ -105,4 +105,6 @@
     <string name="wx_aqi_unhealthy">Unhealthy</string>
     <string name="wx_aqi_very_unhealthy">Very unhealthy</string>
     <string name="wx_aqi_hazardous">Hazardous</string>
+    <string name="weather_hourly">Hourly</string>
+    <string name="weather_days">Forecast</string>
 </resources>

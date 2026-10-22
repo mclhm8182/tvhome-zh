@@ -67,7 +67,7 @@
     <string name="reduced_motion_turned_off">Animacija isključena: radna površina je mirnija, ali manje živa</string>
     <string name="reduced_motion_turned_on">Animacija je ponovo uključena</string>
     <string name="weather">Vreme</string>
-    <string name="weather_line">%1$d° %2$s</string>
+    <string name="weather_line">%1$s %2$d° %3$s</string>
     <string name="weather_degrees">%1$d°</string>
     <string name="weather_feels">Subjektivno %1$d°</string>
     <string name="weather_aqi">Vazduh %1$d · %2$s</string>
@@ -104,4 +104,6 @@
     <string name="wx_aqi_unhealthy">Štetno</string>
     <string name="wx_aqi_very_unhealthy">Veoma štetno</string>
     <string name="wx_aqi_hazardous">Opasno</string>
+    <string name="weather_hourly">Po časovima</string>
+    <string name="weather_days">Prognoza</string>
 </resources>

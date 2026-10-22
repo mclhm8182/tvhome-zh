@@ -68,7 +68,7 @@
     <string name="reduced_motion_turned_off">动画已关闭：桌面更干脆，但少了点灵动</string>
     <string name="reduced_motion_turned_on">动画已恢复</string>
     <string name="weather">天气</string>
-    <string name="weather_line">%1$d° %2$s</string>
+    <string name="weather_line">%1$s %2$d° %3$s</string>
     <string name="weather_degrees">%1$d°</string>
     <string name="weather_feels">体感 %1$d°</string>
     <string name="weather_aqi">空气质量 %1$d · %2$s</string>
@@ -105,4 +105,6 @@
     <string name="wx_aqi_unhealthy">不健康</string>
     <string name="wx_aqi_very_unhealthy">很不健康</string>
     <string name="wx_aqi_hazardous">危险</string>
+    <string name="weather_hourly">每小时</string>
+    <string name="weather_days">未来几天</string>
 </resources>

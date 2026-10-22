@@ -439,6 +439,66 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 .getBoolean(KEY_REDUCED_MOTION, false);
     }
 
+    /**
+     * Open one input, the way that works on this TV. Three ways, in order:
+     *
+     * <p>1. the vendor's own picker with this port's number, when config.xml maps it ({@code input_action}
+     *    + {@code input_sources}). MIUI TV is the case: its HDMI ports answer nothing to the standard
+     *    channel URI, but {@code com.xiaomi.mitv.tvplayer} takes {@code --ei input 23} for HDMI 1.
+     * <p>2. the standard way: ACTION_VIEW on the passthrough input's channel URI. What most TVs want.
+     * <p>3. the vendor action with that URI, for sets whose player wants the action spelled out.
+     */
+    private void openInput(String inputId) {
+        Uri uri = TvContract.buildChannelUriForPassthroughInput(inputId);
+        // 1. the vendor's own number for this port
+        Integer source = mappedSource(inputId);
+        String action = cfg.inputAction == null ? "" : cfg.inputAction.trim();
+        if (source != null && !action.isEmpty()) {
+            try {
+                startActivity(new Intent(action).putExtra("input", source)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                return;
+            } catch (ActivityNotFoundException | SecurityException e) {
+                // fall through to the standard way
+            }
+        }
+        // 2. the standard way
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW)
+                    .setDataAndType(uri, "vnd.android.cursor.item/channel")
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            return;
+        } catch (ActivityNotFoundException | SecurityException e) {
+            if (action.isEmpty()) {
+                Toast.makeText(this, R.string.not_available, Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+        // 3. the vendor action with the URI
+        open(new Intent(action).setDataAndType(uri, "vnd.android.cursor.item/channel"));
+    }
+
+    /** The vendor's own number for this input ("HDMI1=23" -> 23), or null when it is not mapped. */
+    private Integer mappedSource(String inputId) {
+        if (cfg.inputSources == null || cfg.inputSources.trim().isEmpty()) return null;
+        // The input id ends in the port the TV itself names (".../.Hdmi1InputService/HW5"), so the
+        // mapping is matched on that, case aside.
+        String id = inputId.toLowerCase(Locale.ROOT);
+        for (String pair : cfg.inputSources.split(",")) {
+            int eq = pair.indexOf('=');
+            if (eq <= 0) continue;
+            String port = pair.substring(0, eq).trim().toLowerCase(Locale.ROOT);
+            if (!port.isEmpty() && id.contains(port)) {
+                try {
+                    return Integer.parseInt(pair.substring(eq + 1).trim());
+                } catch (NumberFormatException ignored) {
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+
     /** True when config.xml names the TV's own source panel. */
     private boolean panelConfigured() {
         String service = cfg.sourcePanelService == null ? "" : cfg.sourcePanelService.trim();
@@ -1143,8 +1203,8 @@ private int recommendColumns() {
         if (weatherReport == null) return;
         int sky = Weather.skyOf(weatherReport.code);
         weatherIcon.setImageResource(skyIcon(sky));
-        weatherText.setText(getString(R.string.weather_line, weatherReport.temp,
-                getString(weatherSky(sky))));
+        weatherText.setText(getString(R.string.weather_line, weather.placeName(),
+                weatherReport.temp, getString(weatherSky(sky))));
     }
 
     private void showWeatherPanel() {
@@ -1166,7 +1226,12 @@ private int recommendColumns() {
         weatherPanel.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         weatherPanel.setOutsideTouchable(true);
         weatherPanel.setElevation(12 * density);
-        dropIn(weatherPanel, panel, weatherLine, Gravity.START);
+        // The page is taller than the space under the line, so it opens from the top of the screen
+        // instead: a weather sheet over the desk, the way the phone app shows it.
+        int[] at = new int[2];
+        weatherLine.getLocationInWindow(at);
+        int offsetY = (int) (14 * density) - at[1];
+        dropIn(weatherPanel, panel, weatherLine, Gravity.START, offsetY);
         fillWeatherPanel();
         // Focus has to move into the panel: left on the line behind it, the D-pad would steer the desk.
         panel.post(() -> panel.findViewById(R.id.btnChangeCity).requestFocus());
@@ -1201,22 +1266,61 @@ private int recommendColumns() {
             air.setVisibility(View.GONE);
         }
 
-        LinearLayout days = panel.findViewById(R.id.days);
-        days.removeAllViews();
-        LayoutInflater inflater = getLayoutInflater();
-        for (int i = 0; i < weatherReport.days.size() && i < 3; i++) {
-            Weather.Day d = weatherReport.days.get(i);
-            View row = inflater.inflate(R.layout.item_day, days, false);
-            ((TextView) row.findViewById(R.id.dayName)).setText(dayLabel(i));
-            ((ImageView) row.findViewById(R.id.dayIcon)).setImageResource(skyIcon(Weather.skyOf(d.code)));
-            ((TextView) row.findViewById(R.id.dayTemps))
-                    .setText(getString(R.string.weather_high_low, d.max, d.min));
-            days.addView(row);
-        }
+        fillHourly(panel);
+        fillDays(panel);
+
         TextView updated = panel.findViewById(R.id.updated);
         updated.setVisibility(View.VISIBLE);
         updated.setText(getString(R.string.weather_updated,
                 android.text.format.DateFormat.getTimeFormat(this).format(new java.util.Date())));
+    }
+
+    /** The strip of coming hours: the hour, the sky, the temperature, twelve of them side by side. */
+    private void fillHourly(View panel) {
+        LinearLayout row = panel.findViewById(R.id.hourlyRow);
+        row.removeAllViews();
+        LayoutInflater inflater = getLayoutInflater();
+        for (Weather.Hour h : weatherReport.hours) {
+            View item = inflater.inflate(R.layout.item_hour, row, false);
+            ((TextView) item.findViewById(R.id.hourLabel)).setText(h.label);
+            ((ImageView) item.findViewById(R.id.hourIcon)).setImageResource(skyIcon(Weather.skyOf(h.code)));
+            ((TextView) item.findViewById(R.id.hourTemp)).setText(getString(R.string.weather_degrees, h.temp));
+            row.addView(item);
+        }
+    }
+
+    /**
+     * The coming days, each with a bar spanning its slice of the whole range — the way Apple draws
+     * the ten-day list. The bar is placed inside a fixed-width track: the left edge is where the
+     * day's low sits in the range, and the width is the day's spread across it.
+     */
+    private void fillDays(View panel) {
+        LinearLayout days = panel.findViewById(R.id.days);
+        days.removeAllViews();
+        List<Weather.Day> list = weatherReport.days;
+        if (list.isEmpty()) return;
+        int lo = Integer.MAX_VALUE, hi = Integer.MIN_VALUE;
+        for (Weather.Day d : list) {
+            lo = Math.min(lo, d.min);
+            hi = Math.max(hi, d.max);
+        }
+        int span = Math.max(1, hi - lo);
+        LayoutInflater inflater = getLayoutInflater();
+        int trackPx = (int) (150 * density);
+        for (int i = 0; i < list.size() && i < 3; i++) {
+            Weather.Day d = list.get(i);
+            View row = inflater.inflate(R.layout.item_day, days, false);
+            ((TextView) row.findViewById(R.id.dayName)).setText(dayLabel(i));
+            ((ImageView) row.findViewById(R.id.dayIcon)).setImageResource(skyIcon(Weather.skyOf(d.code)));
+            ((TextView) row.findViewById(R.id.dayLow)).setText(getString(R.string.weather_degrees, d.min));
+            ((TextView) row.findViewById(R.id.dayHigh)).setText(getString(R.string.weather_degrees, d.max));
+            View bar = row.findViewById(R.id.dayBar);
+            FrameLayout.LayoutParams blp = (FrameLayout.LayoutParams) bar.getLayoutParams();
+            blp.leftMargin = (int) ((long) trackPx * (d.min - lo) / span);
+            blp.width = Math.max((int) (4 * density), (int) ((long) trackPx * (d.max - d.min) / span));
+            bar.setLayoutParams(blp);
+            days.addView(row);
+        }
     }
 
     private String dayLabel(int i) {
@@ -1593,24 +1697,59 @@ private int recommendColumns() {
                 if (tim.getInputState(info.getId()) == TvInputManager.INPUT_STATE_CONNECTED) hdmiConnected++;
             }
             boolean hdmiStateBogus = hdmiPorts > 1 && hdmiConnected == hdmiPorts;
+            // An HDMI-CEC device (an Apple TV, a soundbar) gets an input of its own whose parent is the
+            // port it sits on, so the port and the device would each get a row ("HDMI 1" and
+            // "HDMI Apple TV"). The device takes its port's row instead, and a bare port is listed
+            // only when nothing on it speaks CEC.
+            java.util.Set<String> inputIds = new java.util.HashSet<>();
+            for (TvInputInfo info : inputs) inputIds.add(info.getId());
+            java.util.Map<String, List<TvInputInfo>> cecDevices = new java.util.HashMap<>();
+            for (TvInputInfo info : inputs) {
+                String parent = info.getParentId();
+                if (parent == null || !inputIds.contains(parent)) continue;
+                if (!info.isPassthroughInput() || info.isHidden(this)) continue;
+                List<TvInputInfo> onPort = cecDevices.get(parent);
+                if (onPort == null) cecDevices.put(parent, onPort = new ArrayList<>());
+                onPort.add(info);
+            }
             for (TvInputInfo info : inputs) {
                 if (info.getType() == TvInputInfo.TYPE_TUNER
                         && (info.getServiceInfo().applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0
                         && (tunerId == null || info.getId().compareTo(tunerId) < 0)) {
                     tunerId = info.getId();
                 }
-                if (!info.isPassthroughInput()) continue;
+                // Inputs hidden in the TV's own Settings > Inputs stay out of the menu too.
+                if (!info.isPassthroughInput() || info.isHidden(this)) continue;
+                // A CEC device's row is added with its port, below.
+                if (info.getParentId() != null && inputIds.contains(info.getParentId())) continue;
                 CharSequence l = info.loadLabel(this);
                 String label = l == null ? info.getId() : l.toString();
                 boolean hdmi = info.getType() == TvInputInfo.TYPE_HDMI;
                 if (hdmi && !label.toUpperCase().contains("HDMI")) label = "HDMI " + label;
+                // The name given to the port in Settings > Inputs ("MacBook Pro") goes before the port.
+                CharSequence custom = info.loadCustomLabel(this);
+                if (custom != null && custom.length() > 0 && !custom.toString().equals(label)) {
+                    label = custom + " \u00B7 " + label;
+                }
                 final String id = info.getId();
                 int state = hdmi && hdmiStateBogus ? -1 : tim.getInputState(id);
                 if (!hdmi && rows.getChildCount() > 0 && !sawNonHdmi) addSeparator(rows);
                 if (!hdmi) sawNonHdmi = true;
+                List<TvInputInfo> devices = cecDevices.get(id);
+                if (devices != null) {
+                    for (TvInputInfo device : devices) {
+                        CharSequence name = device.loadCustomLabel(this);
+                        String deviceLabel = name == null || name.length() == 0
+                                ? label : name + " \u00B7 " + label;
+                        final String deviceId = device.getId();
+                        int deviceState = hdmi && hdmiStateBogus ? -1 : tim.getInputState(deviceId);
+                        addInputRow(rows, popup, R.drawable.ic_input, deviceLabel, deviceState,
+                                () -> openInput(deviceId));
+                    }
+                    continue;
+                }
                 addInputRow(rows, popup, hdmi ? R.drawable.ic_input : R.drawable.ic_av, label, state,
-                        () -> open(new Intent(Intent.ACTION_VIEW).setDataAndType(
-                                TvContract.buildChannelUriForPassthroughInput(id), "vnd.android.cursor.item/channel")));
+                        () -> openInput(id));
             }
         }
         Intent liveTv = liveTvPkg.isEmpty() ? null : getPackageManager().getLeanbackLaunchIntentForPackage(liveTvPkg);
@@ -1673,16 +1812,21 @@ private int recommendColumns() {
 
     /** Drop in: fade and unfold from the top edge, hanging under the anchor. */
     private void dropIn(PopupWindow popup, View panel, View anchor, int gravity) {
+        dropIn(popup, panel, anchor, gravity, (int) (10 * density));
+    }
+
+    /** The same, but hanging from a different height: a negative offset lifts the panel up. */
+    private void dropIn(PopupWindow popup, View panel, View anchor, int gravity, int offsetY) {
         if (reducedMotion) {
             // Weak boxes: the unfold costs frames the user notices as lag, so just put it on screen.
-            popup.showAsDropDown(anchor, 0, (int) (10 * density), gravity);
+            popup.showAsDropDown(anchor, 0, offsetY, gravity);
             return;
         }
         panel.setAlpha(0f);
         panel.setPivotY(0f);
         panel.setScaleY(0.92f);
         panel.setTranslationY(-8 * density);
-        popup.showAsDropDown(anchor, 0, (int) (10 * density), gravity);
+        popup.showAsDropDown(anchor, 0, offsetY, gravity);
         panel.animate().alpha(1f).scaleY(1f).translationY(0f).setDuration(220)
                 .setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f)).start();
     }

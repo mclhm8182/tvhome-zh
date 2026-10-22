@@ -68,7 +68,7 @@
     <string name="reduced_motion_turned_off">Animatsiyalar o‘chirildi — ish stoli tinchroq, ammo kamroq jonli</string>
     <string name="reduced_motion_turned_on">Animatsiyalar yana yoniq</string>
     <string name="weather">Ob-havo</string>
-    <string name="weather_line">%1$d° %2$s</string>
+    <string name="weather_line">%1$s %2$d° %3$s</string>
     <string name="weather_degrees">%1$d°</string>
     <string name="weather_feels">%1$d°dek his qiladi</string>
     <string name="weather_aqi">Havo %1$d · %2$s</string>
@@ -105,4 +105,6 @@
     <string name="wx_aqi_unhealthy">Zararli</string>
     <string name="wx_aqi_very_unhealthy">Juda zararli</string>
     <string name="wx_aqi_hazardous">Xavfli</string>
+    <string name="weather_hourly">Soatiga</string>
+    <string name="weather_days">Prognoz</string>
 </resources>

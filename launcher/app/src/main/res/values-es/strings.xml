@@ -71,7 +71,7 @@
     <string name="reduced_motion_turned_off">Animaciones desactivadas: el escritorio es más sobrio, con menos vida</string>
     <string name="reduced_motion_turned_on">Animaciones activadas de nuevo</string>
     <string name="weather">Tiempo</string>
-    <string name="weather_line">%1$d° %2$s</string>
+    <string name="weather_line">%1$s %2$d° %3$s</string>
     <string name="weather_degrees">%1$d°</string>
     <string name="weather_feels">Sensación %1$d°</string>
     <string name="weather_aqi">Aire %1$d · %2$s</string>
@@ -108,4 +108,6 @@
     <string name="wx_aqi_unhealthy">Insalubre</string>
     <string name="wx_aqi_very_unhealthy">Muy insalubre</string>
     <string name="wx_aqi_hazardous">Peligrosa</string>
+    <string name="weather_hourly">Por hora</string>
+    <string name="weather_days">Pronóstico</string>
 </resources>

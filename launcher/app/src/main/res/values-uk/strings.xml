@@ -68,7 +68,7 @@
     <string name="reduced_motion_turned_off">Анімації вимкнено — робочий стіл спокійніший, але менш живий</string>
     <string name="reduced_motion_turned_on">Анімації знову увімкнено</string>
     <string name="weather">Погода</string>
-    <string name="weather_line">%1$d° %2$s</string>
+    <string name="weather_line">%1$s %2$d° %3$s</string>
     <string name="weather_degrees">%1$d°</string>
     <string name="weather_feels">Відчувається %1$d°</string>
     <string name="weather_aqi">Повітря %1$d · %2$s</string>
@@ -105,4 +105,6 @@
     <string name="wx_aqi_unhealthy">Шкідливо</string>
     <string name="wx_aqi_very_unhealthy">Дуже шкідливо</string>
     <string name="wx_aqi_hazardous">Небезпечно</string>
+    <string name="weather_hourly">Щогодини</string>
+    <string name="weather_days">Прогноз</string>
 </resources>

@@ -68,7 +68,7 @@
     <string name="reduced_motion_turned_off">Đã tắt chuyển động — màn hình bình lặng hơn nhưng kém sinh động</string>
     <string name="reduced_motion_turned_on">Chuyển động đã bật lại</string>
     <string name="weather">Thời tiết</string>
-    <string name="weather_line">%1$d° %2$s</string>
+    <string name="weather_line">%1$s %2$d° %3$s</string>
     <string name="weather_degrees">%1$d°</string>
     <string name="weather_feels">Cảm giác như %1$d°</string>
     <string name="weather_aqi">Không khí %1$d · %2$s</string>
@@ -105,4 +105,6 @@
     <string name="wx_aqi_unhealthy">Có hại</string>
     <string name="wx_aqi_very_unhealthy">Rất có hại</string>
     <string name="wx_aqi_hazardous">Nguy hiểm</string>
+    <string name="weather_hourly">Theo giờ</string>
+    <string name="weather_days">Dự báo</string>
 </resources>

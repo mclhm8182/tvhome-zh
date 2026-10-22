@@ -164,12 +164,26 @@ final class Weather {
     static final class Report {
         int temp, feels, code, aqi = -1;
         final List<Day> days = new ArrayList<>();
+        /** The next hours: label (the hour), the code, the temperature. */
+        final List<Hour> hours = new ArrayList<>();
+    }
+
+    static final class Hour {
+        final String label;
+        final int code, temp;
+
+        Hour(String label, int code, int temp) {
+            this.label = label;
+            this.code = code;
+            this.temp = temp;
+        }
     }
 
     /** The weather now and the next three days. Null when the request failed. */
     Report fetch() throws Exception {
         String url = FORECAST + "?latitude=" + lat() + "&longitude=" + lon()
                 + "&current=temperature_2m,apparent_temperature,weather_code"
+                + "&hourly=temperature_2m,weather_code"
                 + "&daily=weather_code,temperature_2m_max,temperature_2m_min"
                 + "&timezone=auto&forecast_days=4";
         JSONObject json = new JSONObject(get(url));
@@ -187,6 +201,33 @@ final class Weather {
             // The caller turns the first three dates into today/tomorrow/the day after.
             r.days.add(new Day(times.optString(i), codes.optInt(i),
                     Math.round((float) max.optDouble(i)), Math.round((float) min.optDouble(i))));
+        }
+        // The next twelve hours, starting from the one the TV is in now. Open-Meteo answers with a
+        // full day of hours; the first one at or after the current time is where the strip begins.
+        try {
+            JSONObject hourly = json.getJSONObject("hourly");
+            JSONArray hTimes = hourly.getJSONArray("time");
+            JSONArray temps = hourly.getJSONArray("temperature_2m");
+            JSONArray hCodes = hourly.getJSONArray("weather_code");
+            String now = json.getJSONObject("current").optString("time");
+            int from = 0;
+            for (int i = 0; i < hTimes.length(); i++) {
+                if (hTimes.optString(i).compareTo(now) >= 0) { from = i; break; }
+            }
+            int to = Math.min(hTimes.length(), from + 5);
+            for (int i = from; i < to; i++) {
+                // "2026-10-22T23:00" -> "23时" in the TV's own language.
+                String t = hTimes.optString(i);
+                int hour = 0;
+                int sep = t.indexOf('T');
+                if (sep > 0 && t.length() >= sep + 6) {
+                    hour = Integer.parseInt(t.substring(sep + 1, sep + 3));
+                }
+                r.hours.add(new Hour(hour + ":00", hCodes.optInt(i),
+                        Math.round((float) temps.optDouble(i))));
+            }
+        } catch (Exception ignored) {
+            // The strip is a bonus; the line and the days are what the panel is for.
         }
         try {
             JSONObject air = new JSONObject(get(AIR + "?latitude=" + lat() + "&longitude=" + lon() + "&current=us_aqi"));

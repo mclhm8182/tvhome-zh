@@ -72,7 +72,7 @@
     <string name="reduced_motion_turned_off">Animacions desactivades: l’escriptori és més sobri, però menys viu</string>
     <string name="reduced_motion_turned_on">Animacions reactivades</string>
     <string name="weather">Temps</string>
-    <string name="weather_line">%1$d° %2$s</string>
+    <string name="weather_line">%1$s %2$d° %3$s</string>
     <string name="weather_degrees">%1$d°</string>
     <string name="weather_feels">Sensació %1$d°</string>
     <string name="weather_aqi">Aire %1$d · %2$s</string>
@@ -109,4 +109,6 @@
     <string name="wx_aqi_unhealthy">Nociva</string>
     <string name="wx_aqi_very_unhealthy">Molt nociva</string>
     <string name="wx_aqi_hazardous">Perillosa</string>
+    <string name="weather_hourly">Per hora</string>
+    <string name="weather_days">Previsió</string>
 </resources>

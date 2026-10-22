@@ -68,7 +68,7 @@
     <string name="reduced_motion_turned_off">Animazioni spente — la scrivania è più calma, ma meno viva</string>
     <string name="reduced_motion_turned_on">Animazioni di nuovo attive</string>
     <string name="weather">Meteo</string>
-    <string name="weather_line">%1$d° %2$s</string>
+    <string name="weather_line">%1$s %2$d° %3$s</string>
     <string name="weather_degrees">%1$d°</string>
     <string name="weather_feels">Percepita %1$d°</string>
     <string name="weather_aqi">Aria %1$d · %2$s</string>
@@ -105,4 +105,6 @@
     <string name="wx_aqi_unhealthy">Dannosa</string>
     <string name="wx_aqi_very_unhealthy">Molto dannosa</string>
     <string name="wx_aqi_hazardous">Pericolosa</string>
+    <string name="weather_hourly">Orarie</string>
+    <string name="weather_days">Previsioni</string>
 </resources>

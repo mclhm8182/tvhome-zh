@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The bar that spans a day's slice of the range: cool at the low end, warm at the high end. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="3dp" />
+    <gradient
+        android:angle="0"
+        android:startColor="#5AC8FA"
+        android:centerColor="#FFD54F"
+        android:endColor="#FF8A65"
+        android:type="linear" />
+</shape>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One hour in the strip: the hour, the sky, the temperature. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="50dp"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="6dp"
+    android:orientation="vertical"
+    android:gravity="center">
+
+    <TextView
+        android:id="@+id/hourLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#B3FFFFFF"
+        android:textSize="13sp"
+        android:fontFamily="@font/outfit"
+        android:fontVariationSettings="'wght' 400" />
+
+    <ImageView
+        android:id="@+id/hourIcon"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:tint="#E6FFFFFF"
+        android:contentDescription="@null" />
+
+    <TextView
+        android:id="@+id/hourTemp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFFFFFF"
+        android:textSize="15sp"
+        android:fontFamily="@font/outfit"
+        android:fontVariationSettings="'wght' 500" />
+</LinearLayout>

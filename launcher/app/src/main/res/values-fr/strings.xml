@@ -71,7 +71,7 @@
     <string name="reduced_motion_turned_off">Animations désactivées : le bureau est plus net, mais moins vivant</string>
     <string name="reduced_motion_turned_on">Animations réactivées</string>
     <string name="weather">Météo</string>
-    <string name="weather_line">%1$d° %2$s</string>
+    <string name="weather_line">%1$s %2$d° %3$s</string>
     <string name="weather_degrees">%1$d°</string>
     <string name="weather_feels">Ressenti %1$d°</string>
     <string name="weather_aqi">Air %1$d · %2$s</string>
@@ -108,4 +108,6 @@
     <string name="wx_aqi_unhealthy">Mauvaise</string>
     <string name="wx_aqi_very_unhealthy">Très mauvaise</string>
     <string name="wx_aqi_hazardous">Dangereuse</string>
+    <string name="weather_hourly">Horaire</string>
+    <string name="weather_days">Prévisions</string>
 </resources>

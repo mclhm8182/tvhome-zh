@@ -68,7 +68,7 @@
     <string name="reduced_motion_turned_off">Animasi dimatikan — layar utama lebih tenang tapi kurang hidup</string>
     <string name="reduced_motion_turned_on">Animasi hidup kembali</string>
     <string name="weather">Cuaca</string>
-    <string name="weather_line">%1$d° %2$s</string>
+    <string name="weather_line">%1$s %2$d° %3$s</string>
     <string name="weather_degrees">%1$d°</string>
     <string name="weather_feels">Terasa seperti %1$d°</string>
     <string name="weather_aqi">Udara %1$d · %2$s</string>
@@ -105,4 +105,6 @@
     <string name="wx_aqi_unhealthy">Tidak sehat</string>
     <string name="wx_aqi_very_unhealthy">Sangat tidak sehat</string>
     <string name="wx_aqi_hazardous">Berbahaya</string>
+    <string name="weather_hourly">Per jam</string>
+    <string name="weather_days">Prakiraan</string>
 </resources>

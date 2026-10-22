@@ -38,6 +38,8 @@ final class Config {
     final String sourcePanelService;
     final String sourcePanelAction;
     final String inputAction;
+    /** "HDMI1=23,HDMI2=24": the vendor's own source numbers, for TVs whose panel takes one. */
+    final String inputSources;
     final int columns;
     final int rowsBelowDock;
     final boolean shamsiDate;
@@ -53,6 +55,7 @@ final class Config {
 
     private Config(List<String> dockApps, List<String> hiddenApps, String liveTvPackage, String liveTvAction,
                    String sourcePanelService, String sourcePanelAction, String inputAction,
+                   String inputSources,
                    int columns, int rowsBelowDock,
                    boolean shamsiDate, boolean moduleCards, String vpnApp, boolean showHomeSettingsShortcut, int backgroundColor,
                    File wallpaper, boolean overlayApplied) {
@@ -63,6 +66,7 @@ final class Config {
         this.sourcePanelService = sourcePanelService;
         this.sourcePanelAction = sourcePanelAction;
         this.inputAction = inputAction;
+        this.inputSources = inputSources;
         this.columns = columns;
         this.rowsBelowDock = rowsBelowDock;
         this.shamsiDate = shamsiDate;
@@ -88,6 +92,7 @@ final class Config {
         String panelService = res.getString(R.string.source_panel_service).trim();
         String panelAction = res.getString(R.string.source_panel_action).trim();
         String inputAction = res.getString(R.string.input_action).trim();
+        String inputSources = res.getString(R.string.input_sources).trim();
         int columns = res.getInteger(R.integer.columns);
         int rowsBelow = res.getInteger(R.integer.rows_below_dock);
         boolean shamsi = res.getBoolean(R.bool.shamsi_date);
@@ -106,6 +111,7 @@ final class Config {
             hidden = stringList(json, "hidden_apps", hidden);
             liveTv = string(json, "live_tv_package", liveTv);
             liveTvAction = string(json, "live_tv_action", liveTvAction);
+            inputSources = string(json, "input_sources", inputSources);
             panelService = string(json, "source_panel_service", panelService);
             panelAction = string(json, "source_panel_action", panelAction);
             inputAction = string(json, "input_action", inputAction);
@@ -123,8 +129,8 @@ final class Config {
         if (json != null && json.has("wallpaper") && !bool(json, "wallpaper", true)) wallpaper = null;
 
         return new Config(dock, hidden, liveTv, liveTvAction, panelService, panelAction, inputAction,
-                Math.max(1, columns), Math.max(0, rowsBelow), shamsi, moduleCards, vpn, homeSettings, background,
-                wallpaper, applied);
+                inputSources, Math.max(1, columns), Math.max(0, rowsBelow), shamsi, moduleCards, vpn,
+                homeSettings, background, wallpaper, applied);
     }
 
     /** Reads and parses the overlay; any problem means "no overlay", never a crash on the home screen. */

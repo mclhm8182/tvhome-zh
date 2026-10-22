@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  One day in the forecast, the way Apple draws it: the day, the sky, the low, a bar that spans this
+  day's slice of the week's range, and the high. The bar is a view inside a fixed-width track; the
+  code sets its left margin and width from the day's share of the range.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
@@ -7,38 +12,62 @@
     android:background="@drawable/input_row_bg"
     android:paddingStart="10dp"
     android:paddingEnd="12dp"
-    android:paddingTop="7dp"
-    android:paddingBottom="7dp"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp"
     android:focusable="true"
     android:focusableInTouchMode="true">
 
     <TextView
         android:id="@+id/dayName"
-        android:layout_width="64dp"
+        android:layout_width="68dp"
         android:layout_height="wrap_content"
         android:duplicateParentState="true"
         android:textColor="@drawable/pill_text"
-        android:textSize="13sp"
+        android:textSize="15sp"
         android:fontFamily="@font/outfit"
         android:fontVariationSettings="'wght' 500" />
 
     <ImageView
         android:id="@+id/dayIcon"
-        android:layout_width="19dp"
-        android:layout_height="19dp"
-        android:layout_marginStart="6dp"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
         android:layout_marginEnd="10dp"
         android:duplicateParentState="true"
         android:tint="@drawable/pill_text"
         android:contentDescription="@null" />
 
     <TextView
-        android:id="@+id/dayTemps"
-        android:layout_width="wrap_content"
+        android:id="@+id/dayLow"
+        android:layout_width="40dp"
         android:layout_height="wrap_content"
+        android:gravity="end"
         android:duplicateParentState="true"
         android:textColor="@drawable/pill_text_dim"
-        android:textSize="13sp"
+        android:textSize="15sp"
         android:fontFamily="@font/outfit"
         android:fontVariationSettings="'wght' 400" />
+
+    <FrameLayout
+        android:id="@+id/barTrack"
+        android:layout_width="150dp"
+        android:layout_height="6dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp">
+
+        <View
+            android:id="@+id/dayBar"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/wx_day_bar" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/dayHigh"
+        android:layout_width="40dp"
+        android:layout_height="wrap_content"
+        android:duplicateParentState="true"
+        android:textColor="@drawable/pill_text"
+        android:textSize="15sp"
+        android:fontFamily="@font/outfit"
+        android:fontVariationSettings="'wght' 500" />
 </LinearLayout>

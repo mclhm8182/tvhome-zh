@@ -68,7 +68,7 @@
     <string name="reduced_motion_turned_off">Animaatiot pois — työpöytä rauhallisempi mutta vähemmän elävä</string>
     <string name="reduced_motion_turned_on">Animaatiot takaisin</string>
     <string name="weather">Sää</string>
-    <string name="weather_line">%1$d° %2$s</string>
+    <string name="weather_line">%1$s %2$d° %3$s</string>
     <string name="weather_degrees">%1$d°</string>
     <string name="weather_feels">Tuntuu kuin %1$d°</string>
     <string name="weather_aqi">Ilma %1$d · %2$s</string>
@@ -105,4 +105,6 @@
     <string name="wx_aqi_unhealthy">Haitallinen</string>
     <string name="wx_aqi_very_unhealthy">Erittäin haitallinen</string>
     <string name="wx_aqi_hazardous">Vaarallinen</string>
+    <string name="weather_hourly">Tuntitaso</string>
+    <string name="weather_days">Ennuste</string>
 </resources>
