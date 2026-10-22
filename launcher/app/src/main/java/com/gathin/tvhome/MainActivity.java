@@ -26,6 +26,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 import android.view.Gravity;
+import android.view.WindowManager;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,6 +35,8 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
 import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
+import android.view.inputmethod.EditorInfo;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
@@ -53,6 +56,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * tvOS style home: black, a pinned dock row, an app grid, and one glass highlight that springs between tiles.
@@ -172,6 +178,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         glass = findViewById(R.id.glass);
         // A theme may paint the whole background: a colour, a wallpaper, or nothing beyond both.
         root.setBackgroundColor(cfg.backgroundColor);
+        weather = new Weather(this);
+        setupWeather();
         if (cfg.wallpaper != null) showWallpaper(cfg.wallpaper);
         ambient = findViewById(R.id.ambient);
         heroName = findViewById(R.id.heroName);
@@ -338,9 +346,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
         adapter.reload();
         grid.scheduleLayoutAnimation();
+        if (weather != null && weather.enabled()) refreshWeather();
         updateGreeting();
         updateWifiLabel();
         handler.postDelayed(minuteTick, MINUTE_MS);
+        if (weather != null && weather.enabled() && weather.hasPlace()) {
+            handler.postDelayed(weatherTick, Weather.REFRESH_MS);
+        }
 
         // Return to the app we left from, or the same slot if that app is gone. Always refocus: after
         // reload() the view that holds focus may no longer show the app it had.
@@ -354,6 +366,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     protected void onPause() {
         super.onPause();
         handler.removeCallbacks(minuteTick);
+        handler.removeCallbacks(weatherTick);   // nothing is fetched while the desk is off screen
     }
 
     @Override
@@ -489,6 +502,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private boolean started;
     /** Set when the wallpaper bitmap was handed back to the system; it comes back on resume. */
     private boolean wallpaperReleased;
+    /** The weather line under the clock, and the loop that keeps it current. */
+    private Weather weather;
+    private View weatherLine;
+    private ImageView weatherIcon;
+    private TextView weatherText;
+    private Weather.Report weatherReport;
+    private PopupWindow weatherPanel;
+    private final Runnable weatherTick = this::refreshWeather;
+    /** One thread for the network: the weather, the city search, the locate. */
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     /** HomeKeyService cannot reach an activity directly; this is the live one, weakly held. */
     private static WeakReference<MainActivity> live;
 
@@ -754,6 +777,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         final View rowMotion = panel.findViewById(R.id.rowMotion);
         motionStatus.setText(reducedMotion()
                 ? getString(R.string.reduced_motion_on) : getString(R.string.reduced_motion_off));
+        final TextView weatherStatus = panel.findViewById(R.id.weatherStatus);
+        final View rowWeather = panel.findViewById(R.id.rowWeather);
+        weatherStatus.setText(weather.enabled() && weather.hasPlace()
+                ? weather.placeName() : getString(R.string.weather_state_off));
+        rowWeather.setOnClickListener(v -> toggleWeather(weatherStatus));
+
         rowMotion.setOnClickListener(v -> {
             boolean on = !reducedMotion();
             getSharedPreferences(PREFS_LAYOUT, MODE_PRIVATE).edit().putBoolean(KEY_REDUCED_MOTION, on).apply();
@@ -1032,6 +1061,312 @@ private int recommendColumns() {
             grid.requestChildRectangleOnScreen(item, want, false);
         }
     }
+
+
+    // ---- weather ----------------------------------------------------------------------------------
+
+    /** Wire the line under the clock; it stays hidden until the user turns the weather on. */
+    private void setupWeather() {
+        weatherLine = findViewById(R.id.weatherLine);
+        weatherIcon = findViewById(R.id.weatherIcon);
+        weatherText = findViewById(R.id.weatherText);
+        weatherLine.setOnClickListener(v -> showWeatherPanel());
+        if (weather.enabled() && weather.hasPlace()) weatherLine.setVisibility(View.VISIBLE);
+    }
+
+    /** Toggle from the desktop settings panel, and keep the row's subtitle honest. */
+    private void toggleWeather(TextView status) {
+        if (weather.enabled()) {
+            weather.enabled(false);
+            weatherLine.setVisibility(View.GONE);
+            handler.removeCallbacks(weatherTick);
+            if (weatherPanel != null) weatherPanel.dismiss();
+            status.setText(getString(R.string.weather_state_off));
+            toast(getString(R.string.weather_turned_off));
+            return;
+        }
+        weather.enabled(true);
+        if (weather.hasPlace()) {
+            weatherLine.setVisibility(View.VISIBLE);
+            refreshWeather();
+            handler.postDelayed(weatherTick, Weather.REFRESH_MS);
+            status.setText(weather.placeName());
+            toast(getString(R.string.weather_turned_on));
+        } else {
+            // No place yet: start from the TV's own language, the user can change it in one press.
+            Weather.Place guess = guessCity();
+            weather.place(guess.name, guess.lat, guess.lon);
+            weatherLine.setVisibility(View.VISIBLE);
+            status.setText(weather.placeName());
+            toast(getString(R.string.weather_turned_on));
+            refreshWeather();
+            handler.postDelayed(weatherTick, Weather.REFRESH_MS);
+        }
+    }
+
+    /**
+     * A starting city from the TV's language: nothing is sent, nothing is guessed from the network.
+     * Chinese, Japanese and Korean get their own capital; everything else starts in London.
+     */
+    private Weather.Place guessCity() {
+        String l = Locale.getDefault().getLanguage();
+        if (l == null) l = "en";
+        switch (l) {
+            case "zh": return new Weather.Place("北京", "中国", 39.9075, 116.39723);
+            case "ja": return new Weather.Place("東京", "日本", 35.6895, 139.6917);
+            case "ko": return new Weather.Place("서울", "대한민국", 37.5665, 126.9780);
+            default:   return new Weather.Place("London", "United Kingdom", 51.5072, -0.1276);
+        }
+    }
+
+    private void refreshWeather() {
+        if (weather == null || !weather.enabled() || !weather.hasPlace()) return;
+        executor.execute(() -> {
+            Weather.Report r;
+            try {
+                r = weather.fetch();
+            } catch (Exception e) {
+                r = null;
+            }
+            Weather.Report report = r;
+            handler.post(() -> {
+                if (report == null) return;   // offline: the line keeps the last reading it had
+                weatherReport = report;
+                showWeatherLine();
+                if (weatherPanel != null && weatherPanel.isShowing()) fillWeatherPanel();
+            });
+        });
+    }
+
+    /** The line under the clock: icon, temperature, the words for the sky. */
+    private void showWeatherLine() {
+        if (weatherReport == null) return;
+        int sky = Weather.skyOf(weatherReport.code);
+        weatherIcon.setImageResource(skyIcon(sky));
+        weatherText.setText(getString(R.string.weather_line, weatherReport.temp,
+                getString(weatherSky(sky))));
+    }
+
+    private void showWeatherPanel() {
+        if (weatherPanel != null && weatherPanel.isShowing()) {
+            weatherPanel.dismiss();
+            return;
+        }
+        View panel = getLayoutInflater().inflate(R.layout.popup_weather, root, false);
+        panel.findViewById(R.id.btnChangeCity).setOnClickListener(v -> {
+            weatherPanel.dismiss();
+            pickCity();
+        });
+        panel.findViewById(R.id.btnLocate).setOnClickListener(v -> {
+            weatherPanel.dismiss();
+            locateCity();
+        });
+        weatherPanel = new PopupWindow(panel, ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT, true);
+        weatherPanel.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        weatherPanel.setOutsideTouchable(true);
+        weatherPanel.setElevation(12 * density);
+        dropIn(weatherPanel, panel, weatherLine, Gravity.START);
+        fillWeatherPanel();
+        // Focus has to move into the panel: left on the line behind it, the D-pad would steer the desk.
+        panel.post(() -> panel.findViewById(R.id.btnChangeCity).requestFocus());
+    }
+
+    /** Fill the open panel from the last report, or say why there is nothing to show. */
+    private void fillWeatherPanel() {
+        if (weatherPanel == null || !weatherPanel.isShowing()) return;
+        View panel = weatherPanel.getContentView();
+        TextView place = panel.findViewById(R.id.place);
+        TextView message = panel.findViewById(R.id.message);
+        place.setText(weather.placeName());
+        if (weatherReport == null) {
+            message.setVisibility(View.VISIBLE);
+            message.setText(getString(R.string.weather_offline));
+            return;
+        }
+        message.setVisibility(View.GONE);
+        int sky = Weather.skyOf(weatherReport.code);
+        ((ImageView) panel.findViewById(R.id.icon)).setImageResource(skyIcon(sky));
+        ((TextView) panel.findViewById(R.id.temp)).setText(getString(R.string.weather_degrees, weatherReport.temp));
+        ((TextView) panel.findViewById(R.id.sky)).setText(getString(weatherSky(sky)));
+        ((TextView) panel.findViewById(R.id.feels))
+                .setText(getString(R.string.weather_feels, weatherReport.feels));
+
+        TextView air = panel.findViewById(R.id.air);
+        if (weatherReport.aqi >= 0) {
+            air.setText(getString(R.string.weather_aqi, weatherReport.aqi, getString(aqiLabel(weatherReport.aqi))));
+            air.setBackgroundColor(aqiColour(weatherReport.aqi));
+            air.setVisibility(View.VISIBLE);
+        } else {
+            air.setVisibility(View.GONE);
+        }
+
+        LinearLayout days = panel.findViewById(R.id.days);
+        days.removeAllViews();
+        LayoutInflater inflater = getLayoutInflater();
+        for (int i = 0; i < weatherReport.days.size() && i < 3; i++) {
+            Weather.Day d = weatherReport.days.get(i);
+            View row = inflater.inflate(R.layout.item_day, days, false);
+            ((TextView) row.findViewById(R.id.dayName)).setText(dayLabel(i));
+            ((ImageView) row.findViewById(R.id.dayIcon)).setImageResource(skyIcon(Weather.skyOf(d.code)));
+            ((TextView) row.findViewById(R.id.dayTemps))
+                    .setText(getString(R.string.weather_high_low, d.max, d.min));
+            days.addView(row);
+        }
+        TextView updated = panel.findViewById(R.id.updated);
+        updated.setVisibility(View.VISIBLE);
+        updated.setText(getString(R.string.weather_updated,
+                android.text.format.DateFormat.getTimeFormat(this).format(new java.util.Date())));
+    }
+
+    private String dayLabel(int i) {
+        if (i == 0) return getString(R.string.weather_today);
+        if (i == 1) return getString(R.string.weather_tomorrow);
+        if (i == 2) return getString(R.string.weather_day_after);
+        return weatherReport.days.get(i).label;
+    }
+
+    // ---- picking a city ---------------------------------------------------------------------------
+
+    /** Type a name with the TV's own keyboard, then pick from what Open-Meteo knows. */
+    private void pickCity() {
+        View panel = getLayoutInflater().inflate(R.layout.popup_city, root, false);
+        EditText input = panel.findViewById(R.id.cityInput);
+        LinearLayout results = panel.findViewById(R.id.results);
+        TextView message = panel.findViewById(R.id.message);
+        input.setText(weather.placeName());
+        final PopupWindow popup = new PopupWindow(panel, ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT, true);
+        popup.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        popup.setOutsideTouchable(true);
+        popup.setElevation(12 * density);
+        popup.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+
+        Runnable search = () -> {
+            String typed = input.getText().toString();
+            if (typed.trim().isEmpty()) return;
+            message.setVisibility(View.VISIBLE);
+            message.setText(getString(R.string.weather_searching));
+            results.removeAllViews();
+            executor.execute(() -> {
+                List<Weather.Place> found;
+                try {
+                    found = weather.search(typed);
+                } catch (Exception e) {
+                    found = null;
+                }
+                List<Weather.Place> places = found;
+                handler.post(() -> {
+                    message.setVisibility(View.GONE);
+                    if (places == null) {
+                        toast(getString(R.string.weather_offline));
+                    } else if (places.isEmpty()) {
+                        message.setVisibility(View.VISIBLE);
+                        message.setText(getString(R.string.weather_pick_none, typed.trim()));
+                    } else {
+                        for (Weather.Place p : places) {
+                            TextView row = (TextView) getLayoutInflater().inflate(R.layout.item_input, results, false);
+                            row.setText(p.row());
+                            row.setOnClickListener(v -> {
+                                weather.place(p.name, p.lat, p.lon);
+                                popup.dismiss();
+                                refreshWeather();
+                                if (weatherPanel != null && weatherPanel.isShowing()) fillWeatherPanel();
+                                toast(p.name);
+                            });
+                            results.addView(row);
+                        }
+                        results.getChildAt(0).requestFocus();
+                    }
+                });
+            });
+        };
+        panel.findViewById(R.id.btnSearch).setOnClickListener(v -> search.run());
+        input.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_GO) {
+                search.run();
+                return true;
+            }
+            return false;
+        });
+        dropIn(popup, panel, weatherLine, Gravity.START);
+        input.requestFocus();
+    }
+
+    /** One request to ipinfo.io, resolved through the geocoder so the name is the local one. */
+    private void locateCity() {
+        toast(getString(R.string.weather_locating));
+        executor.execute(() -> {
+            Weather.Place p;
+            try {
+                p = weather.locate();
+            } catch (Exception e) {
+                p = null;
+            }
+            Weather.Place place = p;
+            handler.post(() -> {
+                if (place == null) {
+                    toast(getString(R.string.weather_locate_failed));
+                    return;
+                }
+                weather.place(place.name, place.lat, place.lon);
+                refreshWeather();
+                if (weatherPanel != null && weatherPanel.isShowing()) fillWeatherPanel();
+                toast(place.name);
+            });
+        });
+    }
+
+    // ---- weather bits -----------------------------------------------------------------------------
+
+    private static int skyIcon(int sky) {
+        switch (sky) {
+            case 0: return R.drawable.ic_wx_clear;
+            case 1: return R.drawable.ic_wx_cloudy;
+            case 2: return R.drawable.ic_wx_fog;
+            case 3: return R.drawable.ic_wx_drizzle;
+            case 4: return R.drawable.ic_wx_rain;
+            case 5: return R.drawable.ic_wx_snow;
+            case 6: return R.drawable.ic_wx_showers;
+            case 7: return R.drawable.ic_wx_snow;
+            default: return R.drawable.ic_wx_thunder;
+        }
+    }
+
+    private static int weatherSky(int sky) {
+        switch (sky) {
+            case 0: return R.string.wx_clear;
+            case 1: return R.string.wx_cloudy;
+            case 2: return R.string.wx_fog;
+            case 3: return R.string.wx_drizzle;
+            case 4: return R.string.wx_rain;
+            case 5: return R.string.wx_snow;
+            case 6: return R.string.wx_showers;
+            case 7: return R.string.wx_snow_showers;
+            default: return R.string.wx_thunder;
+        }
+    }
+
+    /** The US AQI band, for the words under the number. */
+    private static int aqiLabel(int aqi) {
+        if (aqi <= 50) return R.string.wx_aqi_good;
+        if (aqi <= 100) return R.string.wx_aqi_moderate;
+        if (aqi <= 150) return R.string.wx_aqi_sensitive;
+        if (aqi <= 200) return R.string.wx_aqi_unhealthy;
+        if (aqi <= 300) return R.string.wx_aqi_very_unhealthy;
+        return R.string.wx_aqi_hazardous;
+    }
+
+    /** The same band as a colour, so the pill reads at a glance. */
+    private static int aqiColour(int aqi) {
+        if (aqi <= 50) return 0xFF2E9E5B;      // green
+        if (aqi <= 100) return 0xFFD9A62E;     // yellow
+        if (aqi <= 150) return 0xFFE07A2E;     // orange
+        if (aqi <= 200) return 0xFFD64545;     // red
+        if (aqi <= 300) return 0xFF8E4B9E;     // purple
+        return 0xFF8C2F2F;                     // maroon
+    }
+
 
     // ---- top shelf -------------------------------------------------------------------------------
 

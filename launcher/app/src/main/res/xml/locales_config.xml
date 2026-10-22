@@ -14,17 +14,29 @@
   next to the others and add its code here.
 -->
 <locale-config xmlns:android="http://schemas.android.com/apk/res/android">
-    <locale android:name="en" />
     <locale android:name="ar" />
+    <locale android:name="bn" />
     <locale android:name="ca" />
+    <locale android:name="cs" />
     <locale android:name="de" />
+    <locale android:name="en" />
     <locale android:name="es" />
+    <locale android:name="fi" />
     <locale android:name="fr" />
+    <locale android:name="in" />
+    <locale android:name="it" />
+    <locale android:name="iw" />
+    <locale android:name="nb" />
+    <locale android:name="nl" />
     <locale android:name="pl" />
+    <locale android:name="pt" />
     <locale android:name="ru" />
     <locale android:name="sr-Latn" />
     <locale android:name="th" />
     <locale android:name="tr" />
+    <locale android:name="uk" />
+    <locale android:name="uz" />
+    <locale android:name="vi" />
     <locale android:name="zh-CN" />
     <locale android:name="zh-TW" />
 </locale-config>

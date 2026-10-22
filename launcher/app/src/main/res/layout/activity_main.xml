@@ -117,6 +117,46 @@
                         android:letterSpacing="0.14"
                         android:textAllCaps="true" />
                 </LinearLayout>
+
+                <!-- The weather, one line under the clock. Hidden until the user turns it on. -->
+                <LinearLayout
+                    android:id="@+id/weatherLine"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="7dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/input_row_bg"
+                    android:paddingStart="9dp"
+                    android:paddingEnd="12dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:nextFocusRight="@+id/btnWallpaper"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:id="@+id/weatherIcon"
+                        android:layout_width="19dp"
+                        android:layout_height="19dp"
+                        android:layout_marginEnd="7dp"
+                        android:duplicateParentState="true"
+                        android:tint="@drawable/pill_text"
+                        android:contentDescription="@null" />
+
+                    <TextView
+                        android:id="@+id/weatherText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:duplicateParentState="true"
+                        android:textColor="@drawable/pill_text"
+                        android:textSize="14sp"
+                        android:fontFamily="@font/outfit"
+                        android:fontVariationSettings="'wght' 400"
+                        android:letterSpacing="0.04" />
+                </LinearLayout>
             </LinearLayout>
 
             <LinearLayout
@@ -133,6 +173,7 @@
                     style="@style/TopButton"
                     android:text="@string/desktop"
                     android:drawableStart="@drawable/ic_wallpaper"
+                    android:nextFocusLeft="@+id/weatherLine"
                     android:nextFocusDown="@+id/grid" />
 
                 <TextView

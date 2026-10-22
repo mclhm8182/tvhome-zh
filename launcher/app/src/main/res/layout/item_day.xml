@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/input_row_bg"
+    android:paddingStart="10dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="7dp"
+    android:paddingBottom="7dp"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
+
+    <TextView
+        android:id="@+id/dayName"
+        android:layout_width="64dp"
+        android:layout_height="wrap_content"
+        android:duplicateParentState="true"
+        android:textColor="@drawable/pill_text"
+        android:textSize="13sp"
+        android:fontFamily="@font/outfit"
+        android:fontVariationSettings="'wght' 500" />
+
+    <ImageView
+        android:id="@+id/dayIcon"
+        android:layout_width="19dp"
+        android:layout_height="19dp"
+        android:layout_marginStart="6dp"
+        android:layout_marginEnd="10dp"
+        android:duplicateParentState="true"
+        android:tint="@drawable/pill_text"
+        android:contentDescription="@null" />
+
+    <TextView
+        android:id="@+id/dayTemps"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:duplicateParentState="true"
+        android:textColor="@drawable/pill_text_dim"
+        android:textSize="13sp"
+        android:fontFamily="@font/outfit"
+        android:fontVariationSettings="'wght' 400" />
+</LinearLayout>

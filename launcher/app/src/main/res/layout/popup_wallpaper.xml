@@ -160,6 +160,48 @@
         </LinearLayout>
     </LinearLayout>
 
+    <!-- The weather, off by default: it is the one feature that talks to the network. -->
+    <LinearLayout
+        android:id="@+id/rowWeather"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/input_row_bg"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:focusable="true"
+        android:focusableInTouchMode="true">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:duplicateParentState="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/weather"
+                android:textColor="@drawable/pill_text"
+                android:duplicateParentState="true"
+                android:textSize="15sp"
+                android:fontFamily="@font/outfit"
+                android:fontVariationSettings="'wght' 500" />
+
+            <TextView
+                android:id="@+id/weatherStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@drawable/pill_text_dim"
+                android:duplicateParentState="true"
+                android:textSize="11sp"
+                android:fontFamily="@font/outfit"
+                android:fontVariationSettings="'wght' 400" />
+        </LinearLayout>
+    </LinearLayout>
+
     <!-- Turn the tweens down for a box whose GPU cannot keep up with them. -->
     <LinearLayout
         android:id="@+id/rowMotion"

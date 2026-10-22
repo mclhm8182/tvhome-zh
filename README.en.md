@@ -85,6 +85,7 @@ remote control.**
 | 🌍 **Thirteen languages** | has Chinese already | Simplified **and** Traditional Chinese, plus German, Spanish, French, Russian, Catalan, Thai, Arabic, Polish, Serbian and Turkish |
 | ⌨️ **Menu-key quick settings** | needs a config change, and the key mapping varies per TV | the **Menu button opens a glass panel** (TV settings / display / network / apps / favourites / desktop), optionally from other apps too |
 | 🐢 **Low-end friendly** | reduced motion is just a config value; the desk keeps its tiles when memory runs short | **one switch on the remote** turns the tweens off (the zoom stays), and **the desk lets go of its artwork when the box is short**, rebuilding it on return |
+| 🌤 **Weather** | a separate app, hung off the desk through module cards | **one line under the clock** (temperature and sky), and a glass panel on top of it: feels-like, air quality, three days, change city, **locate my city** |
 | 📦 **A compiled APK** | no binaries; build it yourself | downloaded straight from the Releases page (**267 KB** release build) |
 
 ### Only in upstream (not here)
@@ -172,7 +173,7 @@ of the upstream toolkit still works there.
 
 ## Language
 
-The launcher **follows the TV's system language automatically**; nothing to configure. Thirteen are
+The launcher **follows the TV's system language automatically**; nothing to configure. Twenty-four are
 supported:
 
 | | | | |
@@ -180,7 +181,13 @@ supported:
 | English `en` | Simplified Chinese `zh-CN` | Traditional Chinese `zh-TW` | German `de` |
 | Spanish `es` | French `fr` | Russian `ru` | Catalan `ca` |
 | Thai `th` | Arabic `ar` | Polish `pl` | Serbian (Latin) `sr-Latn` |
-| Turkish `tr` | | | |
+| Turkish `tr` | Norwegian `nb` | Hebrew `iw` | Portuguese `pt` |
+| Finnish `fi` | Vietnamese `vi` | Bengali `bn` | Czech `cs` |
+| Italian `it` | Indonesian `in` | Dutch `nl` | Uzbek `uz` |
+| Ukrainian `uk` | | | |
+
+> The translations are done one string at a time, not batch-generated; corrections for the rarer
+> languages are welcome as issues or pull requests.
 
 The wording follows local convention rather than being machine-translated — Hong Kong and Taiwan
 get 桌布 ("wallpaper") where mainland Chinese gets 壁纸, and the settings entry reads 桌面設定.
@@ -237,6 +244,18 @@ service**: **Settings → Accessibility → Downloaded services → "Home button
 With it on: Home returns to the top of the desk, and the Menu button opens the quick settings panel
 even from another app (that last one can be switched off under *Desktop settings → Menu button in
 other apps too*). Without it the launcher works fine; those two simply do not happen.
+
+### Does the weather use the network?
+
+It does, and it is **off by default** — one row in the desktop settings turns it on. The data comes from
+Open-Meteo:
+
+- No account, no API key, **no location permission**, no background service, no telemetry, no ads
+- Refreshed every 30 minutes while the desk is on screen, and **stops when it is not**
+- What leaves the TV: the city name you typed (to find it), then that place's latitude and longitude
+  (for the forecast and the air quality)
+- **Locate my city** is a button you press: one request to ipinfo.io for the coarse position, resolved
+  through the same geocoder into a proper place, all over HTTPS. Nothing is sent until you do.
 
 ### Restoring
 
