@@ -245,6 +245,20 @@ With it on: Home returns to the top of the desk, and the Menu button opens the q
 even from another app (that last one can be switched off under *Desktop settings → Menu button in
 other apps too*). Without it the launcher works fine; those two simply do not happen.
 
+### Cannot the input source be switched on a Xiaomi TV?
+
+Some Xiaomi sets sold with China's firmware have this: the desk lists the HDMI ports, but
+picking one does nothing — the standard way of switching a port is either unanswered on that
+firmware or answered and ignored.
+
+This version **recognises those sets by itself** and switches through Xiaomi's own player instead
+(HDMI 1/2/3 are the vendor's numbers 23/24/25, AV is 2), with **nothing to configure**. The
+recognition needs two things to be true: Xiaomi's China player (`com.xiaomi.mitv.tvplayer`) is
+installed, and the other-market app (`com.mitv.livetv`) is not — so sets sold elsewhere keep the
+standard route and are left alone.
+
+The Live TV row opens Xiaomi's own analogue TV player on those sets as well.
+
 ### Does the weather use the network?
 
 It does, and it is **off by default** — one row in the desktop settings turns it on. The data comes from

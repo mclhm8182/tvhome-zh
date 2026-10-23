@@ -15,6 +15,8 @@
          in MainActivity needs to see Xiaomi's own settings app. -->
     <queries>
         <package android:name="com.xiaomi.mitv.settings" />
+        <!-- Xiaomi China firmware: its player is the only thing that can switch the HDMI ports. -->
+        <package android:name="com.xiaomi.mitv.tvplayer" />
     </queries>
 
     <application

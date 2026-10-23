@@ -486,9 +486,24 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      */
     private void openInput(String inputId) {
         Uri uri = TvContract.buildChannelUriForPassthroughInput(inputId);
-        // 1. the vendor's own number for this port
-        Integer source = mappedSource(inputId);
         String action = cfg.inputAction == null ? "" : cfg.inputAction.trim();
+
+        // 1. Xiaomi China's firmware: the standard URI is either refused or, worse, accepted and
+        //    ignored, so the vendor's player is asked first — it takes the port number as an int
+        //    extra and switches the port.
+        Integer vendor = VendorInputs.sourceNumber(inputId, vendorSourceNumbers);
+        if (vendor != null) {
+            for (Intent i : VendorInputs.sourceIntents(vendor)) {
+                try {
+                    startActivity(i);
+                    return;
+                } catch (ActivityNotFoundException | SecurityException e) {
+                    // try the next form
+                }
+            }
+        }
+        // 2. a port number the user mapped in config.xml, with the vendor's action
+        Integer source = mappedSource(inputId);
         if (source != null && !action.isEmpty()) {
             try {
                 startActivity(new Intent(action).putExtra("input", source)
@@ -498,20 +513,21 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 // fall through to the standard way
             }
         }
-        // 2. the standard way
+        // 3. the standard way: what most TVs want
         try {
             startActivity(new Intent(Intent.ACTION_VIEW)
                     .setDataAndType(uri, "vnd.android.cursor.item/channel")
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
             return;
         } catch (ActivityNotFoundException | SecurityException e) {
-            if (action.isEmpty()) {
-                Toast.makeText(this, R.string.not_available, Toast.LENGTH_SHORT).show();
-                return;
-            }
+            // no handler for the URI: try what is left below
         }
-        // 3. the vendor action with the URI
-        open(new Intent(action).setDataAndType(uri, "vnd.android.cursor.item/channel"));
+        // 4. the vendor action with the URI
+        if (!action.isEmpty()) {
+            open(new Intent(action).setDataAndType(uri, "vnd.android.cursor.item/channel"));
+            return;
+        }
+        Toast.makeText(this, R.string.not_available, Toast.LENGTH_SHORT).show();
     }
 
     /** The vendor's own number for this input ("HDMI1=23" -> 23), or null when it is not mapped. */
@@ -605,6 +621,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private TextView weatherText;
     private Weather.Report weatherReport;
     private PopupWindow weatherPanel;
+    /** The vendor's own port numbers, when this set needs them (Xiaomi China firmware). */
+    private java.util.Map<String, Integer> vendorSourceNumbers = java.util.Collections.emptyMap();
     private final Runnable weatherTick = this::refreshWeather;
     /** One thread for the network: the weather, the city search, the locate. */
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -1769,6 +1787,9 @@ private int recommendColumns() {
         String tunerId = null;
         if (tim != null) {
             List<TvInputInfo> inputs = new ArrayList<>(tim.getTvInputList());
+            // Some sets (Xiaomi China firmware) need the vendor's own port numbers to switch.
+            vendorSourceNumbers = VendorInputs.isChinaFirmware(this)
+                    ? VendorInputs.sourceNumbers(inputs) : java.util.Collections.emptyMap();
             // HDMI ports first in port order, then AV and the rest.
             Collections.sort(inputs, (a, b) -> {
                 boolean ha = a.getType() == TvInputInfo.TYPE_HDMI, hb = b.getType() == TvInputInfo.TYPE_HDMI;
@@ -1840,6 +1861,10 @@ private int recommendColumns() {
             }
         }
         Intent liveTv = liveTvPkg.isEmpty() ? null : getPackageManager().getLeanbackLaunchIntentForPackage(liveTvPkg);
+        // Xiaomi China firmware: the analogue TV is opened by the vendor's player, with its own action.
+        if (liveTv == null && tunerId != null && VendorInputs.isChinaFirmware(this)) {
+            liveTv = VendorInputs.firstResolvable(this, VendorInputs.analogueTvIntents());
+        }
         if (liveTv != null && tunerId != null) {
             liveTv = new Intent(Intent.ACTION_VIEW)
                     .setDataAndType(TvContract.buildChannelUriForPassthroughInput(tunerId), "vnd.android.cursor.item/channel")
