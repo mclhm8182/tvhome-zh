@@ -33,7 +33,7 @@ moves faster and has more features.
 
 ## 📦 Download
 
-**➜ [Download the latest tvhome-zh APK](https://github.com/mclhm8182/tvhome-zh/releases/latest)** · only **267 KB**, plain Java, no ad SDK
+**➜ [Download the latest tvhome-zh APK](https://github.com/mclhm8182/tvhome-zh/releases/latest)** · only **373 KB**, plain Java, no ad SDK
 
 See the [Releases page](https://github.com/mclhm8182/tvhome-zh/releases) for every version.
 
@@ -58,7 +58,7 @@ The same clean, tvOS-looking home screen, replacing whatever came with the box:
 
 ### 📦 Lightweight
 
-The APK is **267 KB** (R8-minified, resources shrunk). Plain Java, depending only on two light AndroidX libraries (`recyclerview`
+The APK is **373 KB** (R8-minified, resources shrunk). Plain Java, depending only on two light AndroidX libraries (`recyclerview`
 and `dynamicanimation`), **with no Compose or Glance, no ad SDK and no recommendation engine**.
 Measured on a 2 GB Chinese TV box it sits at about **107 MB resident (PSS)**.
 
@@ -82,11 +82,12 @@ remote control.**
 | 🎨 **Wallpapers** | push `wallpaper.jpg` over ADB | Panel with a **Bing daily** toggle or **pick a picture on the TV**; a new picture always replaces the old one, so **space use never grows** |
 | 🔢 **Icons per row, 3 to 8** | push `config.json` or recompile | Tap to cycle in the panel; first run **recommends a value from the actual screen width** |
 | 🌓 **Adaptive dock band** | fixed opaque; a black slab over a bright wallpaper | Turns translucent over a wallpaper, stays as upstream drew it on plain black |
-| 🌍 **Thirteen languages** | has Chinese already | Simplified **and** Traditional Chinese, plus German, Spanish, French, Russian, Catalan, Thai, Arabic, Polish, Serbian and Turkish |
+| 🌍 **Twenty-four languages** | has Chinese already | Simplified **and** Traditional Chinese, plus German, Spanish, French, Russian, Catalan, Thai, Arabic, Polish, Serbian, Turkish, Norwegian, Hebrew, Portuguese, Finnish, Vietnamese, Bengali, Czech, Italian, Indonesian, Dutch, Uzbek and Ukrainian |
 | ⌨️ **Menu-key quick settings** | needs a config change, and the key mapping varies per TV | the **Menu button opens a glass panel** (TV settings / display / network / apps / favourites / desktop), optionally from other apps too |
 | 🐢 **Low-end friendly** | reduced motion is just a config value; the desk keeps its tiles when memory runs short | **one switch on the remote** turns the tweens off (the zoom stays), and **the desk lets go of its artwork when the box is short**, rebuilding it on return |
-| 🌤 **Weather** | a separate app, hung off the desk through module cards | **one line under the clock** (temperature and sky), and a glass panel on top of it: feels-like, air quality, three days, change city, **locate my city** |
-| 📦 **A compiled APK** | no binaries; build it yourself | downloaded straight from the Releases page (**267 KB** release build) |
+| 🌤 **Weather** | a separate app, hung off the desk through module cards | **one line under the clock** (city, temperature, sky), and a glass panel on top of it: feels-like, air quality, **hourly**, three days, **50 common cities to pick from**, **locate my city** |
+| 🔌 **Switching source on a Xiaomi TV** | not handled (the standard way does nothing on China's firmware) | **recognised by itself**, switching through Xiaomi's own player (HDMI 1/2/3, AV) with **nothing to configure**; sets sold elsewhere are left alone |
+| 📦 **A compiled APK** | no binaries; build it yourself | downloaded straight from the Releases page (**373 KB** release build) |
 
 ### Only in upstream (not here)
 
