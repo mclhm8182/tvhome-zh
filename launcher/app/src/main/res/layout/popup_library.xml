@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The app library: every app the TV can start, with a tick for the ones on the desk.
+
+  Same glass sheet as the Favourites and Desktop settings panels, with a title line on top and a
+  scrollable list under it. The list is given a fixed height by the code: a TV with two hundred
+  apps would otherwise measure the whole list and put the panel off the screen.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/glass_panel"
+    android:padding="6dp"
+    android:elevation="12dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="6dp"
+        android:text="@string/app_library_title"
+        android:textColor="@drawable/pill_text"
+        android:textSize="13sp"
+        android:fontVariationSettings="'wght' 500" />
+
+    <TextView
+        android:id="@+id/status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="6dp"
+        android:textColor="@drawable/pill_text_dim"
+        android:textSize="11sp"
+        android:fontVariationSettings="'wght' 400" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rows"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        android:scrollbars="none" />
+</LinearLayout>

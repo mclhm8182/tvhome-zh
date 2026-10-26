@@ -13,7 +13,6 @@
         android:layout_height="wrap_content"
         android:textColor="#B3FFFFFF"
         android:textSize="13sp"
-        android:fontFamily="@font/outfit"
         android:fontVariationSettings="'wght' 400" />
 
     <ImageView
@@ -31,6 +30,5 @@
         android:layout_height="wrap_content"
         android:textColor="#FFFFFFFF"
         android:textSize="15sp"
-        android:fontFamily="@font/outfit"
         android:fontVariationSettings="'wght' 500" />
 </LinearLayout>

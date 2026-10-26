@@ -5,7 +5,11 @@
   Same construction as the Inputs menu upstream: a glass sheet with 6dp of padding and rows that
   carry their own focus pill, so no title bar, no border per row and no close button are needed.
   Rows with a second line of status text are 52dp, plain rows 42dp, which is the rhythm the rest
-  of the launcher's menus use. Width and height are set from the content when the popup is built.
+  of the launcher's menus use.
+
+  The rows live in a ScrollView because there are more of them than fit under the top bar on a
+  1080p screen: without it the last rows hang below the bottom edge and the remote can never
+  reach them. Its height is set from the room the top bar leaves when the panel is built.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -14,6 +18,19 @@
     android:background="@drawable/glass_panel"
     android:padding="6dp"
     android:elevation="12dp">
+
+    <ScrollView
+        android:id="@+id/scroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:descendantFocusability="afterDescendants">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
     <!-- Bing daily: the one option that fetches on its own, so it shows its state as a tick. -->
     <LinearLayout
@@ -42,7 +59,6 @@
                 android:textColor="@drawable/pill_text"
                 android:duplicateParentState="true"
                 android:textSize="15sp"
-                android:fontFamily="@font/outfit"
                 android:fontVariationSettings="'wght' 500" />
 
             <TextView
@@ -52,7 +68,6 @@
                 android:textColor="@drawable/pill_text_dim"
                 android:duplicateParentState="true"
                 android:textSize="11sp"
-                android:fontFamily="@font/outfit"
                 android:fontVariationSettings="'wght' 400" />
         </LinearLayout>
 
@@ -94,7 +109,6 @@
                 android:textColor="@drawable/pill_text"
                 android:duplicateParentState="true"
                 android:textSize="15sp"
-                android:fontFamily="@font/outfit"
                 android:fontVariationSettings="'wght' 500" />
 
             <TextView
@@ -104,7 +118,6 @@
                 android:textColor="@drawable/pill_text_dim"
                 android:duplicateParentState="true"
                 android:textSize="11sp"
-                android:fontFamily="@font/outfit"
                 android:fontVariationSettings="'wght' 400" />
         </LinearLayout>
 
@@ -145,7 +158,6 @@
                 android:textColor="@drawable/pill_text"
                 android:duplicateParentState="true"
                 android:textSize="15sp"
-                android:fontFamily="@font/outfit"
                 android:fontVariationSettings="'wght' 500" />
 
             <TextView
@@ -155,7 +167,6 @@
                 android:textColor="@drawable/pill_text_dim"
                 android:duplicateParentState="true"
                 android:textSize="11sp"
-                android:fontFamily="@font/outfit"
                 android:fontVariationSettings="'wght' 400" />
         </LinearLayout>
     </LinearLayout>
@@ -187,7 +198,6 @@
                 android:textColor="@drawable/pill_text"
                 android:duplicateParentState="true"
                 android:textSize="15sp"
-                android:fontFamily="@font/outfit"
                 android:fontVariationSettings="'wght' 500" />
 
             <TextView
@@ -197,7 +207,6 @@
                 android:textColor="@drawable/pill_text_dim"
                 android:duplicateParentState="true"
                 android:textSize="11sp"
-                android:fontFamily="@font/outfit"
                 android:fontVariationSettings="'wght' 400" />
         </LinearLayout>
     </LinearLayout>
@@ -229,7 +238,6 @@
                 android:textColor="@drawable/pill_text"
                 android:duplicateParentState="true"
                 android:textSize="15sp"
-                android:fontFamily="@font/outfit"
                 android:fontVariationSettings="'wght' 500" />
 
             <TextView
@@ -239,7 +247,177 @@
                 android:textColor="@drawable/pill_text_dim"
                 android:duplicateParentState="true"
                 android:textSize="11sp"
-                android:fontFamily="@font/outfit"
+                android:fontVariationSettings="'wght' 400" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Every tile shows its name, not only the focused one. Off by default: the names take room
+         the grid would rather have, and most people recognise their own icons. -->
+    <LinearLayout
+        android:id="@+id/rowNames"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/input_row_bg"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:focusable="true"
+        android:focusableInTouchMode="true">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:duplicateParentState="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/always_show_names"
+                android:textColor="@drawable/pill_text"
+                android:duplicateParentState="true"
+                android:textSize="15sp"
+                android:fontVariationSettings="'wght' 500" />
+
+            <TextView
+                android:id="@+id/namesStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@drawable/pill_text_dim"
+                android:duplicateParentState="true"
+                android:textSize="11sp"
+                android:fontVariationSettings="'wght' 400" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- How tiles with no artwork of their own are drawn: the app's icon scaled up with its own
+         edges stretched out, or the app's mark sized by area on a wash of its colour. -->
+    <LinearLayout
+        android:id="@+id/rowUnified"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/input_row_bg"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:focusable="true"
+        android:focusableInTouchMode="true">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:duplicateParentState="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tile_style"
+                android:textColor="@drawable/pill_text"
+                android:duplicateParentState="true"
+                android:textSize="15sp"
+                android:fontVariationSettings="'wght' 500" />
+
+            <TextView
+                android:id="@+id/unifiedStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@drawable/pill_text_dim"
+                android:duplicateParentState="true"
+                android:textSize="11sp"
+                android:fontVariationSettings="'wght' 400" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- The apps the user took off the desk. Opens a list to put them back. -->
+    <LinearLayout
+        android:id="@+id/rowHidden"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/input_row_bg"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:focusable="true"
+        android:focusableInTouchMode="true">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:duplicateParentState="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/hidden_apps"
+                android:textColor="@drawable/pill_text"
+                android:duplicateParentState="true"
+                android:textSize="15sp"
+                android:fontVariationSettings="'wght' 500" />
+
+            <TextView
+                android:id="@+id/hiddenStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@drawable/pill_text_dim"
+                android:duplicateParentState="true"
+                android:textSize="11sp"
+                android:fontVariationSettings="'wght' 400" />
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@drawable/ic_chevron"
+            android:tint="@drawable/pill_text"
+            android:duplicateParentState="true"
+            android:contentDescription="@null" />
+    </LinearLayout>
+
+    <!-- Whether the remote's own source button opens this launcher's Inputs menu. Off by default:
+         a TV with its own source picker should keep it. -->
+    <LinearLayout
+        android:id="@+id/rowInputKey"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/input_row_bg"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:focusable="true"
+        android:focusableInTouchMode="true">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:duplicateParentState="true">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/input_source_key"
+                android:textColor="@drawable/pill_text"
+                android:duplicateParentState="true"
+                android:textSize="15sp"
+                android:fontVariationSettings="'wght' 500" />
+
+            <TextView
+                android:id="@+id/inputKeyStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@drawable/pill_text_dim"
+                android:duplicateParentState="true"
+                android:textSize="11sp"
                 android:fontVariationSettings="'wght' 400" />
         </LinearLayout>
     </LinearLayout>
@@ -265,7 +443,6 @@
             android:textColor="@drawable/pill_text"
             android:duplicateParentState="true"
             android:textSize="15sp"
-            android:fontFamily="@font/outfit"
             android:fontVariationSettings="'wght' 500" />
 
         <ImageView
@@ -298,7 +475,6 @@
             android:textColor="@drawable/pill_text"
             android:duplicateParentState="true"
             android:textSize="15sp"
-            android:fontFamily="@font/outfit"
             android:fontVariationSettings="'wght' 500" />
 
         <ImageView
@@ -309,4 +485,7 @@
             android:duplicateParentState="true"
             android:contentDescription="@null" />
     </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>

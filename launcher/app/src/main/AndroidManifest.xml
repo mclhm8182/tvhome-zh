@@ -6,17 +6,37 @@
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <!-- Needed on Android 10 to read the Wi-Fi network name; granted over adb at install time. -->
+    <!-- Needed on Android 10 to read the Wi-Fi network name; granted over adb at install time.
+         Play and lint both ask for the coarse one alongside the fine one. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <!-- Only for the optional Bing daily wallpaper, which stays off until the user turns it on. -->
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- A TV has no GPS, and a launcher that appears to want one is filtered out by it. -->
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+    <uses-feature android:name="android.hardware.location" android:required="false" />
+        <!-- Only for the optional Bing daily wallpaper, which stays off until the user turns it on. -->
+        <uses-permission android:name="android.permission.INTERNET" />
 
     <!-- Android 11+ hides other packages from us unless we name them; the Settings/Wi-Fi fallback
          in MainActivity needs to see Xiaomi's own settings app. -->
-    <queries>
+        <queries>
         <package android:name="com.xiaomi.mitv.settings" />
         <!-- Xiaomi China firmware: its player is the only thing that can switch the HDMI ports. -->
         <package android:name="com.xiaomi.mitv.tvplayer" />
+        <!-- Coocaa OS (Skyworth / 酷开): registers no inputs with TvInputManager, so the sources
+             come from the vendor's own provider instead. -->
+        <package android:name="com.skyworth.tv" />
+        <!-- Android 11+ hides every other package unless we name the kinds we look for. These two
+             intents surface every app with a TV (leanback) or plain launcher entry point, so the
+             desk grid and the app-library panel can see sideloaded apps — and the packages they
+             belong to become fully visible, so adding one by hand keeps working. -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
     </queries>
 
     <application
@@ -40,11 +60,17 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
+                <!-- Without this a TV's own app row does not list the launcher, so the user cannot
+                     open it from anywhere but the Home button. -->
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
 
         <!-- Quick settings, opened by the remote's Settings (选项) button through HomeKeyService.
-             Its own task and no history, so the app behind keeps running and Back returns to it. -->
+             Its own task and no history, so the app behind keeps running and Back returns to it.
+             No screenOrientation: a translucent activity may not request one on Android 8.0
+             (API 26) — onCreate throws IllegalStateException there and Home loses its default.
+             A TV is landscape anyway. -->
         <activity
             android:name=".QuickSettingsActivity"
             android:exported="false"
@@ -52,8 +78,24 @@
             android:launchMode="singleTop"
             android:excludeFromRecents="true"
             android:noHistory="true"
-            android:screenOrientation="landscape"
             android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" />
+
+        <!-- The system's input switcher (com.android.tv.action.VIEW_INPUTS), which is what the remote's
+             source button becomes once the stock launcher is gone. Disabled here and switched on by
+             MainActivity only while the user asks for it in the desktop settings: kept off, a TV
+             with its own source picker never sees a second candidate and a chooser. -->
+        <activity
+            android:name=".InputsRequestActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.NoDisplay">
+            <intent-filter>
+                <action android:name="com.android.tv.action.VIEW_INPUTS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
 
         <!-- Screensaver: pick it in Settings, or `settings put secure screensaver_components
              com.gathin.tvhome/.ClockDream` over adb. -->
@@ -74,6 +116,7 @@
         <service
             android:name=".HomeKeyService"
             android:label="@string/home_key_name"
+            android:directBootAware="true"
             android:exported="true"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>

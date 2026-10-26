@@ -10,7 +10,6 @@
     android:paddingEnd="16dp"
     android:textColor="@drawable/pill_text"
     android:textSize="15sp"
-    android:fontFamily="@font/outfit"
     android:fontVariationSettings="'wght' 500"
     android:focusable="true"
     android:clickable="true" />

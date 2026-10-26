@@ -8,6 +8,7 @@
     android:paddingEnd="12dp"
     android:background="@drawable/input_row_bg"
     android:focusable="true"
+    android:focusableInTouchMode="true"
     android:clickable="true">
 
     <ImageView
@@ -28,7 +29,6 @@
         android:textColor="@drawable/pill_text"
         android:duplicateParentState="true"
         android:textSize="15sp"
-        android:fontFamily="@font/outfit"
         android:fontVariationSettings="'wght' 500"
         android:singleLine="true" />
 
@@ -46,6 +46,5 @@
         android:textColor="@drawable/pill_text_dim"
         android:duplicateParentState="true"
         android:textSize="11sp"
-        android:fontFamily="@font/outfit"
         android:letterSpacing="0.04" />
 </LinearLayout>

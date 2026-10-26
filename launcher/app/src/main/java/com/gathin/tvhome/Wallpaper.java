@@ -137,7 +137,7 @@ void setAutoDaily(boolean on) {
             c.setReadTimeout(TIMEOUT);
             c.setInstanceFollowRedirects(true);
             if (c.getResponseCode() / 100 != 2) return null;
-            long len = c.getContentLengthLong();
+            int len = c.getContentLength();   // the long form is Android 7 (24)
             if (len > MAX_BYTES) return null;              // a multi-megabyte JPEG is not a wallpaper
             try (InputStream in = c.getInputStream()) {
                 return readBytes(in);

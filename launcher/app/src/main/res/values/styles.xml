@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Theme.TvHome" parent="android:Theme.Material.NoActionBar.Fullscreen">
         <item name="android:windowBackground">@android:color/black</item>
         <item name="android:colorBackground">@android:color/black</item>
@@ -7,21 +7,40 @@
     </style>
 
     <!-- Frosted pill, tvOS style. -->
+    <!-- The same pill with only a picture in it: the top bar has no room for a sixth label, and the
+         app library is the one entry that is worth a button of its own. It is a picture and not a
+         letter, so the button is square and the picture is centred in it. -->
+    <style name="TopButtonIcon">
+        <item name="android:layout_width">42dp</item>
+        <item name="android:layout_height">42dp</item>
+        <item name="android:layout_marginStart">5dp</item>
+        <item name="android:background">@drawable/pill_bg</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:scaleType">centerInside</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+    </style>
+
     <style name="TopButton">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">42dp</item>
-        <item name="android:layout_marginStart">8dp</item>
+        <!-- Tight: six buttons now share the top bar with the date, and at 8dp the first one
+             overlapped the date. -->
+        <item name="android:layout_marginStart">5dp</item>
         <item name="android:paddingStart">14dp</item>
         <item name="android:paddingEnd">16dp</item>
         <item name="android:gravity">center</item>
         <item name="android:background">@drawable/pill_bg</item>
         <item name="android:textColor">@drawable/pill_text</item>
         <item name="android:textSize">15sp</item>
-        <item name="android:fontFamily">@font/outfit</item>
-        <item name="android:fontVariationSettings">\'wght\' 500</item>
+        <!-- Inert below Android 8 (26): the TextView of those releases never reads
+             fontVariationSettings, so the weight simply stays at the file's default. -->
+        <item name="android:fontVariationSettings" tools:ignore="NewApi">\'wght\' 500</item>
         <item name="android:letterSpacing">0.01</item>
         <item name="android:drawablePadding">9dp</item>
-        <item name="android:drawableTint">@drawable/pill_text</item>
+        <!-- Inert below Android 6 (23): the icon keeps its own colour there, which for a
+             white glyph on a glass pill is the same thing. -->
+        <item name="android:drawableTint" tools:ignore="NewApi">@drawable/pill_text</item>
         <item name="android:focusable">true</item>
         <item name="android:clickable">true</item>
     </style>

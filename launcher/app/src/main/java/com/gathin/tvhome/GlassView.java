@@ -30,8 +30,10 @@ public class GlassView extends View {
         density = getResources().getDisplayMetrics().density;
         radius = 20f * density;
         rim.setStyle(Paint.Style.STROKE);
-        rim.setStrokeWidth(1.5f * density);
-        rim.setColor(0xCCFFFFFF);
+        // A thick bright ring: on a sofa, across a room, this is the only thing that says which tile
+        // has the focus, and a thin line is gone by the time it gets there.
+        rim.setStrokeWidth(3f * density);
+        rim.setColor(0xF2FFFFFF);
         glow.setStyle(Paint.Style.STROKE);
     }
 
@@ -49,14 +51,18 @@ public class GlassView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        float inset = 6f * density;   // room for the glow
+        float inset = 9f * density;   // room for the glow
         rect.set(inset, inset, getWidth() - inset, getHeight() - inset);
 
-        // Outer glow: three widening, fading strokes.
-        for (int i = 1; i <= 3; i++) {
-            glow.setStrokeWidth(i * 2f * density);
-            glow.setColor((0x30 / i) << 24 | 0xFFFFFF);
-            float o = i * density;
+        // Outer glow: thin rings across the inset, each a little fainter, so it fades out smoothly.
+        // Three wide strokes left visible bands once the glow took an app's colour at a stronger alpha.
+        int rings = 14;
+        float step = inset / rings;
+        glow.setStrokeWidth(step + 0.5f);
+        for (int i = 0; i < rings; i++) {
+            float o = step * (i + 0.5f);
+            float t = 1f - (float) i / rings;
+            glow.setColor(Math.round(0x58 * t) << 24 | 0xFFFFFF);
             canvas.drawRoundRect(rect.left - o, rect.top - o, rect.right + o, rect.bottom + o, radius + o, radius + o, glow);
         }
 

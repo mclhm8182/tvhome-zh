@@ -27,8 +27,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -53,14 +55,26 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         final String pkg;
         final Drawable banner;
         final Drawable icon;
+        /**
+         * Whether the app declares a TV (leanback) entry point. The apps the user added by hand do
+         * not, and they are started as ordinary apps.
+         */
+        final boolean tv;
         int ambient;
+        /** The face of a tile with no banner: the icon, scaled up, with the sides filled in. */
+        Drawable tile;
 
         Entry(String label, ComponentName component, Drawable banner, Drawable icon) {
+            this(label, component, banner, icon, true);
+        }
+
+        Entry(String label, ComponentName component, Drawable banner, Drawable icon, boolean tv) {
             this.label = label;
             this.component = component;
             this.pkg = component.getPackageName();
             this.banner = banner;
             this.icon = icon;
+            this.tv = tv;
         }
     }
 
@@ -112,6 +126,47 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         return 16f * density * Math.min(1f, tileWidthPx / (DESIGN_W_DP * density));
     }
 
+    /**
+     * Some apps declare a small square image as their banner (Rockchip's Media Center ships a 64 px one).
+     * Cropped over a 16:9 tile it is a blur. A drawable with no intrinsic size (a colour, a shape) still
+     * fills the tile, so it counts as a banner.
+     */
+    static boolean isBannerShaped(int width, int height) {
+        return width <= 0 || height <= 0 || width >= height * 1.4f;
+    }
+
+    /**
+     * An app's own label as the tile shows it: control characters, bidi overrides and line separators
+     * become spaces, runs of spaces collapse, at most 40 characters (never cutting a surrogate pair), and
+     * the package name when nothing is left. Without this a label can redraw the tile name as something
+     * else entirely.
+     */
+    static String cleanLabel(String s, String fallback) {
+        if (s == null) return fallback;
+        StringBuilder b = new StringBuilder(Math.min(s.length(), 48));
+        boolean space = true;   // leading spaces are dropped too
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            int type = Character.getType(c);
+            boolean blank = c == ' ' || Character.isISOControl(c) || Character.isWhitespace(c)
+                    || type == Character.FORMAT || type == Character.LINE_SEPARATOR
+                    || type == Character.PARAGRAPH_SEPARATOR || type == Character.SPACE_SEPARATOR;
+            if (blank) {
+                if (!space) b.append(' ');
+                space = true;
+                continue;
+            }
+            boolean pair = Character.isHighSurrogate(c) && i + 1 < s.length()
+                    && Character.isLowSurrogate(s.charAt(i + 1));
+            if (b.length() + (pair ? 2 : 1) > 40) break;
+            b.append(c);
+            if (pair) b.append(s.charAt(++i));
+            space = false;
+        }
+        String out = b.toString().trim();
+        return out.isEmpty() ? fallback : out;
+    }
+
     private final Context ctx;
     private final TileListener listener;
     private final int dockSize;
@@ -119,7 +174,23 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
     private final DockStore dock;
     /** Never shown as tiles (res/values/config.xml, hidden_apps). */
     private final Set<String> hidden;
+    /** The apps the user put on the desk by hand (AppLibraryPanel). */
+    private final LibraryApps library;
+    /** The apps the user took off the desk from the sofa (HiddenApps). */
+    private final HiddenApps hiddenAtRuntime;
+    /** The order the user put the grid apps in, from the tile menu's Move. */
+    private Map<String, Integer> savedRanks = java.util.Collections.emptyMap();
     private final List<Entry> items = new ArrayList<>();
+    /**
+     * How visible an unfocused tile's name is. 0 hides it (only the focused tile shows its name),
+     * 0.75 keeps every name on screen but dimmer — on a TV where nobody recognises the app icons,
+     * the names are the only way to tell them apart.
+     *
+     * <p>Static, like {@link #reducedMotion}: the focus animation lives in the ViewHolder and reads
+     * this too. As an instance field the animation kept its own hard-coded 0 and faded every name
+     * back out as focus moved away, so only tiles focus had never visited kept their name.
+     */
+    private static float restNameAlpha;
 
     AppAdapter(Context ctx, TileListener listener, int dockSize, List<String> dockDefaults) {
         this.ctx = ctx;
@@ -127,18 +198,104 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         this.dockSize = dockSize;
         this.dock = new DockStore(ctx, dockDefaults);
         this.hidden = new HashSet<>(Arrays.asList(ctx.getResources().getStringArray(R.array.hidden_apps)));
+        this.library = new LibraryApps(ctx);
+        this.hiddenAtRuntime = new HiddenApps(ctx);
+        this.savedRanks = OrderStore.load(ctx);
         // Tiles keep their identity across reload(), so a focused tile stays on its app instead of
         // its view being rebound to whatever app now sits in that slot.
         setHasStableIds(true);
+    }
+
+    /** Whether tiles with no artwork of their own are drawn as one set. */
+    private static boolean unifiedTiles = true;
+
+    static void setUnifiedTiles(boolean on) {
+        unifiedTiles = on;
+    }
+
+    /**
+     * Drops every tile face built so far, so they come back in the other style. The banners are
+     * untouched: only the tiles drawn from an icon are rebuilt.
+     */
+    void dropTileArt() {
+        for (int i = 0; i < items.size(); i++) items.get(i).tile = null;
+    }
+
+    /** Turns every tile's name on, not just the focused one's. */
+    static void setAlwaysShowNames(boolean on) {
+        float alpha = on ? 0.75f : 0f;
+        if (alpha == restNameAlpha) return;
+        restNameAlpha = alpha;
+    }
+
+    /** Whether the names of unfocused tiles are shown. */
+    static boolean alwaysShowNames() {
+        return restNameAlpha > 0f;
     }
 
     DockStore dock() {
         return dock;
     }
 
+    /** How many apps are in the dock: the first tiles of the grid, in dock order. */
+    int dockCount() {
+        return Math.min(dock.apps().size(), dockSize);
+    }
+
+    /**
+     * Swaps two tiles, for the tile menu's Move. Both positions must be in the grid below the dock:
+     * the dock has its own editor, and moving a tile out of it there would leave a hole.
+     */
+    void swap(int from, int to) {
+        if (from == to || from < 0 || to < 0 || from >= items.size() || to >= items.size()) return;
+        java.util.Collections.swap(items, from, to);
+        // A plain refresh, not a move notification. The grid keeps its own view state, and telling it
+        // about a move it did not make left the rows out of step with the list: extra tiles appeared
+        // and the names went with the wrong ones.
+        notifyDataSetChanged();
+    }
+
+    /** The keys of the tiles below the dock, in the order they are in now. */
+    List<String> gridKeys() {
+        List<String> out = new ArrayList<>();
+        for (int i = dockCount(); i < items.size(); i++) {
+            out.add(items.get(i).component.flattenToShortString());
+        }
+        return out;
+    }
+
+    /** The package of the tile at this position, or null. */
+    String packageAt(int position) {
+        return position >= 0 && position < items.size() ? items.get(position).pkg : null;
+    }
+
+    /** Re-reads the saved order, after the user has moved tiles. */
+    void reloadOrder() {
+        savedRanks = OrderStore.load(ctx);
+        reload();
+    }
+
+    /**
+     * Whether this package already has a tile on the desk. The app library asks, so it can tick the
+     * apps that are there and leave the rest to be added.
+     *
+     * <p>Asked of the adapter rather than worked out from the app's own declarations: an intent with a
+     * component set resolves as long as that component exists, whatever its intent filters say, so
+     * probing one would call every app a TV app.
+     */
+    boolean containsPackage(String pkg) {
+        for (Entry entry : items) if (entry.pkg.equals(pkg)) return true;
+        return false;
+    }
+
     /** How many dock slots this launcher lays out. */
     int dockSize() {
         return dockSize;
+    }
+
+    /** The tiles as they are now, for {@link #containsPackage} and the app library. */
+    List<Entry> items() {
+        return items;
     }
 
     /**
@@ -151,20 +308,40 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         notifyDataSetChanged();
     }
 
+    /** True when the tiles were let go of (memory was short) and have to be loaded again. */
+    boolean isEmpty() {
+        return items.isEmpty();
+    }
+
     void reload() {
         PackageManager pm = ctx.getPackageManager();
         Intent probe = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER);
         List<ResolveInfo> found = pm.queryIntentActivities(probe, 0);
         List<Entry> fresh = new ArrayList<>();
+        // Some system apps declare two leanback entry points under one name, which would show as two
+        // identical tiles: keep the first per package and label.
+        Set<String> seen = new HashSet<>();
         for (ResolveInfo ri : found) {
             if (ri.activityInfo == null) continue;
             String pkg = ri.activityInfo.packageName;
             if (pkg.equals(ctx.getPackageName()) || hidden.contains(pkg)) continue;
+            if (hiddenAtRuntime.isHidden(pkg)) continue;
             Drawable banner = ri.activityInfo.loadBanner(pm);
             if (banner == null) banner = ri.activityInfo.applicationInfo.loadBanner(pm);
+            // A square "banner" counts as none: cropped over a 16:9 tile it is a blur, so the tile shows
+            // the app's icon and name instead.
+            if (banner != null && !isBannerShaped(banner.getIntrinsicWidth(), banner.getIntrinsicHeight())) {
+                banner = null;
+            }
             Drawable icon = ri.loadIcon(pm);
-            String label = String.valueOf(ri.loadLabel(pm));
+            String label = cleanLabel(String.valueOf(ri.loadLabel(pm)), pkg);
+            if (!seen.add(pkg + '\n' + label)) continue;
             fresh.add(new Entry(label, new ComponentName(pkg, ri.activityInfo.name), banner, icon));
+        }
+        // The apps the user put on the desk by hand: they declare no TV entry point, so nothing else
+        // would ever bring them onto the desk.
+        for (String component : library.added()) {
+            addLibraryApp(pm, fresh, seen, component);
         }
         Collections.sort(fresh, (a, b) -> {
             List<String> dockApps = dock.apps();
@@ -174,6 +351,14 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
                 if (fb < 0) return -1;
                 return Integer.compare(fa, fb);
             }
+            // The dock is the user's own; so is the order of everything below it.
+            Integer ra = savedRanks.get(a.component.flattenToShortString());
+            Integer rb = savedRanks.get(b.component.flattenToShortString());
+            if (ra != null || rb != null) {
+                if (ra == null) return 1;    // a newly installed app goes to the end
+                if (rb == null) return -1;
+                return Integer.compare(ra, rb);
+            }
             return a.label.compareToIgnoreCase(b.label);
         });
         items.clear();
@@ -181,10 +366,30 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         notifyDataSetChanged();
     }
 
+    /**
+     * Adds one app the user put on the desk by hand. It has no banner of its own (no TV entry
+     * point means no TV artwork), so the tile shows its icon and name.
+     */
+    private void addLibraryApp(PackageManager pm, List<Entry> fresh, Set<String> seen, String component) {
+        ComponentName cn = ComponentName.unflattenFromString(component);
+        if (cn == null) return;
+        String pkg = cn.getPackageName();
+        if (hidden.contains(pkg) || hiddenAtRuntime.isHidden(pkg)) return;
+        try {
+            android.content.pm.ActivityInfo ai = pm.getActivityInfo(cn, 0);
+            String label = cleanLabel(String.valueOf(ai.loadLabel(pm)), pkg);
+            if (!seen.add(pkg + '\n' + label)) return;   // it has a TV entry point after all
+            fresh.add(new Entry(label, cn, null, ai.loadIcon(pm), false));
+        } catch (Exception e) {
+            // The app was uninstalled since it was added; nothing to put on the desk.
+        }
+    }
+
     @NonNull
     @Override
     public Holder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_app, parent, false);
+        Typefaces.apply(v);
         // Size the tile from the cell it has to live in; the XML's 180dp is only the design size.
         // Falling back to the screen width rather than the design size matters: a holder created
         // before the grid has been measured would otherwise keep an oversized tile for its lifetime.
@@ -211,23 +416,30 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
     public void onBindViewHolder(@NonNull Holder h, int position) {
         Entry e = items.get(position);
         h.name.setText(e.label);
-        h.name.setVisibility(position < dockSize ? View.INVISIBLE : View.VISIBLE);   // the dock has no labels
+        // The dock's own names only show with always_show_names: the band has to grow to hold them.
+        h.name.setVisibility((position < dockSize && restNameAlpha == 0f) ? View.INVISIBLE : View.VISIBLE);
         boolean focused = h.card.isFocused();   // a rebind after reload() can hit the focused tile
-        h.name.setAlpha(focused ? 1f : 0f);
+        h.name.setAlpha(focused ? 1f : restNameAlpha);
+        // Every name sits on the same line, whatever the tile has been through: the focus used to
+        // push one name down by a few pixels, which left a row of them looking ragged.
+        h.name.setTranslationY(0f);
         h.card.setScaleX(focused ? FOCUS_SCALE : 1f);
         h.card.setScaleY(focused ? FOCUS_SCALE : 1f);
         if (e.banner != null) {
             h.banner.setImageDrawable(e.banner);
             h.banner.setVisibility(View.VISIBLE);
             h.icon.setVisibility(View.GONE);
-            h.label.setVisibility(View.GONE);
+            h.card.setBackground(h.cardBackground);
         } else {
             h.banner.setImageDrawable(null);
             h.banner.setVisibility(View.GONE);
-            h.icon.setImageDrawable(e.icon);
+            // An app with no TV artwork used to leave a black slab with one small icon floating on
+            // it. The icon now fills the tile and the space beside it is filled from the icon's
+            // own edges, so the tile reads as one picture.
+            if (e.tile == null) e.tile = IconTileDrawable.of(e.icon, unifiedTiles);
+            h.icon.setImageDrawable(e.tile);
             h.icon.setVisibility(View.VISIBLE);
-            h.label.setText(e.label);
-            h.label.setVisibility(View.VISIBLE);
+            h.card.setBackground(h.cardBackground);
         }
         h.card.setOnClickListener(v -> launch(e));
         // Long-press edits the dock: pin into the first free slot, or unpin if it is already there.
@@ -240,7 +452,7 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
 
     private void launch(Entry e) {
         Intent i = new Intent(Intent.ACTION_MAIN)
-                .addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
+                .addCategory(e.tv ? Intent.CATEGORY_LEANBACK_LAUNCHER : Intent.CATEGORY_LAUNCHER)
                 .setComponent(e.component)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
         try {
@@ -332,15 +544,16 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         final View card;
         final ImageView banner;
         final ImageView icon;
-        final TextView label;
         final TextView name;
+        /** The card's own background from the XML, put back for tiles that carry a banner. */
+        final Drawable cardBackground;
 
         Holder(View v, TileListener listener) {
             super(v);
             card = v.findViewById(R.id.card);
+            cardBackground = card.getBackground();
             banner = v.findViewById(R.id.banner);
             icon = v.findViewById(R.id.icon);
-            label = v.findViewById(R.id.label);
             name = v.findViewById(R.id.name);
 
             final float density = v.getResources().getDisplayMetrics().density;
@@ -362,18 +575,19 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
 
             card.setOnFocusChangeListener((view, focused) -> {
                 float s = focused ? FOCUS_SCALE : 1.0f;
+                // The unfocused name follows the setting: hidden, or kept on screen but dimmer. Its
+                // place does not change: a name that moved down when the tile took the focus left
+                // the rest of its row on a different line.
                 if (reducedMotion) {
                     view.setScaleX(s);
                     view.setScaleY(s);
-                    name.setAlpha(focused ? 1f : 0f);
-                    name.setTranslationY(focused ? density * 4f : -density * 6f);
+                    name.setAlpha(focused ? 1f : restNameAlpha);
                 } else {
                     view.animate().scaleX(s).scaleY(s)
                             .setDuration(focused ? 260 : 180)
                             .setInterpolator(new OvershootInterpolator(focused ? 1.6f : 0f))
                             .start();
-                    name.animate().alpha(focused ? 1f : 0f)
-                            .translationY(focused ? density * 4f : -density * 6f)
+                    name.animate().alpha(focused ? 1f : restNameAlpha)
                             .setDuration(220).start();
                 }
                 int pos = getBindingAdapterPosition();

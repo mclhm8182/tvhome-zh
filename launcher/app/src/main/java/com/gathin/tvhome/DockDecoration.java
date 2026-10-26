@@ -25,6 +25,10 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
     private final Paint band = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint edge = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF rect = new RectF();
+    /** Extra band below the tiles for their names (always_show_names), in px. */
+    private float namesRoom;
+    /** Whether a picture is behind the desk, which is the only case where the band can be glass. */
+    private boolean overWallpaper;
 
     /** @param overWallpaper true when a wallpaper is behind the desk, so the band must not be opaque. */
     DockDecoration(int dockSize, float density, boolean overWallpaper) {
@@ -38,11 +42,22 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
     }
 
     /**
+     * Whether the dock's tiles show their names. The band then reaches down over them, so the names
+     * sit on the band instead of on the background.
+     */
+    void setNames(boolean on) {
+        float room = on ? 22 * density : 0;
+        if (room == namesRoom) return;
+        namesRoom = room;
+    }
+
+    /**
      * The wallpaper can be added or removed while the launcher is running, so the band has to be
      * switchable without rebuilding the grid. {@link #invalidate()} is a no-op on the decoration;
      * the caller invalidates the RecyclerView.
      */
     void setOverWallpaper(boolean overWallpaper) {
+        this.overWallpaper = overWallpaper;
         // Opaque on black (unchanged from upstream); ~72% black over a picture, enough to keep the
         // icons legible on a bright wallpaper without turning the dock into a black brick.
         band.setColor(overWallpaper ? 0xB8141416 : 0xFF141416);
@@ -82,9 +97,29 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
         }
         if (!any) return;
         float pad = 14 * density;
-        rect.inset(-pad, -pad);
+        // The band can only draw inside the grid, and the first and last dock tiles sit a little in from
+        // its edges: a full 14dp at the sides sliced the rounded ends flat. Keep the sides, with the 1dp
+        // edge line, inside the grid; the top and bottom have room. 22dp where there is room for it, so a
+        // focused first or last tile still keeps the band's top margin from its rounded end.
+        float sidePad = 22 * density;
+        float side = Math.max(0f, Math.min(sidePad, Math.min(rect.left, parent.getWidth() - rect.right) - density));
+        rect.inset(-side, -pad);
         float radius = 26 * density;
-        c.drawRoundRect(rect, radius, radius, band);
+        // The dock's names hang below the tiles; the band reaches down over them.
+        rect.bottom += namesRoom;
+        // Over a picture the band is glass: the wallpaper behind it, softened, under a dark sheet.
+        // On the plain black desk it stays the flat slab it always was — there is nothing behind it
+        // to be glass about, and a slab drawn over nothing reads as a grey rectangle.
+        if (overWallpaper && Glass.hasWallpaper()) {
+            // The canvas is the grid's own, so the grid's place on the screen is what says which
+            // part of the wallpaper belongs behind the band.
+            int[] where = new int[2];
+            parent.getLocationOnScreen(where);
+            Glass.draw(c, rect, radius, 0xB4000000, 0x33FFFFFF, density,
+                    where[0], where[1], false);
+        } else {
+            c.drawRoundRect(rect, radius, radius, band);
+        }
         c.drawRoundRect(rect, radius, radius, edge);
     }
 }

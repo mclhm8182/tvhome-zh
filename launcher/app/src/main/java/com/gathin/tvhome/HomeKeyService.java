@@ -1,7 +1,12 @@
 package com.gathin.tvhome;
 
 import android.accessibilityservice.AccessibilityService;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Build;
+import android.os.UserManager;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 
@@ -33,10 +38,63 @@ public class HomeKeyService extends AccessibilityService {
     /** Remote buttons that should open quick settings rather than fall through to the app behind. */
     private int[] settingsScancodes = new int[0];
 
+    /** The service is directBootAware, so Android binds it before the user unlocks. */
+    private BroadcastReceiver unlockReceiver;
+
+    /**
+     * False while the box is still locked. The user's own settings live in credential-protected storage,
+     * which cannot be read before the unlock, so the Menu key does nothing until then.
+     */
+    private boolean unlocked;
+
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
         settingsScancodes = getResources().getIntArray(R.array.settings_key_scancodes);
+        // The service is directBootAware: Android 11 would otherwise skip a service that is not while the
+        // user is still locked at boot, write accessibility_enabled=0 and, on some firmware, never bind it
+        // after the unlock. Wait for the unlock before touching the user's settings.
+        UserManager users = (UserManager) getSystemService(Context.USER_SERVICE);
+        // Direct boot is an Android 7 (24) idea: before it a device that has booted is unlocked,
+        // so there is nothing to wait for and isUserUnlocked() does not exist.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N || (users != null && users.isUserUnlocked())) {
+            unlocked = true;
+            return;
+        }
+        unlockReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                stopWaitingForUnlock();
+                unlocked = true;
+            }
+        };
+        IntentFilter filter = new IntentFilter(Intent.ACTION_USER_UNLOCKED);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(unlockReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(unlockReceiver, filter);
+        }
+        // The unlock may have happened between the check and the registration.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N || (users != null && users.isUserUnlocked())) {
+            stopWaitingForUnlock();
+            unlocked = true;
+        }
+    }
+
+    private void stopWaitingForUnlock() {
+        if (unlockReceiver == null) return;
+        try {
+            unregisterReceiver(unlockReceiver);
+        } catch (IllegalArgumentException ignored) {
+            // already gone
+        }
+        unlockReceiver = null;
+    }
+
+    @Override
+    public void onDestroy() {
+        stopWaitingForUnlock();
+        super.onDestroy();
     }
 
     private boolean isSettingsKey(KeyEvent event) {
@@ -53,6 +111,8 @@ public class HomeKeyService extends AccessibilityService {
      * the desktop's settings panel turns it on explicitly.
      */
     private boolean menuOpensQuickSettings() {
+        // Credential-protected storage cannot be read before the unlock; the Menu key falls through then.
+        if (!unlocked) return false;
         return getSharedPreferences(PREFS, MODE_PRIVATE).getBoolean(KEY_MENU_EVERYWHERE, false);
     }
 

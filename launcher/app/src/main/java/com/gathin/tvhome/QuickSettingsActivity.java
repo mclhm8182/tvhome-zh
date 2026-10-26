@@ -27,6 +27,7 @@ public final class QuickSettingsActivity extends Activity {
     protected void onCreate(Bundle state) {
         super.onCreate(state);
         setContentView(R.layout.activity_quick_settings);
+        Typefaces.apply(findViewById(android.R.id.content));
         findViewById(R.id.scrim).setOnClickListener(v -> finish());
         LinearLayout rows = findViewById(R.id.rows);
         addRow(rows, R.drawable.ic_settings, R.string.tv_settings, 0,
@@ -78,6 +79,7 @@ public final class QuickSettingsActivity extends Activity {
 
     private void addRow(LinearLayout rows, int icon, int title, int status, Intent target) {
         View row = getLayoutInflater().inflate(R.layout.item_input, rows, false);
+        Typefaces.apply(row);
         ((ImageView) row.findViewById(R.id.icon)).setImageResource(icon);
         ((TextView) row.findViewById(R.id.title)).setText(title);
         row.findViewById(R.id.dot).setVisibility(View.GONE);

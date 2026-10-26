@@ -23,30 +23,17 @@
             android:scaleType="centerCrop"
             android:contentDescription="@null" />
 
+        <!-- For an app with no banner of its own: the icon scaled up to fill the tile, with the
+             space beside it filled from the icon's own edges. The drawable does the work, so the
+             view simply takes the whole tile. -->
         <ImageView
             android:id="@+id/icon"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_gravity="center"
-            android:layout_marginBottom="14dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"
             android:visibility="gone"
             android:contentDescription="@null" />
 
-        <TextView
-            android:id="@+id/label"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"
-            android:paddingBottom="8dp"
-            android:gravity="center"
-            android:singleLine="true"
-            android:ellipsize="end"
-            android:textColor="#FFFFFFFF"
-            android:textSize="13sp"
-            android:fontFamily="@font/outfit"
-            android:visibility="gone" />
     </FrameLayout>
 
     <TextView
@@ -59,10 +46,8 @@
         android:singleLine="true"
         android:ellipsize="end"
         android:alpha="0"
-        android:translationY="-6dp"
         android:textColor="#F2FFFFFF"
         android:textSize="14sp"
-        android:fontFamily="@font/outfit"
         android:fontVariationSettings="'wght' 500"
         android:letterSpacing="0.02" />
 </FrameLayout>

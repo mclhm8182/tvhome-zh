@@ -21,9 +21,9 @@ import java.util.Locale;
  * launcher's own INTERNET permission is used, the same one the daily wallpaper already needs.
  *
  * <p>What leaves the TV: the city name the user typed (to find it), then that place's latitude and
- * longitude (for the forecast and the air quality), and — only when the user taps "Locate my city" —
- * one request to ipinfo.io for the coarse position, which is then resolved through the same geocoder.
- * Nothing runs in the background: requests happen while the desk is on screen.
+ * longitude (for the forecast and the air quality), and one request to ipinfo.io for the coarse
+ * position of this connection — once when the launcher is first set up, and again whenever the user
+ * taps "Locate my city". Nothing runs in the background: requests happen while the desk is on screen.
  */
 final class Weather {
 
@@ -32,6 +32,8 @@ final class Weather {
     private static final String KEY_NAME = "name";
     private static final String KEY_LAT = "lat";
     private static final String KEY_LON = "lon";
+    /** Set the first time the desk starts, so the opening guess only ever happens once. */
+    private static final String KEY_SEEN = "seen";
 
     private static final String GEO = "https://geocoding-api.open-meteo.com/v1/search";
     private static final String FORECAST = "https://api.open-meteo.com/v1/forecast";
@@ -57,6 +59,19 @@ final class Weather {
 
     void enabled(boolean on) {
         prefs.edit().putBoolean(KEY_ENABLED, on).apply();
+    }
+
+    /**
+     * Whether this is the first start on this TV, so the desk can fill itself in: the weather on, and
+     * the city taken from the connection. Marked as seen before anything is asked for, so a TV that
+     * is offline at first start is not asked again every time it boots.
+     */
+    boolean firstRun() {
+        return !prefs.getBoolean(KEY_SEEN, false);
+    }
+
+    void markSeen() {
+        prefs.edit().putBoolean(KEY_SEEN, true).apply();
     }
 
     /** True once a place has been chosen (or located), so the desk knows it can show a line. */

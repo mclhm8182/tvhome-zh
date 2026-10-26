@@ -90,6 +90,9 @@ final class DockStore {
     }
 
     private void compact(List<String> list) {
-        list.removeIf(s -> s == null || s.trim().isEmpty());
+        for (int i = list.size() - 1; i >= 0; i--) {
+            String s = list.get(i);
+            if (s == null || s.trim().isEmpty()) list.remove(i);
+        }
     }
 }

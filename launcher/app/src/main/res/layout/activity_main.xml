@@ -21,7 +21,6 @@
         android:alpha="0"
         android:textColor="#FFFFFFFF"
         android:textSize="48sp"
-        android:fontFamily="@font/outfit"
         android:fontVariationSettings="'wght' 300"
         android:letterSpacing="-0.02"
         android:includeFontPadding="false"
@@ -40,25 +39,47 @@
             android:layout_height="wrap_content">
 
 
-                <TextView
-                    android:id="@+id/greeting"
+                <!-- The date sits above the clock where the greeting used to be: the greeting was
+                     words that changed with the hour and said nothing, and a TV is asked what day
+                     it is far more often than how to greet the room. The lunar date follows it for
+                     a Chinese TV, and is left out everywhere else. -->
+                <LinearLayout
+                    android:id="@+id/dateRow"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
                     android:layout_marginStart="4dp"
-                    android:textColor="#8CFFFFFF"
-                    android:textSize="12sp"
-                    android:fontFamily="@font/outfit"
-                    android:fontVariationSettings="'wght' 500"
-                    android:letterSpacing="0.22"
-                    android:textAllCaps="true" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:baselineAligned="true">
+
+                    <TextClock
+                        android:id="@+id/date"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:format12Hour="@string/date_format"
+                        android:format24Hour="@string/date_format"
+                        android:textColor="#A6FFFFFF"
+                        android:textSize="13sp"
+                        android:fontVariationSettings="'wght' 400" />
+
+                    <TextView
+                        android:id="@+id/lunar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:textColor="#8CFFFFFF"
+                        android:textSize="12sp"
+                        android:fontVariationSettings="'wght' 400"
+                        android:visibility="gone" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/clockRow"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
-                    android:layout_below="@id/greeting"
+                    android:layout_below="@id/dateRow"
                     android:orientation="horizontal"
                     android:baselineAligned="true">
 
@@ -70,7 +91,6 @@
                         android:format24Hour="HH:mm"
                         android:textColor="#FFFFFFFF"
                         android:textSize="52sp"
-                        android:fontFamily="@font/outfit"
                         android:fontVariationSettings="'wght' 300"
                         android:letterSpacing="-0.04"
                         android:includeFontPadding="false" />
@@ -86,33 +106,15 @@
                         android:format24Hour=""
                         android:textColor="#B3FFFFFF"
                         android:textSize="15sp"
-                        android:fontFamily="@font/outfit"
                         android:fontVariationSettings="'wght' 500"
                         android:letterSpacing="0.08"
                         android:textAllCaps="true" />
 
                     <View
                         android:id="@+id/clockDivider"
-                        android:layout_width="1dp"
-                        android:layout_height="26dp"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginStart="16dp"
-                        android:layout_marginEnd="16dp"
-                        android:background="#33FFFFFF" />
-
-                    <TextClock
-                        android:id="@+id/date"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:format12Hour="@string/date_format"
-                        android:format24Hour="@string/date_format"
-                        android:textColor="#A6FFFFFF"
-                        android:textSize="14sp"
-                        android:fontFamily="@font/outfit"
-                        android:fontVariationSettings="'wght' 400"
-                        android:letterSpacing="0.14"
-                        android:textAllCaps="true" />
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:visibility="gone" />
                 </LinearLayout>
 
         <!-- The weather, one line under the clock. -->
@@ -151,7 +153,6 @@
             android:duplicateParentState="true"
             android:textColor="@drawable/pill_text"
             android:textSize="14sp"
-            android:fontFamily="@font/outfit"
             android:fontVariationSettings="'wght' 400"
             android:letterSpacing="0.04" />
     </LinearLayout>
@@ -171,35 +172,54 @@
                     android:text="@string/desktop"
                     android:drawableStart="@drawable/ic_wallpaper"
                     android:nextFocusLeft="@+id/weatherLine"
-                    android:nextFocusDown="@+id/grid" />
+                    android:nextFocusDown="@+id/grid" 
+                    android:nextFocusRight="@+id/btnDock"/>
 
                 <TextView
                     android:id="@+id/btnDock"
                     style="@style/TopButton"
                     android:text="@string/favourites"
                     android:drawableStart="@drawable/ic_dock"
-                    android:nextFocusDown="@+id/grid" />
+                    android:nextFocusDown="@+id/grid" 
+                    android:nextFocusRight="@+id/btnInputs"/>
 
                 <TextView
                     android:id="@+id/btnInputs"
                     style="@style/TopButton"
                     android:text="@string/inputs"
                     android:drawableStart="@drawable/ic_input"
-                    android:nextFocusDown="@+id/grid" />
+                    android:nextFocusDown="@+id/grid" 
+                    android:nextFocusRight="@+id/btnWifi"/>
 
                 <TextView
                     android:id="@+id/btnWifi"
                     style="@style/TopButton"
                     android:text="@string/wifi"
                     android:drawableStart="@drawable/ic_wifi"
-                    android:nextFocusDown="@+id/grid" />
+                    android:nextFocusDown="@+id/grid" 
+                    android:nextFocusRight="@+id/btnSettings"/>
 
                 <TextView
                     android:id="@+id/btnSettings"
                     style="@style/TopButton"
                     android:text="@string/settings"
                     android:drawableStart="@drawable/ic_settings"
-                    android:nextFocusDown="@+id/grid" />
+                    android:nextFocusDown="@+id/grid" 
+                    android:nextFocusRight="@+id/btnLibrary"/>
+
+                <!-- The app library: every app the TV can start, so the ones with no TV icon of
+                     their own can be put on the desk. An icon, because the top bar has no room for
+                     a sixth label. An ImageView and not a button with a picture in it: a compound
+                     drawable in a text button sits at the start of the text, so the picture came
+                     out pushed to the left with a wide gap on its right. -->
+                <ImageView
+                    android:id="@+id/btnLibrary"
+                    style="@style/TopButtonIcon"
+                    android:contentDescription="@string/app_library"
+                    android:src="@drawable/ic_apps"
+                    android:tint="@drawable/pill_text"
+                    android:nextFocusDown="@+id/grid"
+                    android:nextFocusLeft="@+id/btnSettings" />
             </LinearLayout>
 
 

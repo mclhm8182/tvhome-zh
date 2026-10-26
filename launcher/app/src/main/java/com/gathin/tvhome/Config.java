@@ -134,6 +134,9 @@ final class Config {
     }
 
     /** Reads and parses the overlay; any problem means "no overlay", never a crash on the home screen. */
+    // The BOM check below is a string literal in the source, not a byte-order mark in this file.
+    @SuppressWarnings("unused")
+    @android.annotation.SuppressLint("ByteOrderMark")
     private static JSONObject read(File file) {
         if (file == null || !file.isFile()) return null;
         if (file.length() > 64 * 1024) {

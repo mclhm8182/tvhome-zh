@@ -24,7 +24,6 @@
         android:duplicateParentState="true"
         android:textColor="@drawable/pill_text"
         android:textSize="15sp"
-        android:fontFamily="@font/outfit"
         android:fontVariationSettings="'wght' 500" />
 
     <ImageView
@@ -44,7 +43,6 @@
         android:duplicateParentState="true"
         android:textColor="@drawable/pill_text_dim"
         android:textSize="15sp"
-        android:fontFamily="@font/outfit"
         android:fontVariationSettings="'wght' 400" />
 
     <FrameLayout
@@ -68,6 +66,5 @@
         android:duplicateParentState="true"
         android:textColor="@drawable/pill_text"
         android:textSize="15sp"
-        android:fontFamily="@font/outfit"
         android:fontVariationSettings="'wght' 500" />
 </LinearLayout>
