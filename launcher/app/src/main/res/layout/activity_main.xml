@@ -59,7 +59,7 @@
                         android:layout_height="wrap_content"
                         android:format12Hour="@string/date_format"
                         android:format24Hour="@string/date_format"
-                        android:textColor="#A6FFFFFF"
+                        android:textColor="#FFFFFFFF"
                         android:textSize="13sp"
                         android:fontVariationSettings="'wght' 400" />
 
@@ -68,7 +68,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
-                        android:textColor="#8CFFFFFF"
+                        android:textColor="#FFFFFFFF"
                         android:textSize="12sp"
                         android:fontVariationSettings="'wght' 400"
                         android:visibility="gone" />

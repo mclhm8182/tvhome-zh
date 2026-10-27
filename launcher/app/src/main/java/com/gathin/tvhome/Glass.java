@@ -3,6 +3,8 @@ package com.gathin.tvhome;
 import android.graphics.Bitmap;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.RectF;
@@ -37,6 +39,33 @@ final class Glass {
     private static final int BLUR_RADIUS = 5;
     /** How many times the blur runs: three box passes sit very close to a true Gaussian. */
     private static final int BLUR_PASSES = 3;
+
+    /**
+     * How much dark goes over the picture behind a sheet of glass.
+     *
+     * <p>Enough for white writing to stay readable, light enough that the wallpaper keeps its own
+     * colours. A heavier tint turned every panel and the dock band into a black slab, which is the
+     * one thing glass is not: the point of the blurred picture behind it is that you can still tell
+     * what the wallpaper was.
+     */
+    static final int DIM = 0x590E1014;
+    /** A little light on top, the way real glass catches the room it stands in. */
+    static final int SHEEN = 0x12FFFFFF;
+    /** The hairline round the sheet. */
+    static final int EDGE = 0x40FFFFFF;
+
+    /**
+     * The tint the glass puts over the picture behind it: the picture keeps its own colours, at
+     * half their light, and a little light is added back so a sheet over a bright wallpaper is a
+     * sheet of glass and not a black hole. A flat dark colour over the picture was what made every
+     * panel look like a hole cut out of the wallpaper.
+     */
+    private static final ColorMatrix TINT = new ColorMatrix(new float[]{
+            0.48f, 0f, 0f, 0f, 14f,
+            0f, 0.48f, 0f, 0f, 14f,
+            0f, 0f, 0.48f, 0f, 14f,
+            0f, 0f, 0f, 1f, 0f});
+    private static final ColorMatrixColorFilter TINT_FILTER = new ColorMatrixColorFilter(TINT);
 
     private static Bitmap wall;
     private static Bitmap desk;
@@ -149,10 +178,18 @@ final class Glass {
             matrix.postTranslate(-originX, -originY);
             use.setLocalMatrix(matrix);
             paint.setShader(use);
+            paint.setColorFilter(TINT_FILTER);
             canvas.drawRoundRect(rect, radius, radius, paint);
             paint.setShader(null);
+            paint.setColorFilter(null);
+        } else {
+            // Nothing behind to be glass about: the sheet keeps the flat colour it always was.
+            tint.setColor(dim);
+            canvas.drawRoundRect(rect, radius, radius, tint);
         }
-        tint.setColor(dim);
+        // The sheen goes on last, over the picture: it is the light the glass catches, and it is
+        // the same on every panel and on the dock band.
+        tint.setColor(SHEEN);
         canvas.drawRoundRect(rect, radius, radius, tint);
         if (edge != 0) {
             tint.setStyle(Paint.Style.STROKE);

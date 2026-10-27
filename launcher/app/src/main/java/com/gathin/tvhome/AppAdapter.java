@@ -47,7 +47,16 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
 
         /** Long-press on a tile: pin to the dock, or unpin when already pinned. */
         void onTileLongPressed(Entry entry, boolean alreadyPinned);
+
+        /**
+         * Long-press on a tile by position, which is how a remote's held OK button arrives: a
+         * stream of repeated key events, not a touch, so the long-click listener never hears it.
+         */
+        void onTileLongPressedAt(int position);
     }
+
+    /** How long the OK button has to be held for the tile to be picked up. */
+    private static final long LONG_PRESS_MS = 500;
 
     static final class Entry {
         final String label;
@@ -87,6 +96,36 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
 
     /** Weak boxes get the same look, applied instantly instead of tweened. */
     static boolean reducedMotion;
+
+    /** Whether a tile is being carried to another place, which lifts it off the wall. */
+    private static boolean carrying;
+
+    /** How much bigger a carried tile is: it is off the desk and in the hand. */
+    static final float CARRY_SCALE = 1.18f;
+
+    /** Called when a tile is picked up or put down. */
+    static void setCarrying(boolean on) {
+        if (carrying == on) return;
+        carrying = on;
+    }
+
+    /** Whether a tile is in the hand at the moment. */
+    static boolean carrying() {
+        return carrying;
+    }
+
+    /**
+     * Forgets the OK button a tile was picked up with.
+     *
+     * <p>The button that lifts a tile off the desk is held down for half a second, and the press
+     * that ends the move must not open the app behind it. The tile's own state is cleared here
+     * so that the next press on it opens the app as usual.
+     */
+    static void resetLongPress(View card) {
+        if (card == null) return;
+        Object tag = card.getTag(R.id.card);
+        if (tag instanceof long[]) ((long[]) tag)[2] = 1;   // the next release is swallowed
+    }
 
     /** Called once at startup from MainActivity, before the first layout pass. */
     static void setReducedMotion(boolean reduced) {
@@ -237,30 +276,57 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         return dock;
     }
 
-    /** How many apps are in the dock: the first tiles of the grid, in dock order. */
-    int dockCount() {
-        return Math.min(dock.apps().size(), dockSize);
+    /**
+     * Carries a tile to another place on the desk.
+     *
+     * <p>The desk is one list: the favourites are its bottom row and the grid is what lies above
+     * it, so a tile moves between the two the way it moves inside either. The tiles in between
+     * step aside and the carried one slides over, instead of the two of them jumping into each
+     * other's places.
+     *
+     * <p>The favourites are the front of the bottom row, and they follow the move: an app carried
+     * into the row joins them, one carried out of it lets them go, and one the move pushed out of
+     * the row has no place in it any more.
+     *
+     * @return true when the tile moved.
+     */
+    boolean move(int from, int to) {
+        if (from == to || from < 0 || to < 0 || from >= items.size() || to >= items.size()) return false;
+        Entry carried = items.remove(from);
+        items.add(to, carried);
+        // A move notification, not a refresh: the grid can then slide the tile over and let the
+        // ones in between step aside. A refresh made every tile jump at once, and the focus —
+        // which follows a tile by its id — landed on a different app on the way.
+        notifyItemMoved(from, to);
+        syncFavourites(from, to);
+        return true;
     }
 
     /**
-     * Swaps two tiles, for the tile menu's Move. Both positions must be in the grid below the dock:
-     * the dock has its own editor, and moving a tile out of it there would leave a hole.
+     * The favourites after a move: the front of the bottom row.
+     *
+     * <p>The row holds a fixed number of apps and the favourites are the ones the user marked at
+     * the front of it, so the row is read again after every move: the app in the hand joins them
+     * when it came in from the grid, lets them go when it left the row, and one the move pushed
+     * out of the row is let go as well — the loop below simply stops when the row is full.
      */
-    void swap(int from, int to) {
-        if (from == to || from < 0 || to < 0 || from >= items.size() || to >= items.size()) return;
-        java.util.Collections.swap(items, from, to);
-        // A plain refresh, not a move notification. The grid keeps its own view state, and telling it
-        // about a move it did not make left the rows out of step with the list: extra tiles appeared
-        // and the names went with the wrong ones.
-        notifyDataSetChanged();
+    private void syncFavourites(int from, int to) {
+        int row = Math.min(dockSize, items.size());
+        int count = dock.apps().size();
+        if (to < row && from >= row) count++;              // carried in from the grid
+        else if (from < row && to >= row) count--;         // carried out of the row
+        List<String> now = new ArrayList<>();
+        for (int i = 0; i < row && now.size() < count; i++) now.add(items.get(i).pkg);
+        dock.set(now);
     }
 
-    /** The keys of the tiles below the dock, in the order they are in now. */
-    List<String> gridKeys() {
+    /**
+     * Every tile's key, in the order they stand in now: what the desk looks like after the user
+     * has moved the tiles around.
+     */
+    List<String> orderKeys() {
         List<String> out = new ArrayList<>();
-        for (int i = dockCount(); i < items.size(); i++) {
-            out.add(items.get(i).component.flattenToShortString());
-        }
+        for (Entry e : items) out.add(e.component.flattenToShortString());
         return out;
     }
 
@@ -269,10 +335,17 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         return position >= 0 && position < items.size() ? items.get(position).pkg : null;
     }
 
-    /** Re-reads the saved order, after the user has moved tiles. */
-    void reloadOrder() {
-        savedRanks = OrderStore.load(ctx);
-        reload();
+    /**
+     * Re-applies the focus look to a tile. The carrying state changed under it — a tile that was
+     * picked up grows and lifts — and a focus change does not come to tell it.
+     */
+    void refreshLook(View card) {
+        boolean focused = card.isFocused();
+        float scale = focused ? (carrying ? CARRY_SCALE : FOCUS_SCALE) : 1f;
+        card.setScaleX(scale);
+        card.setScaleY(scale);
+        card.setTranslationY(focused && carrying
+                ? -10 * card.getResources().getDisplayMetrics().density : 0f);
     }
 
     /**
@@ -318,12 +391,18 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         Intent probe = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER);
         List<ResolveInfo> found = pm.queryIntentActivities(probe, 0);
         List<Entry> fresh = new ArrayList<>();
+        // The packages that answer to a TV entry point. An app the user put on the desk by hand
+        // is started the way its own entry point says it should be, and this is where that is
+        // known: an intent with a component set resolves as long as the component exists, so
+        // probing one would call every app a TV app.
+        Set<String> tvPackages = new HashSet<>();
         // Some system apps declare two leanback entry points under one name, which would show as two
         // identical tiles: keep the first per package and label.
         Set<String> seen = new HashSet<>();
         for (ResolveInfo ri : found) {
             if (ri.activityInfo == null) continue;
             String pkg = ri.activityInfo.packageName;
+            tvPackages.add(pkg);
             if (pkg.equals(ctx.getPackageName()) || hidden.contains(pkg)) continue;
             if (hiddenAtRuntime.isHidden(pkg)) continue;
             Drawable banner = ri.activityInfo.loadBanner(pm);
@@ -341,7 +420,7 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         // The apps the user put on the desk by hand: they declare no TV entry point, so nothing else
         // would ever bring them onto the desk.
         for (String component : library.added()) {
-            addLibraryApp(pm, fresh, seen, component);
+            addLibraryApp(pm, fresh, seen, component, tvPackages);
         }
         Collections.sort(fresh, (a, b) -> {
             List<String> dockApps = dock.apps();
@@ -369,8 +448,13 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
     /**
      * Adds one app the user put on the desk by hand. It has no banner of its own (no TV entry
      * point means no TV artwork), so the tile shows its icon and name.
+     *
+     * <p>An app that does have a TV entry point is started as one: it was put on the desk by
+     * hand only because it had been hidden from it, and a TV app has to be started the way its
+     * own entry point says it should be.
      */
-    private void addLibraryApp(PackageManager pm, List<Entry> fresh, Set<String> seen, String component) {
+    private void addLibraryApp(PackageManager pm, List<Entry> fresh, Set<String> seen, String component,
+                                Set<String> tvPackages) {
         ComponentName cn = ComponentName.unflattenFromString(component);
         if (cn == null) return;
         String pkg = cn.getPackageName();
@@ -379,7 +463,8 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
             android.content.pm.ActivityInfo ai = pm.getActivityInfo(cn, 0);
             String label = cleanLabel(String.valueOf(ai.loadLabel(pm)), pkg);
             if (!seen.add(pkg + '\n' + label)) return;   // it has a TV entry point after all
-            fresh.add(new Entry(label, cn, null, ai.loadIcon(pm), false));
+            boolean tv = tvPackages.contains(pkg);
+            fresh.add(new Entry(label, cn, null, ai.loadIcon(pm), tv));
         } catch (Exception e) {
             // The app was uninstalled since it was added; nothing to put on the desk.
         }
@@ -409,7 +494,7 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         nameLp.width = w;
         nameLp.topMargin = h + Math.round(7 * density);
         name.setLayoutParams(nameLp);
-        return new Holder(v, listener);
+        return new Holder(v, listener, dockSize);
     }
 
     @Override
@@ -548,7 +633,7 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         /** The card's own background from the XML, put back for tiles that carry a banner. */
         final Drawable cardBackground;
 
-        Holder(View v, TileListener listener) {
+        Holder(View v, TileListener listener, int columns) {
             super(v);
             card = v.findViewById(R.id.card);
             cardBackground = card.getBackground();
@@ -566,15 +651,78 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
             });
             card.setClipToOutline(true);
 
+            // A remote's long press is a stream of repeated key events, not a touch, so the
+            // long-click listener never hears of it: the first press opened the app and there was
+            // no way to pick a tile up. Holding the OK button for half a second opens the menu,
+            // and the press that follows is swallowed so the app does not open behind it.
+            // The state lives on the card itself, so the launcher can clear it when it takes the
+            // press over (it does, while a tile is being carried).
+            final long[] state = new long[3];      // down time, long press fired, swallow the release
+            card.setTag(R.id.card, state);
+            final Runnable[] fire = new Runnable[1];
+            final Runnable[] hold = new Runnable[1];
+            fire[0] = () -> {
+                int p = getBindingAdapterPosition();
+                if (p != RecyclerView.NO_POSITION && listener != null) listener.onTileLongPressedAt(p);
+            };
+            hold[0] = () -> {
+                if (state[0] != 0 && state[1] == 0) {
+                    state[1] = 1;
+                    fire[0].run();
+                }
+            };
             card.setOnKeyListener((view, keyCode, event) -> {
-                if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
-                if (keyCode != KeyEvent.KEYCODE_DPAD_UP && keyCode != KeyEvent.KEYCODE_DPAD_DOWN) return false;
+                int action = event.getAction();
+                boolean enter = keyCode == KeyEvent.KEYCODE_DPAD_CENTER
+                        || keyCode == KeyEvent.KEYCODE_ENTER
+                        || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER;
+                if (enter) {
+                    if (action == KeyEvent.ACTION_DOWN) {
+                        if (state[0] == 0) {
+                            state[0] = event.getEventTime();
+                            card.removeCallbacks(hold[0]);
+                            card.postDelayed(hold[0], LONG_PRESS_MS);
+                        }
+                        // A remote's long press is a stream of repeated key events, and the repeats
+                        // are marked as such; the time the button has been down is the fallback for
+                        // a remote that does not mark them.
+                        long held = event.getEventTime() - event.getDownTime();
+                        if (state[1] == 0
+                                && (event.getRepeatCount() > 0 || held >= LONG_PRESS_MS)) {
+                            state[1] = 1;
+                            fire[0].run();
+                        }
+                    } else if (action == KeyEvent.ACTION_UP) {
+                        card.removeCallbacks(hold[0]);
+                        // The release of a press the launcher took over must not open the app.
+                        if (state[1] != 0 || state[2] != 0) {
+                            state[1] = 0;
+                            state[2] = 0;
+                            state[0] = 0;
+                            return true;    // the app must not open behind the menu
+                        }
+                        state[0] = 0;
+                    }
+                    return false;
+                }
+                if (action != KeyEvent.ACTION_DOWN) return false;
                 int pos = getBindingAdapterPosition();
-                return listener != null && pos != RecyclerView.NO_POSITION && listener.onTileVerticalKey(pos, keyCode);
+                if (pos == RecyclerView.NO_POSITION) return false;
+                if (keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                    return listener != null && listener.onTileVerticalKey(pos, keyCode);
+                }
+                // Left from a row's first tile and right from its last used to fall through to the
+                // system's focus search, whose beam swept across the screen and landed on whatever
+                // shares the column — the weather line, a top-bar button. Stay put instead.
+                if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && pos % columns == 0) return true;
+                if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && pos % columns == columns - 1) return true;
+                return false;
             });
 
             card.setOnFocusChangeListener((view, focused) -> {
-                float s = focused ? FOCUS_SCALE : 1.0f;
+                float s = focused ? (carrying ? CARRY_SCALE : FOCUS_SCALE) : 1.0f;
+                // A carried tile is lifted off the wall it sits on, so it reads as being held.
+                view.setTranslationY(focused && carrying ? -10 * density : 0f);
                 // The unfocused name follows the setting: hidden, or kept on screen but dimmer. Its
                 // place does not change: a name that moved down when the tile took the focus left
                 // the rest of its row on a different line.

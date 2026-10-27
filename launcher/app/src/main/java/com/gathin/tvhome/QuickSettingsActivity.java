@@ -28,6 +28,14 @@ public final class QuickSettingsActivity extends Activity {
         super.onCreate(state);
         setContentView(R.layout.activity_quick_settings);
         Typefaces.apply(findViewById(android.R.id.content));
+        // The same glass as the panels on the desk: the wallpaper behind, softened, under a tinted
+        // sheet. This panel floats in a window of its own, so the desk cannot be photographed from
+        // here — the wallpaper is what the sheet is made of.
+        View panel = findViewById(R.id.panel);
+        if (Glass.hasWallpaper()) {
+            panel.setBackground(new GlassBackground(panel, 20,
+                    getResources().getDisplayMetrics().density, Glass.DIM, Glass.EDGE, false));
+        }
         findViewById(R.id.scrim).setOnClickListener(v -> finish());
         LinearLayout rows = findViewById(R.id.rows);
         addRow(rows, R.drawable.ic_settings, R.string.tv_settings, 0,

@@ -333,54 +333,6 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- The apps the user took off the desk. Opens a list to put them back. -->
-    <LinearLayout
-        android:id="@+id/rowHidden"
-        android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:background="@drawable/input_row_bg"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:focusable="true"
-        android:focusableInTouchMode="true">
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:duplicateParentState="true">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/hidden_apps"
-                android:textColor="@drawable/pill_text"
-                android:duplicateParentState="true"
-                android:textSize="15sp"
-                android:fontVariationSettings="'wght' 500" />
-
-            <TextView
-                android:id="@+id/hiddenStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@drawable/pill_text_dim"
-                android:duplicateParentState="true"
-                android:textSize="11sp"
-                android:fontVariationSettings="'wght' 400" />
-        </LinearLayout>
-
-        <ImageView
-            android:layout_width="18dp"
-            android:layout_height="18dp"
-            android:src="@drawable/ic_chevron"
-            android:tint="@drawable/pill_text"
-            android:duplicateParentState="true"
-            android:contentDescription="@null" />
-    </LinearLayout>
-
     <!-- Whether the remote's own source button opens this launcher's Inputs menu. Off by default:
          a TV with its own source picker should keep it. -->
     <LinearLayout

@@ -32,6 +32,7 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
 import android.view.animation.OvershootInterpolator;
@@ -48,6 +49,7 @@ import androidx.annotation.NonNull;
 import androidx.dynamicanimation.animation.DynamicAnimation;
 import androidx.dynamicanimation.animation.SpringAnimation;
 import androidx.dynamicanimation.animation.SpringForce;
+import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -129,14 +131,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private PopupWindow dockPicker;
     /** The app library panel, open while the user picks apps for the desk. */
     private AppLibraryPanel libraryPanel;
-    /** The panel that puts hidden apps back, open over the desktop settings. */
-    private HiddenAppsPanel hiddenPanel;
     /**
      * A tile is picked up and the arrow keys carry it. {@link #carried} says which one; Back puts it
      * down and keeps the new order.
      */
     private boolean reordering;
     private int carried = -1;
+    /** Whether the OK button is down right now: a held button is one press, not many. */
+    private boolean okDown;
     private SpringAnimation springX, springY;
     private float glassTargetX, glassTargetY;
     private boolean glassShown;
@@ -263,7 +265,30 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             }
         });
         grid.setHasFixedSize(true);
-        grid.setItemAnimator(null);
+        // A carried tile slides to its new place and the ones in between step aside: the grid
+        // animates the move itself. Only the move is animated — a change animation on a refresh
+        // made the whole desk flash, and a long jump scrolled instead of sliding.
+        DefaultItemAnimator animator = new DefaultItemAnimator();
+        animator.setMoveDuration(240);
+        animator.setAddDuration(0);
+        animator.setRemoveDuration(0);
+        animator.setChangeDuration(0);
+        animator.setSupportsChangeAnimations(false);
+        grid.setItemAnimator(animator);
+        // The glass highlight was placed when the tile took focus, which can be before the scroll
+        // that brings it on screen has finished: measured on the old coordinates, it ended up
+        // sitting over whatever row had since scrolled into its place. Re-place it — the spring
+        // then glides it over — once the grid stops moving.
+        grid.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView rv, int newState) {
+                if (newState != RecyclerView.SCROLL_STATE_IDLE) return;
+                View card = rv.findFocus();
+                if (card == null || card.getId() != R.id.card) return;
+                int pos = rv.getChildAdapterPosition((View) card.getParent());
+                if (pos != RecyclerView.NO_POSITION) onTileFocused(pos, card);
+            }
+        });
         dockDecoration = new DockDecoration(COLUMNS, density, wallpaperPresent());
         dockDecoration.setNames(alwaysShowNames());
         grid.addItemDecoration(dockDecoration);
@@ -789,6 +814,22 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         int code = event.getKeyCode();
+        boolean ok = code == KeyEvent.KEYCODE_DPAD_CENTER
+                || code == KeyEvent.KEYCODE_ENTER
+                || code == KeyEvent.KEYCODE_NUMPAD_ENTER;
+        if (ok) {
+            // The button that picks a tile up is held down, and the remote keeps sending the
+            // press while it is held. Those repeats are not a second press: treating them as one
+            // put the tile straight back down again, and the move never got off the ground.
+            boolean repeat = okDown && event.getAction() == KeyEvent.ACTION_DOWN;
+            if (event.getAction() == KeyEvent.ACTION_DOWN) okDown = true;
+            else if (event.getAction() == KeyEvent.ACTION_UP) okDown = false;
+            if (reordering) {
+                if (event.getAction() != KeyEvent.ACTION_DOWN) return true;  // letting go: the tile stays in the hand
+                if (!repeat) endReorder();
+                return true;
+            }
+        }
         // A picked-up tile: the arrow keys carry it, Back puts it down. This comes before the rest so
         // a direction never scrolls the grid out from under the tile being carried.
         if (reordering) {
@@ -840,6 +881,21 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      * Long-press a tile: pin it to the dock, or take it out again. Pinning replaces the slot the app
      * would otherwise occupy, so with a full dock the user still ends up with exactly one copy of it.
      */
+    /**
+     * The remote's held OK button: the same menu, reached by position rather than by the entry a
+     * long-click hands over. A remote's long press is a stream of repeated key events, not a
+     * touch, so it never reaches the long-click listener at all.
+     */
+    @Override
+    public void onTileLongPressedAt(int position) {
+        if (reordering || adapter == null) return;
+        if (position < 0 || position >= adapter.getItemCount()) return;
+        // The remote picks the tile up straight away, the way the Apple TV does: the arrow keys
+        // carry it and Back puts it down. A tile among the favourites is carried the same way —
+        // the favourites are the top row of the same list.
+        startMove(position);
+    }
+
     @Override
     /**
      * Hold OK on a tile: a glass menu next to it. The dock edit is what the long press used to do on
@@ -864,11 +920,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         addTileMenuRow(rows, popup,
                 alreadyPinned ? R.string.dock_remove_from : R.string.dock_add_to,
                 () -> editDock(entry, alreadyPinned));
-        // Only the tiles below the dock can be moved: the dock has its own editor, and a tile moved
-        // out of it there would leave a hole in the row.
-        if (position >= adapter.dockCount()) {
-            addTileMenuRow(rows, popup, R.string.tile_move, () -> startMove(position));
-        }
+        // Every tile can be moved: the favourites are the bottom row of the same desk, not a
+        // place of their own, so a tile moves between the two the way it moves inside either.
+        addTileMenuRow(rows, popup, R.string.tile_move, () -> startMove(position));
         if (new LibraryApps(this).isAdded(entry.component.flattenToString())) {
             addTileMenuRow(rows, popup, R.string.app_library_remove, () -> {
                 new LibraryApps(this).remove(entry.component.flattenToString());
@@ -957,36 +1011,149 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      * grid itself is laid out.
      */
     private boolean startMove(int position) {
-        if (position < adapter.dockCount() || position >= adapter.getItemCount()) return false;
+        if (position < 0 || position >= adapter.getItemCount()) return false;
         reordering = true;
         carried = position;
+        // The tile is in the hand now: it grows and lifts off the wall.
+        AppAdapter.setCarrying(true);
+        // The highlight chases the tile harder while it is being carried: it has to keep up with
+        // a tile that slides over in a quarter of a second.
+        setSpring(520f, 0.82f);
+        View focused = grid.findFocus();
+        if (focused != null) adapter.refreshLook(focused);
         toast(getString(R.string.reorder_hint));
         focusTile(carried);
+        // The highlight is put on the tile on every frame while it is on the way: the tile moves
+        // with the grid's own animation and the highlight is a separate view, so it has to be
+        // told where the tile is now, not where it will end up.
+        grid.removeCallbacks(followCarried);
+        grid.post(followCarried);
         return true;
     }
 
-    /** Moves the carried tile one step, staying inside the grid below the dock. */
+    /**
+     * Moves the carried tile.
+     *
+     * <p>The desk is one list: the favourites are its bottom row and the grid is what lies above
+     * it, so up from the top grid row puts a tile among the favourites, down from the favourites
+     * takes it back into the grid, and left and right change the order of the row the way they
+     * change the order of the grid.
+     */
     private void moveCarried(int keyCode) {
-        int columns = COLUMNS;
-        int to = carried;
-        if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) to = carried - 1;
-        else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) to = carried + 1;
-        else if (keyCode == KeyEvent.KEYCODE_DPAD_UP) to = carried - columns;
-        else if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) to = carried + columns;
-        if (to < adapter.dockCount() || to >= adapter.getItemCount()) return;
-        adapter.swap(carried, to);
+        int count = adapter.getItemCount();
+        if (count == 0 || carried < 0) return;
+        int to;
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_DPAD_LEFT: to = carried - 1; break;
+            case KeyEvent.KEYCODE_DPAD_RIGHT: to = carried + 1; break;
+            case KeyEvent.KEYCODE_DPAD_UP: to = carried - COLUMNS; break;
+            case KeyEvent.KEYCODE_DPAD_DOWN: to = carried + COLUMNS; break;
+            default: return;
+        }
+        if (to < 0) return;                       // the top of the desk: nowhere to go
+        if (to >= count) {
+            // The last row is not full: down puts the tile at the end of it.
+            if (keyCode != KeyEvent.KEYCODE_DPAD_DOWN || to <= carried) return;
+            to = count - 1;
+        }
+        if (to == carried) return;
+        int from = carried;
+        if (!adapter.move(from, to)) return;
         carried = to;
-        focusTile(carried);
+        // The tile keeps the focus — it is the same view, only in another place — and the grid
+        // scrolls just enough to keep it on screen.
+        scrollCarriedIntoView();
+    }
+
+    /** Brings the tile in the hand on screen, without a jump: the grid scrolls just enough. */
+    private void scrollCarriedIntoView() {
+        grid.post(() -> {
+            if (!reordering) return;
+            RecyclerView.ViewHolder vh = grid.findViewHolderForAdapterPosition(carried);
+            if (vh == null) return;
+            View cell = vh.itemView;
+            Rect want = new Rect(0, 0, cell.getWidth(), cell.getHeight());
+            grid.requestChildRectangleOnScreen(cell, want, false);
+        });
+    }
+
+    /**
+     * Keeps the highlight on the tile in the hand while the grid slides it over.
+     *
+     * <p>The tile moves with the grid's own animation and the highlight is a view of its own: it
+     * has to be put where the tile is on every frame, or it stands still while the tile slides
+     * away from under it and comes to rest over a different app.
+     */
+    private final Runnable followCarried = new Runnable() {
+        @Override
+        public void run() {
+            if (!reordering) return;
+            View card = carriedCard();
+            if (card != null) {
+                fitGlass(card);
+                parkCarriedRow();
+            }
+            grid.postOnAnimation(this);
+        }
+    };
+
+    /** The tile in the hand, if the grid has it on screen. */
+    private View carriedCard() {
+        if (adapter == null || carried < 0 || carried >= adapter.getItemCount()) return null;
+        RecyclerView.ViewHolder vh = grid.findViewHolderForAdapterPosition(carried);
+        if (vh == null) return null;
+        return vh.itemView.findViewById(R.id.card);
+    }
+
+    /**
+     * Keeps the bottom row of the desk where it belongs — at the foot of the screen — while a
+     * tile is carried into it or out of it.
+     */
+    private void parkCarriedRow() {
+        if (carried >= COLUMNS) return;
+        RecyclerView.ViewHolder vh = grid.findViewHolderForAdapterPosition(carried);
+        if (vh == null) return;
+        View cell = vh.itemView;
+        int decoratedTop = cell.getTop() - (int) (6 * density);
+        int dy = decoratedTop - grid.getPaddingTop();
+        if (Math.abs(dy) > 1) grid.smoothScrollBy(0, dy);
     }
 
     /** Puts the carried tile down and keeps the order the user left it in. */
     private void endReorder() {
         if (!reordering) return;
         reordering = false;
-        OrderStore.save(this, adapter.gridKeys());
-        adapter.reloadOrder();
+        grid.removeCallbacks(followCarried);
+        AppAdapter.setCarrying(false);
+        setSpring(260f, 0.58f);
+        View focused = grid.findFocus();
+        if (focused != null) adapter.refreshLook(focused);
+        // The press that ends the move was taken by the launcher: the app behind the tile must
+        // not open when the button is let go.
+        AppAdapter.resetLongPress(focused);
+        // The order is kept as it stands: the tiles are already where the user put them, so
+        // there is nothing to rebuild. A rebuild unbound every tile at once, which dropped the
+        // focus and left the highlight over a different app.
+        OrderStore.save(this, adapter.orderKeys());
         carried = -1;
         toast(getString(R.string.reorder_saved));
+    }
+
+    /**
+     * The highlight's spring: softer on the desk, harder while a tile is in the hand.
+     *
+     * <p>The force is tuned in place rather than replaced: a spring that is already running holds
+     * the place it is heading for in its force, and a fresh force has none — the animation would
+     * come to a stop with an error the first time it drew a frame.
+     */
+    private void setSpring(float stiffness, float damping) {
+        if (springX == null || springY == null) return;
+        for (SpringAnimation s : new SpringAnimation[]{springX, springY}) {
+            SpringForce force = s.getSpring();
+            if (force == null) continue;
+            force.setStiffness(stiffness);
+            force.setDampingRatio(damping);
+        }
     }
 
     /** Puts the app in the dock, or takes it back out — what holding OK used to do on its own. */
@@ -1144,27 +1311,6 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         libraryPanel.show(anchor);
     }
 
-    /** The hidden apps panel, opened from the desktop settings row of the same name. */
-    private void showHiddenApps(View anchor) {
-        if (hiddenPanel != null) {
-            hiddenPanel.dismiss();
-            hiddenPanel = null;
-        }
-        hiddenPanel = new HiddenAppsPanel(this);
-        hiddenPanel.show(anchor);
-    }
-
-    /** The desktop settings row's second line: how many apps are off the desk. */
-    private void updateHiddenStatus(TextView view) {
-        int n = new HiddenApps(this).all().size();
-        view.setText(n == 0 ? getString(R.string.hidden_none) : getString(R.string.hidden_count, n));
-    }
-
-    /** Called by the hidden apps panel after an app is put back: the desk has to show it again. */
-    void onHiddenAppsChanged() {
-        adapter.reload();
-    }
-
     // ---- wallpaper ------------------------------------------------------------------------------
 
     /**
@@ -1303,15 +1449,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             applyInputKeyHandling();
         });
 
-        // The apps the user took off the desk: the row says how many, and opens the list to put
-        // them back.
-        final View rowHidden = panel.findViewById(R.id.rowHidden);
-        final TextView hiddenStatus = panel.findViewById(R.id.hiddenStatus);
-        rowHidden.setOnClickListener(v -> {
-            wallpaperPanel.dismiss();
-            showHiddenApps(rowHidden);
-        });
-        updateHiddenStatus(hiddenStatus);
+        // The apps the user took off the desk are put back from the app library at the far end of
+        // the top bar: it lists every app the TV can start, so it is the one place where an app
+        // that is not on the desk can be brought back. A second list for the same thing was one
+        // menu too many.
         final TextView weatherStatus = panel.findViewById(R.id.weatherStatus);
         final View rowWeather = panel.findViewById(R.id.rowWeather);
         weatherStatus.setText(weather.enabled() && weather.hasPlace()
@@ -1548,6 +1689,13 @@ private int recommendColumns() {
 
     @Override
     public void onTileFocused(int position, View card) {
+        // While a tile is being carried the highlight belongs to it and to nothing else. The
+        // focus can wander — a rebind, a scroll, a row being laid out again — and every time it
+        // did the highlight jumped over to whatever app the focus had landed on.
+        if (reordering && position != carried) {
+            focusTile(carried);
+            return;
+        }
         // Cold start, or a column count the grid has not laid out yet: the tile has no size, and fitting
         // the glass to it would leave it at whatever the XML says until the next key press. Run again as
         // soon as the tile has been measured.
@@ -1559,13 +1707,41 @@ private int recommendColumns() {
         }
         lastFocused = position;
         lastFocusedKey = adapter.keyAt(position);
-        // Tile rect in root coordinates, using layout positions (ignores the scale animation).
+        fitGlass(card);
+
+        View item = (View) card.getParent();
+        if (position < COLUMNS) {
+            // Dock: park it at the bottom of the screen and show the top shelf for this app.
+            int decoratedTop = item.getTop() - (int) (6 * density);
+            int dy = decoratedTop - grid.getPaddingTop();
+            if (Math.abs(dy) > 1) grid.smoothScrollBy(0, dy);
+            showHero(position, tileRect.top - dy);
+        } else {
+            hideHero();
+            // Scroll just enough so the whole glass (not only the tile) is visible.
+            float pad = 9f * density;        // matches GlassView's glow inset
+            Rect want = revealRect;
+            want.set(0, -(int) pad * 2, item.getWidth(), item.getHeight() + (int) pad);
+            grid.requestChildRectangleOnScreen(item, want, false);
+        }
+    }
+
+    /**
+     * Puts the highlight over a tile: it is fitted to the tile's size and glides to where the
+     * tile is.
+     *
+     * <p>The tile is measured where it stands at this moment, slide included: the grid moves the
+     * cell it is animating by translating it, and a highlight measured on the old coordinates
+     * ends up sitting over whatever row has since slid into its place.
+     */
+    private void fitGlass(View card) {
+        if (card.getWidth() == 0 || card.getHeight() == 0) return;
         Rect r = tileRect;
-        r.set(0, 0, card.getWidth(), card.getHeight());
-        root.offsetDescendantRectToMyCoords(card, r);
+        tileRectInRoot(card, r);
         float pad = 9f * density;        // matches GlassView's glow inset
-        float w = card.getWidth() * AppAdapter.FOCUS_SCALE + 2 * pad;
-        float h = card.getHeight() * AppAdapter.FOCUS_SCALE + 2 * pad;
+        float zoom = AppAdapter.carrying() ? AppAdapter.CARRY_SCALE : AppAdapter.FOCUS_SCALE;
+        float w = card.getWidth() * zoom + 2 * pad;
+        float h = card.getHeight() * zoom + 2 * pad;
         float x = r.exactCenterX() - w / 2f;
         float y = r.exactCenterY() - h / 2f;
 
@@ -1579,7 +1755,7 @@ private int recommendColumns() {
             glass.setLayoutParams(lp);
             // GlassView draws its slab inset by pad, i.e. exactly over the zoomed tile: same corners as
             // the tile, which is itself proportionally rounder when a narrow grid made it smaller.
-            glass.setRadius(AppAdapter.cornerRadius(card.getWidth(), density) * AppAdapter.FOCUS_SCALE);
+            glass.setRadius(AppAdapter.cornerRadius(card.getWidth(), density) * zoom);
         }
         glassTargetX = x;
         glassTargetY = y;
@@ -1600,20 +1776,25 @@ private int recommendColumns() {
             springX.animateToFinalPosition(x);
             springY.animateToFinalPosition(y);
         }
-        View item = (View) card.getParent();
-        if (position < COLUMNS) {
-            // Dock: park it at the bottom of the screen and show the top shelf for this app.
-            int decoratedTop = item.getTop() - (int) (6 * density);
-            int dy = decoratedTop - grid.getPaddingTop();
-            if (Math.abs(dy) > 1) grid.smoothScrollBy(0, dy);
-            showHero(position, r.top - dy);
-        } else {
-            hideHero();
-            // Scroll just enough so the whole glass (not only the tile) is visible.
-            Rect want = revealRect;
-            want.set(0, -(int) pad * 2, item.getWidth(), item.getHeight() + (int) pad);
-            grid.requestChildRectangleOnScreen(item, want, false);
+    }
+
+    /**
+     * Where the tile stands on the desk right now, slide included.
+     *
+     * <p>The platform's own helper does not follow the slide a move animation draws: the grid
+     * moves the cell it is animating by translating it, so the tile has to be measured by hand.
+     */
+    private void tileRectInRoot(View card, Rect out) {
+        int dx = 0, dy = 0;
+        View v = card;
+        while (v != null && v != root) {
+            dx += v.getLeft() + Math.round(v.getTranslationX());
+            dy += v.getTop() + Math.round(v.getTranslationY());
+            ViewParent p = v.getParent();
+            if (!(p instanceof View)) break;
+            v = (View) p;
         }
+        out.set(dx, dy, dx + card.getWidth(), dy + card.getHeight());
     }
 
 
@@ -1749,6 +1930,11 @@ private int recommendColumns() {
         }
         View panel = getLayoutInflater().inflate(R.layout.popup_weather, root, false);
         Typefaces.apply(panel);
+        // The same glass as every other panel: the desk behind, softened, under a tinted sheet.
+        // This one used to keep the flat dark background of its own layout, which is what made it
+        // read as a black hole in the middle of the wallpaper.
+        Glass.capture(root);
+        applyGlass(panel);
         panel.findViewById(R.id.btnChangeCity).setOnClickListener(v -> {
             weatherPanel.dismiss();
             pickCity();
@@ -1762,12 +1948,19 @@ private int recommendColumns() {
         weatherPanel.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         weatherPanel.setOutsideTouchable(true);
         weatherPanel.setElevation(12 * density);
-        // The page is taller than the space under the line, so it opens from the top of the screen
-        // instead: a weather sheet over the desk, the way the phone app shows it.
+        // The sheet opens from the top of the screen and reaches down to the bottom of it: the
+        // page is tall, and the buttons at its bottom have to stay clear of the bottom edge as
+        // well. What does not fit scrolls inside the sheet — nothing is folded away, because a
+        // page that loses its hourly strip or its coming days reads as a page that lost its
+        // memory.
         int[] at = new int[2];
         weatherLine.getLocationInWindow(at);
-        int offsetY = (int) (14 * density) - at[1];
-        dropIn(weatherPanel, panel, weatherLine, Gravity.START, offsetY);
+        int top = (int) (16 * density);
+        int bottom = (int) (20 * density);
+        int height = Math.max((int) (200 * density), root.getHeight() - top - bottom);
+        weatherPanel.setHeight(height);
+        weatherPanel.update();
+        dropIn(weatherPanel, panel, weatherLine, Gravity.START, top - at[1]);
         fillWeatherPanel();
         // Focus has to move into the panel: left on the line behind it, the D-pad would steer the desk.
         panel.post(() -> panel.findViewById(R.id.btnChangeCity).requestFocus());
@@ -1874,14 +2067,18 @@ private int recommendColumns() {
     private void pickCity() {
         View panel = getLayoutInflater().inflate(R.layout.popup_city, root, false);
         Typefaces.apply(panel);
+        // The same glass as every other panel: the desk behind, softened, under a tinted sheet.
+        Glass.capture(root);
+        applyGlass(panel);
         EditText input = panel.findViewById(R.id.cityInput);
         LinearLayout results = panel.findViewById(R.id.results);
         TextView message = panel.findViewById(R.id.message);
         input.setText(weather.placeName());
         // The list of places can be longer than the screen: it scrolls inside the panel, and the
-        // panel itself opens from the top so that everything stays on the screen.
+        // panel itself opens from the top so that everything stays on the screen. The heading and
+        // the field above the list need their room as well, so the list is cut to what is left.
         results.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-        int room = (int) (330 * density);
+        int room = (int) (root.getHeight() - 200 * density);
         int height = Math.min(results.getMeasuredHeight(), room);
         final PopupWindow popup = new PopupWindow(panel, ViewGroup.LayoutParams.WRAP_CONTENT,
                 height > 0 ? height : ViewGroup.LayoutParams.WRAP_CONTENT, true);
@@ -1958,7 +2155,7 @@ private int recommendColumns() {
         });
         int[] at = new int[2];
         weatherLine.getLocationInWindow(at);
-        dropIn(popup, panel, weatherLine, Gravity.START, (int) (14 * density) - at[1]);
+        dropIn(popup, panel, weatherLine, Gravity.START, (int) (40 * density) - at[1]);
         input.requestFocus();
     }
 
@@ -2177,8 +2374,13 @@ private int recommendColumns() {
                 if (newState != RecyclerView.SCROLL_STATE_IDLE) return;
                 rv.removeOnScrollListener(this);
                 RecyclerView.ViewHolder h = rv.findViewHolderForAdapterPosition(pos);
-                View target = h != null ? h.itemView.findViewById(R.id.card) : rv.getChildAt(0);
-                if (target != null) target.requestFocus();
+                if (h != null) {
+                    h.itemView.findViewById(R.id.card).requestFocus();
+                } else {
+                    // The row is still not bound (a very long jump): try once more from the top,
+                    // rather than focusing whatever view happens to sit at the top of the screen.
+                    rv.post(() -> focusTile(pos));
+                }
             }
         });
         grid.smoothScrollToPosition(pos);
@@ -2449,7 +2651,7 @@ private int recommendColumns() {
         // taken: without a picture the panel keeps the flat sheet its layout gives it, which is what
         // a box with nothing behind it has always had.
         if (Glass.hasDesk()) {
-            panel.setBackground(new GlassBackground(panel, 20, density, 0xDA101014, 0x33FFFFFF));
+            panel.setBackground(new GlassBackground(panel, 20, density, Glass.DIM, Glass.EDGE));
         }
     }
 

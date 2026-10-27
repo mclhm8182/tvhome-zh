@@ -3,17 +3,35 @@
   The weather page, laid out the way Apple's Weather app reads on a TV: the city, one very large
   temperature with the condition beside it, then a horizontal hourly strip, then the coming days as
   rows with a bar that spans the week's range. Everything is sized for three metres away.
+
+  The page fills the screen from edge to edge and the content scrolls inside it: a box with a
+  short screen used to lose the hourly strip or the coming days to make room, and what was left
+  read as a panel that had forgotten half of itself.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/wxContent"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:background="@drawable/wx_panel"
-    android:orientation="vertical"
-    android:paddingStart="22dp"
-    android:paddingEnd="22dp"
-    android:paddingTop="16dp"
-    android:paddingBottom="14dp">
+    android:orientation="vertical">
+
+    <ScrollView
+        android:id="@+id/wxScroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+    <LinearLayout
+        android:id="@+id/wxInner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="22dp"
+        android:paddingEnd="22dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="14dp">
 
     <!-- Where this is for, so a wrong guess is obvious and fixable. -->
     <TextView
@@ -99,6 +117,7 @@
 
     <!-- The next hours: a strip, the way Apple shows them. -->
     <TextView
+        android:id="@+id/hourlyTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -124,6 +143,7 @@
 
     <!-- The coming days, each with a bar across the week's range. -->
     <TextView
+        android:id="@+id/daysTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -170,4 +190,6 @@
             android:text="@string/weather_locate"
             android:drawableStart="@drawable/ic_wx_locate" />
     </LinearLayout>
+    </LinearLayout>
+    </ScrollView>
 </LinearLayout>

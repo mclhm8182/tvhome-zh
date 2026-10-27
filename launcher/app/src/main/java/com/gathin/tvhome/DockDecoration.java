@@ -115,7 +115,7 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
             // part of the wallpaper belongs behind the band.
             int[] where = new int[2];
             parent.getLocationOnScreen(where);
-            Glass.draw(c, rect, radius, 0xB4000000, 0x33FFFFFF, density,
+            Glass.draw(c, rect, radius, Glass.DIM, Glass.EDGE, density,
                     where[0], where[1], false);
         } else {
             c.drawRoundRect(rect, radius, radius, band);

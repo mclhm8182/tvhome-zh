@@ -26,6 +26,7 @@ import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -142,21 +143,33 @@ final class AppLibraryPanel {
     private void load(final Set<String> onDesk) {
         LOADER.execute(() -> {
             PackageManager pm = activity.getPackageManager();
-            Intent probe = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER);
-            List<ResolveInfo> found;
-            try {
-                found = pm.queryIntentActivities(probe, 0);
-            } catch (RuntimeException e) {
-                found = new ArrayList<>();
-            }
-            List<App> catalogue = new ArrayList<>();
-            for (ResolveInfo ri : found) {
+            // Both kinds of entry point: an app that only offers a TV entry point is on the desk
+            // like any other, and it has to be in this list too — this is where an app that was
+            // taken off the desk is put back.
+            Map<String, ComponentName> component = new LinkedHashMap<>();
+            Map<String, ResolveInfo> info = new LinkedHashMap<>();
+            for (ResolveInfo ri : query(pm, Intent.CATEGORY_LAUNCHER)) {
                 if (ri.activityInfo == null) continue;
                 String pkg = ri.activityInfo.packageName;
                 if (pkg.equals(activity.getPackageName())) continue;
-                ComponentName cn = new ComponentName(pkg, ri.activityInfo.name);
-                String label = labelOf(pm, pkg, ri);
-                catalogue.add(new App(cn.flattenToString(), pkg, label, onDesk.contains(pkg)));
+                if (!component.containsKey(pkg)) {
+                    component.put(pkg, new ComponentName(pkg, ri.activityInfo.name));
+                    info.put(pkg, ri);
+                }
+            }
+            for (ResolveInfo ri : query(pm, Intent.CATEGORY_LEANBACK_LAUNCHER)) {
+                if (ri.activityInfo == null) continue;
+                String pkg = ri.activityInfo.packageName;
+                if (pkg.equals(activity.getPackageName())) continue;
+                // The TV entry point wins where an app has both: it is the one the desk runs.
+                component.put(pkg, new ComponentName(pkg, ri.activityInfo.name));
+                info.put(pkg, ri);
+            }
+            List<App> catalogue = new ArrayList<>();
+            for (Map.Entry<String, ComponentName> e : component.entrySet()) {
+                String pkg = e.getKey();
+                String label = labelOf(pm, pkg, info.get(pkg));
+                catalogue.add(new App(e.getValue().flattenToString(), pkg, label, onDesk.contains(pkg)));
             }
             Collections.sort(catalogue, (a, b) -> collator.compare(a.label, b.label));
             main.post(() -> {
@@ -168,6 +181,16 @@ final class AppLibraryPanel {
                 list.getAdapter().notifyDataSetChanged();
             });
         });
+    }
+
+    /** The apps that answer to this kind of entry point. Never null. */
+    private List<ResolveInfo> query(PackageManager pm, String category) {
+        try {
+            Intent probe = new Intent(Intent.ACTION_MAIN).addCategory(category);
+            return pm.queryIntentActivities(probe, 0);
+        } catch (RuntimeException e) {
+            return new ArrayList<>();
+        }
     }
 
     /** The app's own name, remembered between openings so the panel opens faster next time. */
@@ -182,18 +205,6 @@ final class AppLibraryPanel {
         }
         KNOWN.put(pkg, label);
         return label;
-    }
-
-    /** Whether this app also has a TV entry point, which puts it on the desk by itself. */
-    private static boolean declaresTvEntry(PackageManager pm, ComponentName cn) {
-        try {
-            Intent lean = new Intent(Intent.ACTION_MAIN)
-                    .addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
-                    .setComponent(cn);
-            return pm.resolveActivity(lean, 0) != null;
-        } catch (RuntimeException e) {
-            return false;
-        }
     }
 
     /** The icon for this app, loaded in the background and kept in the small cache. */
@@ -256,6 +267,10 @@ final class AppLibraryPanel {
                         toast(activity.getString(R.string.app_library_full));
                         return;
                     }
+                    // An app the user took off the desk comes back with it: this panel is where
+                    // the apps that are not on the desk are put back, so an app hidden from the
+                    // desk has to be let go of here as well.
+                    new HiddenApps(activity).show(app.pkg);
                     h.tick.setVisibility(View.VISIBLE);
                     toast(activity.getString(R.string.app_library_added, app.label));
                 }
